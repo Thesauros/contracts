@@ -1,0 +1,22 @@
+{
+  "name": "rebalance-lending-vaults",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test:mocking": "npx hardhat test test/mocking/*.ts",
+    "test:forking": "npx hardhat test test/forking/arbitrum/*.ts && npx hardhat test test/forking/avalanche/*.ts",
+    "coverage": "npx hardhat coverage"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-foundry": "^1.1.2",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/merkle-tree": "^1.0.7",
+    "dotenv": "^16.4.4",
+    "hardhat": "^2.22.10",
+    "hardhat-contract-sizer": "^2.10.0",
+    "hardhat-deploy": "^0.11.45",
+    "hardhat-deploy-ethers": "^0.4.1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.1.0"
+  }
+}

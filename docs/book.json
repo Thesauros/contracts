@@ -1,0 +1,59 @@
+{
+  "title": "Thesauros Documentation",
+  "description": "Документация смарт-контрактов Thesauros - системы для автоматической ребалансировки процентных доходов",
+  "author": "Thesauros Team",
+  "language": "ru",
+  "structure": {
+    "readme": "README.md",
+    "summary": "SUMMARY.md"
+  },
+  "plugins": [
+    "expandable-chapters",
+    "search",
+    "copy-code-button",
+    "theme-default",
+    "highlight",
+    "sharing",
+    "fontsettings",
+    "livereload",
+    "mermaid-gb3"
+  ],
+  "pluginsConfig": {
+    "theme-default": {
+      "showLevel": true
+    },
+    "sharing": {
+      "facebook": true,
+      "twitter": true,
+      "google": false,
+      "weibo": false,
+      "instapaper": false,
+      "vk": false,
+      "all": [
+        "facebook", "twitter", "google", "weibo", "instapaper"
+      ]
+    },
+    "fontsettings": {
+      "theme": "white",
+      "family": "sans",
+      "size": 2
+    },
+    "mermaid-gb3": {
+      "theme": "default"
+    }
+  },
+  "variables": {
+    "projectName": "Thesauros",
+    "projectVersion": "1.0.0",
+    "githubUrl": "https://github.com/your-org/rebalance-finance",
+    "discordUrl": "https://discord.gg/rebalance-finance",
+    "telegramUrl": "https://t.me/rebalance_finance"
+  },
+  "styles": {
+    "website": "styles/website.css",
+    "ebook": "styles/ebook.css",
+    "pdf": "styles/pdf.css",
+    "mobi": "styles/mobi.css",
+    "epub": "styles/epub.css"
+  }
+} 

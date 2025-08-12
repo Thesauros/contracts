@@ -4,6 +4,7 @@ import '@nomicfoundation/hardhat-foundry';
 import 'hardhat-contract-sizer';
 import 'hardhat-deploy';
 import 'hardhat-deploy-ethers';
+import '@nomicfoundation/hardhat-verify';
 import 'dotenv/config';
 
 import { networkConfig } from './network-config';
@@ -20,7 +21,7 @@ const config: HardhatUserConfig = {
   networks: networkConfig,
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY || '',
-     customChains: [
+    customChains: [
       {
         network: "arbitrumOne",
         chainId: 42161,

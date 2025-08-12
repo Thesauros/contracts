@@ -4,4 +4,8 @@ node_modules
 .DS_Store
 out 
 cache_forge
+artifacts
+cache
+typechain-types
+
 

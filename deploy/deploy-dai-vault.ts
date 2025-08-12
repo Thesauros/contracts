@@ -19,8 +19,8 @@ const deployDaiVault: DeployFunction = async function (
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const name = 'Rebalance DAI';
-  const symbol = 'rDAI';
+  const name = 'Thesauros DAI Vault';
+  const symbol = 'tDAI';
 
   const daiAddress = tokenAddresses.DAI;
 

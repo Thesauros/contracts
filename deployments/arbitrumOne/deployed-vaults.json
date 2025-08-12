@@ -1,0 +1,66 @@
+{
+  "network": "arbitrumOne",
+  "chainId": 42161,
+  "deployedAt": "2024-12-19",
+  "vaults": {
+    "WETH": {
+      "address": "0x78c11f63E6840820be18fDA461Ab16f23da5884f",
+      "name": "Thesauros WETH Vault",
+      "symbol": "tWETH",
+      "asset": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+      "status": "deployed-verified-setup"
+    },
+    "USDC": {
+      "address": "0xdf5AFad7f88888bEE944d14982c2d9eBA65653e6",
+      "name": "Thesauros USDC Vault",
+      "symbol": "tUSDC",
+      "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "status": "deployed-verified-setup"
+    },
+    "USDT": {
+      "address": "0xe1D34AB80090da3498Fc5D0696a2Cf82971E5eC6",
+      "name": "Rebalance USDT",
+      "symbol": "tUSDT",
+      "asset": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+      "status": "deployed-verified-setup"
+    },
+    "DAI": {
+      "address": "0xBC64abbCa87289746f2B01C8ab02A78c9fC92B89",
+      "name": "Thesauros DAI Vault",
+      "symbol": "tDAI",
+      "asset": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+      "status": "deployed-verified-setup"
+    }
+  },
+  "baseContracts": {
+    "Timelock": {
+      "address": "0x0c5cEd804488E4AbdE6B809164e72cc0F91896b5",
+      "status": "deployed-verified"
+    },
+    "VaultManager": {
+      "address": "0xAeEcf7F780e88B155df330434Ef29b2B077024e0",
+      "status": "deployed-verified"
+    },
+    "ProviderManager": {
+      "address": "0x30dC35B78a401Fd0227C229ADF6d0F5097358EF9",
+      "status": "deployed-verified"
+    },
+    "AaveV3Provider": {
+      "address": "0xE1Cfb1BDb3901dcEe9F21146c1F299c775d9B65C",
+      "status": "deployed-verified"
+    },
+    "CompoundV3Provider": {
+      "address": "0x4382190FDbf4befA016Ea412f34eb54593312aD5",
+      "status": "deployed-verified"
+    }
+  },
+  "tokenAddresses": {
+    "WETH": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+    "USDC": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    "USDT": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+    "DAI": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+    "FRAX": "0x17FC002b466eEc40DaE837Fc4bE5c67993ddBd6F",
+    "USDC_e": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"
+  },
+  "treasury": "0xc8a682F0991323777253ffa5fa6F19035685E723"
+}

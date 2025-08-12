@@ -19,8 +19,8 @@ const deployWethVault: DeployFunction = async function (
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const name = 'Rebalance WETH';
-  const symbol = 'rWETH';
+  const name = 'Thesauros WETH Vault';
+  const symbol = 'tWETH';
 
   const wethAddress = tokenAddresses.WETH;
 

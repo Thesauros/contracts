@@ -19,8 +19,8 @@ const deployBridgedUsdcVault: DeployFunction = async function (
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const name = 'Rebalance USDC.e';
-  const symbol = 'rUSDC.e';
+  const name = 'Thesauros USDC.e Vault';
+  const symbol = 'tUSDC.e';
 
   const usdcAddress = tokenAddresses.USDC_e;
 

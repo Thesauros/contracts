@@ -19,8 +19,8 @@ const deployFraxVault: DeployFunction = async function (
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const name = 'Rebalance FRAX';
-  const symbol = 'rFRAX';
+  const name = 'Thesauros FRAX Vault';
+  const symbol = 'tFRAX';
 
   const fraxAddress = tokenAddresses.FRAX;
 

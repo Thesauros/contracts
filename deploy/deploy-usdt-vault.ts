@@ -19,8 +19,8 @@ const deployUsdtVault: DeployFunction = async function (
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const name = 'Rebalance USDT';
-  const symbol = 'rUSDT';
+  const name = 'Thesauros USDT Vault';
+  const symbol = 'tUSDT';
 
   const usdtAddress = tokenAddresses.USDT;
 

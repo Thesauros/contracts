@@ -103,13 +103,13 @@ async function main() {
         console.log('');
 
       } catch (error) {
-        console.log(`❌ Error getting Aave data for ${tokenSymbol}: ${error}`);
+        console.log(`  Error getting Aave data for ${tokenSymbol}: ${error}`);
         console.log('');
       }
     }
 
   } catch (error) {
-    console.log(`❌ Error analyzing Aave V3: ${error}`);
+    console.log(`  Error analyzing Aave V3: ${error}`);
     console.log('');
   }
 
@@ -170,13 +170,13 @@ async function main() {
         console.log('');
 
       } catch (error) {
-        console.log(`❌ Error getting Compound data for ${tokenSymbol}: ${error}`);
+        console.log(`  Error getting Compound data for ${tokenSymbol}: ${error}`);
         console.log('');
       }
     }
 
   } catch (error) {
-    console.log(`❌ Error analyzing Compound V3: ${error}`);
+    console.log(`  Error analyzing Compound V3: ${error}`);
     console.log('');
   }
 
@@ -240,15 +240,15 @@ async function main() {
       const apyDiff = best.apy - worst.apy;
       
       if (apyDiff > 0.5) { // Если разница больше 0.5%
-        console.log(`💡 ${tokenSymbol}: Consider rebalancing from ${worst.name.split(' - ')[0]} to ${best.name.split(' - ')[0]}`);
+        console.log(`Tips ${tokenSymbol}: Consider rebalancing from ${worst.name.split(' - ')[0]} to ${best.name.split(' - ')[0]}`);
         console.log(`   Potential gain: ${apyDiff.toFixed(4)}% APY`);
         console.log('');
       }
     }
   }
 
-  console.log('✅ APY monitoring complete!');
-  console.log('\n💡 Tips:');
+  console.log('  APY monitoring complete!');
+  console.log('\nTips Tips:');
   console.log('   - Monitor APY changes regularly');
   console.log('   - Consider gas costs when rebalancing');
   console.log('   - Set up alerts for significant APY changes');

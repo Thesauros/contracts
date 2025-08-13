@@ -46,12 +46,12 @@ const setupVaults: DeployFunction = async function (
       if (usdcBalance >= setupAmount) {
         await usdcToken.approve(usdcVault.address, setupAmount);
         await usdcVaultInstance.setupVault(setupAmount);
-        console.log(`✅ USDC Vault setup completed with ${ethers.formatUnits(setupAmount, 6)} USDC`);
+        console.log(`  USDC Vault setup completed with ${ethers.formatUnits(setupAmount, 6)} USDC`);
       } else {
-        console.log('❌ Insufficient USDC balance for setup');
+        console.log('  Insufficient USDC balance for setup');
       }
     } else {
-      console.log('✅ USDC Vault already setup');
+      console.log('  USDC Vault already setup');
     }
   }
 
@@ -67,12 +67,12 @@ const setupVaults: DeployFunction = async function (
       if (usdtBalance >= setupAmount) {
         await usdtToken.approve(usdtVault.address, setupAmount);
         await usdtVaultInstance.setupVault(setupAmount);
-        console.log(`✅ USDT Vault setup completed with ${ethers.formatUnits(setupAmount, 6)} USDT`);
+        console.log(`  USDT Vault setup completed with ${ethers.formatUnits(setupAmount, 6)} USDT`);
       } else {
-        console.log('❌ Insufficient USDT balance for setup');
+        console.log('  Insufficient USDT balance for setup');
       }
     } else {
-      console.log('✅ USDT Vault already setup');
+      console.log('  USDT Vault already setup');
     }
   }
 

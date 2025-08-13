@@ -18,7 +18,7 @@
 
 This file contains instructions for using and building documentation for the Thesauros project.
 
-## 📚 What's Included
+##  What's Included
 
 The documentation includes:
 
@@ -29,7 +29,7 @@ The documentation includes:
 - **Integration examples** and usage
 - **Liquidity provider documentation**
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Viewing Documentation
 
@@ -61,7 +61,7 @@ gitbook install
 gitbook build
 ```
 
-## 📖 Documentation Structure
+##  Documentation Structure
 
 ```
 docs/
@@ -82,7 +82,7 @@ docs/
 └── README_GITBOOK.md           # GitBook instructions
 ```
 
-## 🔧 Main Contracts
+##  Main Contracts
 
 ### Vault
 - **File**: `contracts/base/Vault.sol`
@@ -109,7 +109,7 @@ docs/
 - **Description**: Manager for managing multiple vaults
 - **Documentation**: [docs/contracts/vault-manager.md](docs/contracts/vault-manager.md)
 
-## 🛡️ Security
+##  Security
 
 ### Roles and Access Rights
 - **Admin**: Full control over settings
@@ -127,7 +127,7 @@ Detailed information: [docs/security/roles.md](docs/security/roles.md)
 - **Inflation attack protection** through `setupVault()`
 - **Merkle proof** for efficient reward distribution
 
-## 🚀 Development
+##  Development
 
 ### Installation and Setup
 ```bash
@@ -174,7 +174,7 @@ npx hardhat run deploy/deploy-usdc-vault.ts --network localhost
 npx hardhat run deploy/deploy-timelock.ts --network goerli
 ```
 
-## 📊 Supported Providers
+##  Supported Providers
 
 - **Aave V3**: Deposits and loans
 - **Compound V3**: Deposits
@@ -182,7 +182,7 @@ npx hardhat run deploy/deploy-timelock.ts --network goerli
 - **Fraxlend**: Lending
 - **Venus**: Deposits
 
-## 🔄 Usage Examples
+##  Usage Examples
 
 ### Rebalancing Funds
 ```solidity
@@ -220,7 +220,7 @@ rewardsDistributor.claim(
 );
 ```
 
-## 📈 Monitoring and Analytics
+##  Monitoring and Analytics
 
 ### Events to Track
 - `RebalanceExecuted`: Rebalancing execution
@@ -235,7 +235,7 @@ rewardsDistributor.claim(
 - Fees and rewards
 - Gas costs
 
-## 🤝 Integration
+## Integration
 
 ### ERC4626 Compatibility
 The system is fully compatible with the ERC4626 standard, ensuring integration with existing DeFi protocols.
@@ -252,7 +252,7 @@ IProvider[] memory providers = vault.getProviders();
 IProvider activeProvider = vault.activeProvider();
 ```
 
-## 📞 Support
+##  Support
 
 ### Getting Help
 - **GitHub Issues**: Create an issue for bugs or questions
@@ -265,7 +265,7 @@ IProvider activeProvider = vault.activeProvider();
 - [Installation Instructions](docs/development/installation.md)
 - [Usage Examples](docs/contracts/)
 
-## 📝 Updating Documentation
+##  Updating Documentation
 
 ### Adding New Methods
 1. Update the corresponding documentation file in `docs/contracts/`
@@ -278,15 +278,7 @@ IProvider activeProvider = vault.activeProvider();
 2. Add new diagrams if necessary
 3. Update related documentation sections
 
-## 🎯 Next Steps
-
-1. **Study Architecture**: Start with [docs/architecture.md](docs/architecture.md)
-2. **Run Tests**: Ensure everything works correctly
-3. **Study Contracts**: Review documentation for each contract
-4. **Start Development**: Use [docs/development/installation.md](docs/development/installation.md)
-5. **Integrate**: Use examples from documentation
-
 ---
 
 **Thesauros Team**  
-*Created with ❤️ for the DeFi community* 
+*Created with  for the DeFi community* 

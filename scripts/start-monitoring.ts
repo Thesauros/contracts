@@ -11,7 +11,7 @@ interface MonitoringConfig {
 }
 
 async function main() {
-  console.log('🚀 Thesauros Strategy Monitoring Dashboard');
+  console.log('Starting Thesauros Strategy Monitoring Dashboard');
   console.log('==========================================\n');
 
   // Конфигурация мониторингов
@@ -47,11 +47,11 @@ async function main() {
   ];
 
   // Показываем доступные опции
-  console.log('📋 Available Monitoring Options:');
+  console.log('  Available Monitoring Options:');
   console.log('================================\n');
 
   monitoringConfigs.forEach((config, index) => {
-    const status = config.enabled ? '✅' : '❌';
+    const status = config.enabled ? ' ' : ' ';
     const interval = config.interval > 0 ? `${config.interval}s` : 'Real-time';
     console.log(`${index + 1}. ${status} ${config.name}`);
     console.log(`   Interval: ${interval}`);
@@ -60,7 +60,7 @@ async function main() {
   });
 
   // Проверяем подключение к сети
-  console.log('🔗 Network Connection Check:');
+  console.log('Network Network Connection Check:');
   console.log('============================\n');
 
   try {
@@ -71,15 +71,15 @@ async function main() {
     console.log(`Network: ${network.name} (Chain ID: ${network.chainId})`);
     console.log(`Current Block: ${blockNumber}`);
     console.log(`Gas Price: ${ethers.formatUnits(gasPrice.gasPrice || 0, 'gwei')} gwei`);
-    console.log('✅ Network connection successful\n');
+    console.log('  Network connection successful\n');
   } catch (error) {
-    console.log(`❌ Network connection failed: ${error}`);
+    console.log(`  Network connection failed: ${error}`);
     console.log('Please check your RPC configuration\n');
     return;
   }
 
   // Проверяем доступность контрактов
-  console.log('📋 Contract Availability Check:');
+  console.log('  Contract Availability Check:');
   console.log('================================\n');
 
   const contractAddresses = {
@@ -94,37 +94,37 @@ async function main() {
     try {
       const code = await ethers.provider.getCode(address);
       if (code !== '0x') {
-        console.log(`✅ ${name}: ${address}`);
+        console.log(`  ${name}: ${address}`);
       } else {
-        console.log(`❌ ${name}: Contract not found`);
+        console.log(`  ${name}: Contract not found`);
       }
     } catch (error) {
-      console.log(`❌ ${name}: Error checking contract`);
+      console.log(`  ${name}: Error checking contract`);
     }
   }
 
   console.log('');
 
   // Запускаем включенные мониторинги
-  console.log('🚀 Starting Enabled Monitoring Services:');
+  console.log('Starting Starting Enabled Monitoring Services:');
   console.log('========================================\n');
 
   const activeMonitors: { [key: string]: NodeJS.Timeout } = {};
 
   for (const config of monitoringConfigs) {
     if (!config.enabled) {
-      console.log(`⏸️  ${config.name}: Disabled`);
+      console.log(`    ${config.name}: Disabled`);
       continue;
     }
 
     if (config.interval === 0) {
-      console.log(`📡 ${config.name}: Real-time monitoring (requires separate process)`);
+      console.log(`  ${config.name}: Real-time monitoring (requires separate process)`);
       console.log(`   Run: npx hardhat run ${config.script} --network arbitrumOne`);
       console.log('');
       continue;
     }
 
-    console.log(`🔄 ${config.name}: Starting with ${config.interval}s interval`);
+    console.log(`  ${config.name}: Starting with ${config.interval}s interval`);
 
     // Запускаем первый раз сразу
     runMonitoringScript(config.script, config.name);
@@ -139,7 +139,7 @@ async function main() {
 
   // Показываем статистику каждые 60 секунд
   const statsInterval = setInterval(() => {
-    console.log('\n📊 Monitoring Status Update:');
+    console.log('\n  Monitoring Status Update:');
     console.log('============================');
     console.log(`Active monitors: ${Object.keys(activeMonitors).length}`);
     console.log(`Time: ${new Date().toLocaleString()}`);
@@ -154,8 +154,8 @@ async function main() {
     Object.values(activeMonitors).forEach(interval => clearInterval(interval));
     clearInterval(statsInterval);
     
-    console.log('✅ All monitoring services stopped');
-    console.log('\n📋 Quick Commands:');
+    console.log('  All monitoring services stopped');
+    console.log('\n  Quick Commands:');
     console.log('   npx hardhat run scripts/monitor-vaults.ts --network arbitrumOne');
     console.log('   npx hardhat run scripts/monitor-apy.ts --network arbitrumOne');
     console.log('   npx hardhat run scripts/monitor-events.ts --network arbitrumOne');
@@ -164,8 +164,8 @@ async function main() {
     process.exit(0);
   });
 
-  console.log('\n✅ Monitoring dashboard started successfully!');
-  console.log('\n💡 Tips:');
+  console.log('\n  Monitoring dashboard started successfully!');
+  console.log('\nTips Tips:');
   console.log('   - Check logs above for any errors');
   console.log('   - Monitor gas prices for optimal timing');
   console.log('   - Set up alerts for significant changes');
@@ -174,7 +174,7 @@ async function main() {
 
 // Функция для запуска скрипта мониторинга
 function runMonitoringScript(scriptPath: string, scriptName: string) {
-  console.log(`\n🔄 Running ${scriptName}...`);
+  console.log(`\n  Running ${scriptName}...`);
   console.log('─'.repeat(50));
 
   const child = spawn('npx', ['hardhat', 'run', scriptPath, '--network', 'arbitrumOne'], {
@@ -199,9 +199,9 @@ function runMonitoringScript(scriptPath: string, scriptName: string) {
 
   child.on('close', (code) => {
     if (code === 0) {
-      console.log(`✅ ${scriptName} completed successfully`);
+      console.log(`  ${scriptName} completed successfully`);
     } else {
-      console.log(`❌ ${scriptName} failed with code ${code}`);
+      console.log(`  ${scriptName} failed with code ${code}`);
       if (errorOutput) {
         console.log(`Error output: ${errorOutput}`);
       }
@@ -210,7 +210,7 @@ function runMonitoringScript(scriptPath: string, scriptName: string) {
   });
 
   child.on('error', (error) => {
-    console.log(`❌ Error running ${scriptName}: ${error.message}`);
+    console.log(`  Error running ${scriptName}: ${error.message}`);
     console.log('─'.repeat(50));
   });
 }
@@ -225,7 +225,7 @@ function validateConfig() {
   const missing = requiredEnvVars.filter(varName => !process.env[varName]);
   
   if (missing.length > 0) {
-    console.log('❌ Missing required environment variables:');
+    console.log('  Missing required environment variables:');
     missing.forEach(varName => console.log(`   - ${varName}`));
     console.log('\nPlease set these variables in your .env file');
     return false;
@@ -242,10 +242,10 @@ if (!validateConfig()) {
 main()
   .then(() => {
     // Держим процесс активным
-    console.log('\n🔄 Monitoring dashboard is running...');
+    console.log('\n  Monitoring dashboard is running...');
     console.log('Press Ctrl+C to stop');
   })
   .catch((error) => {
-    console.error('❌ Error starting monitoring dashboard:', error);
+    console.error('  Error starting monitoring dashboard:', error);
     process.exit(1);
   });

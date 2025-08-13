@@ -42,15 +42,15 @@ async function main() {
           const setupTx = await usdcVault.setupVault(setupAmount);
           await setupTx.wait();
           
-          console.log(`✅ USDC Vault setup completed with ${ethers.formatUnits(setupAmount, 6)} USDC`);
+          console.log(`  USDC Vault setup completed with ${ethers.formatUnits(setupAmount, 6)} USDC`);
         } else {
-          console.log('❌ Insufficient USDC balance for setup');
+          console.log('  Insufficient USDC balance for setup');
         }
       } else {
-        console.log('✅ USDC Vault already setup');
+        console.log('  USDC Vault already setup');
       }
     } catch (error) {
-      console.log('❌ Error setting up USDC Vault:', error);
+      console.log('  Error setting up USDC Vault:', error);
     }
   }
 
@@ -72,15 +72,15 @@ async function main() {
           const setupTx = await usdtVault.setupVault(setupAmount);
           await setupTx.wait();
           
-          console.log(`✅ USDT Vault setup completed with ${ethers.formatUnits(setupAmount, 6)} USDT`);
+          console.log(`  USDT Vault setup completed with ${ethers.formatUnits(setupAmount, 6)} USDT`);
         } else {
-          console.log('❌ Insufficient USDT balance for setup');
+          console.log('  Insufficient USDT balance for setup');
         }
       } else {
-        console.log('✅ USDT Vault already setup');
+        console.log('  USDT Vault already setup');
       }
     } catch (error) {
-      console.log('❌ Error setting up USDT Vault:', error);
+      console.log('  Error setting up USDT Vault:', error);
     }
   }
 
@@ -102,15 +102,15 @@ async function main() {
           const setupTx = await daiVault.setupVault(setupAmount);
           await setupTx.wait();
           
-          console.log(`✅ DAI Vault setup completed with ${ethers.formatUnits(setupAmount, 18)} DAI`);
+          console.log(`  DAI Vault setup completed with ${ethers.formatUnits(setupAmount, 18)} DAI`);
         } else {
-          console.log('❌ Insufficient DAI balance for setup');
+          console.log('  Insufficient DAI balance for setup');
         }
       } else {
-        console.log('✅ DAI Vault already setup');
+        console.log('  DAI Vault already setup');
       }
     } catch (error) {
-      console.log('❌ Error setting up DAI Vault:', error);
+      console.log('  Error setting up DAI Vault:', error);
     }
   }
 

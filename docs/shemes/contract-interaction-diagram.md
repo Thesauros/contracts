@@ -9,41 +9,41 @@ This diagram shows the relationships and interactions between all contracts in t
 ```mermaid
 graph TB
     %% User Layer
-    User[👤 User]
-    DAO[🏛️ DAO/Governance]
+    User[  User]
+    DAO[   DAO/Governance]
     
     %% Core Contracts
-    VaultManager[🏦 VaultManager]
+    VaultManager[  VaultManager]
     Timelock[⏰ Timelock]
-    AccessManager[🔐 AccessManager]
+    AccessManager[  AccessManager]
     
     %% Vault Contracts
-    Vault[💰 Vault]
-    Rebalancer[⚖️ Rebalancer]
+    Vault[  Vault]
+    Rebalancer[   Rebalancer]
     RebalancerWithRewards[🎁 RebalancerWithRewards]
     
     %% Rewards System
-    RewardsDistributor[🎯 RewardsDistributor]
+    RewardsDistributor[  RewardsDistributor]
     
     %% Provider Management
-    ProviderManager[🔧 ProviderManager]
+    ProviderManager[  ProviderManager]
     
     %% Provider Contracts
-    AaveV3Provider[🏦 AaveV3Provider]
-    CompoundV3Provider[🏛️ CompoundV3Provider]
-    DolomiteProvider[💎 DolomiteProvider]
-    FraxlendProvider[🔗 FraxlendProvider]
+    AaveV3Provider[  AaveV3Provider]
+    CompoundV3Provider[   CompoundV3Provider]
+    DolomiteProvider[Diamond DolomiteProvider]
+    FraxlendProvider[  FraxlendProvider]
     VenusProvider[🌙 VenusProvider]
     
     %% External Protocols
-    AaveV3[🏦 Aave V3 Protocol]
-    CompoundV3[🏛️ Compound V3 Protocol]
-    Dolomite[💎 Dolomite Protocol]
-    Fraxlend[🔗 Fraxlend Protocol]
+    AaveV3[  Aave V3 Protocol]
+    CompoundV3[   Compound V3 Protocol]
+    Dolomite[Diamond Dolomite Protocol]
+    Fraxlend[  Fraxlend Protocol]
     Venus[🌙 Venus Protocol]
     
     %% Treasury and Tokens
-    Treasury[🏛️ Treasury]
+    Treasury[   Treasury]
     ERC20Token[🪙 ERC20 Token]
     
     %% User Interactions
@@ -254,13 +254,13 @@ graph LR
 
 | Contract | Admin | Operator | Executor | RootUpdater | Timelock |
 |----------|-------|----------|----------|-------------|----------|
-| Vault | ✅ | ❌ | ❌ | ❌ | ✅ |
-| Rebalancer | ✅ | ✅ | ❌ | ❌ | ❌ |
-| RebalancerWithRewards | ✅ | ✅ | ❌ | ❌ | ❌ |
-| VaultManager | ✅ | ❌ | ✅ | ❌ | ✅ |
-| RewardsDistributor | ✅ | ❌ | ❌ | ✅ | ❌ |
-| ProviderManager | ✅ | ❌ | ❌ | ❌ | ✅ |
-| Timelock | ❌ | ❌ | ❌ | ❌ | ✅ |
+| Vault |   |   |   |   |   |
+| Rebalancer |   |   |   |   |   |
+| RebalancerWithRewards |   |   |   |   |   |
+| VaultManager |   |   |   |   |   |
+| RewardsDistributor |   |   |   |   |   |
+| ProviderManager |   |   |   |   |   |
+| Timelock |   |   |   |   |   |
 
 ## Data Flow Patterns
 

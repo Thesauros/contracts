@@ -2,11 +2,11 @@ import { ethers } from 'hardhat';
 import { deployments } from 'hardhat';
 
 async function main() {
-  console.log('🚀 Thesauros Deployed Contracts on Arbitrum One');
+  console.log('Starting Thesauros Deployed Contracts on Arbitrum One');
   console.log('==============================================\n');
 
   // Base Contracts
-  console.log('📋 Base Contracts:');
+  console.log('  Base Contracts:');
   console.log('------------------');
   
   try {
@@ -44,7 +44,7 @@ async function main() {
     console.log('CompoundV3Provider: Not deployed');
   }
 
-  console.log('\n🏦 Vaults:');
+  console.log('\nVaults Vaults:');
   console.log('----------');
   
   // Known vault addresses from our deployments
@@ -59,7 +59,7 @@ async function main() {
     console.log(`${name}: ${address}`);
   }
 
-  console.log('\n💰 Token Addresses:');
+  console.log('\n  Token Addresses:');
   console.log('------------------');
   
   const tokenAddresses = {
@@ -75,11 +75,11 @@ async function main() {
     console.log(`${name}: ${address}`);
   }
 
-  console.log('\n🏛️ Treasury:');
+  console.log('\n   Treasury:');
   console.log('------------');
   console.log('Treasury: 0xc8a682F0991323777253ffa5fa6F19035685E723');
 
-  console.log('\n📁 Deployment files location:');
+  console.log('\nFiles Deployment files location:');
   console.log('deployments/arbitrumOne/');
   console.log('deployments/arbitrumOne/deployed-vaults.json');
 }

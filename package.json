@@ -4,7 +4,16 @@
     "compile": "npx hardhat compile",
     "test:mocking": "npx hardhat test test/mocking/*.ts",
     "test:forking": "npx hardhat test test/forking/arbitrum/*.ts && npx hardhat test test/forking/avalanche/*.ts",
-    "coverage": "npx hardhat coverage"
+    "coverage": "npx hardhat coverage",
+    "monitor": "npx hardhat run scripts/start-monitoring.ts --network arbitrumOne",
+    "monitor:vaults": "npx hardhat run scripts/monitor-vaults.ts --network arbitrumOne",
+    "monitor:apy": "npx hardhat run scripts/monitor-apy.ts --network arbitrumOne",
+    "monitor:apy-simple": "npx hardhat run scripts/monitor-apy-simple.ts --network arbitrumOne",
+    "monitor:apy-real": "npx hardhat run scripts/monitor-apy-real.ts --network arbitrumOne",
+    "monitor:events": "npx hardhat run scripts/monitor-events.ts --network arbitrumOne",
+    "monitor:rebalance": "npx hardhat run scripts/auto-rebalance.ts --network arbitrumOne",
+    "show:addresses": "npx hardhat run scripts/show-addresses.ts --network arbitrumOne",
+    "update-config": "node scripts/update-config.js"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.1.2",

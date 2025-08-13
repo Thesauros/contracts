@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thesauros Monitoring Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .network-info {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .network-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .network-label {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .network-value {
+            font-weight: 600;
+        }
+
+        .last-update {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.8rem;
+        }
+
+        .nav {
+            background: white;
+            padding: 0 2rem;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+        }
+
+        .nav button {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav button:hover {
+            color: #667eea;
+            background-color: #f8f9ff;
+        }
+
+        .nav button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+
+        .main {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            color: #666;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #d32f2f;
+        }
+
+        .error button {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        .error button:hover {
+            background: #b71c1c;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .metric-value.success {
+            color: #4caf50;
+        }
+
+        .metric-value.warning {
+            color: #ff9800;
+        }
+
+        .metric-value.error {
+            color: #f44336;
+        }
+
+        .vaults-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .vault-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .vault-card.error {
+            border-left-color: #f44336;
+        }
+
+        .vault-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .vault-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .vault-symbol {
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .vault-address {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 1rem;
+            word-break: break-all;
+        }
+
+        .providers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .provider-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #4caf50;
+        }
+
+        .provider-card.error {
+            border-left-color: #f44336;
+        }
+
+        .apy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .apy-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .apy-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4caf50;
+            margin: 1rem 0;
+        }
+
+        .apy-token {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .apy-source {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .events-list {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .event-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-info {
+            flex: 1;
+        }
+
+        .event-type {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .event-details {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .event-time {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .event-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .event-status.success {
+            background: #e8f5e8;
+            color: #4caf50;
+        }
+
+        .event-status.error {
+            background: #ffebee;
+            color: #f44336;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .nav {
+                overflow-x: auto;
+                padding: 0 1rem;
+            }
+            
+            .main {
+                padding: 1rem;
+            }
+            
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .vaults-grid,
+            .providers-grid,
+            .apy-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .network-info {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Thesauros Monitoring Dashboard</h1>
+        <div class="network-info">
+            <div class="network-item">
+                <span class="network-label">Chain ID:</span>
+                <span class="network-value" id="chainId">Loading...</span>
+            </div>
+            <div class="network-item">
+                <span class="network-label">Block:</span>
+                <span class="network-value" id="blockNumber">Loading...</span>
+            </div>
+            <div class="network-item">
+                <span class="network-label">Gas:</span>
+                <span class="network-value" id="gasPrice">Loading...</span>
+            </div>
+            <div class="last-update" id="lastUpdate">
+                Last update: Never
+            </div>
+        </div>
+    </header>
+    
+    <nav class="nav">
+        <button class="nav-btn active" onclick="showTab('dashboard')">Dashboard</button>
+        <button class="nav-btn" onclick="showTab('vaults')">Vaults</button>
+        <button class="nav-btn" onclick="showTab('providers')">Providers</button>
+        <button class="nav-btn" onclick="showTab('apy')">APY Analysis</button>
+        <button class="nav-btn" onclick="showTab('events')">Events</button>
+    </nav>
+    
+    <main class="main">
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading monitoring data...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="error hidden">
+            <h3>Error</h3>
+            <p id="errorMessage">Failed to load data</p>
+            <button onclick="fetchData()">Retry</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="dashboard">
+            <div class="card">
+                <h3>Total Value Locked</h3>
+                <div class="metric">
+                    <span class="metric-label">Total TVL</span>
+                    <span class="metric-value success" id="totalTVL">$0.00</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Active Vaults</span>
+                    <span class="metric-value" id="activeVaults">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total Shares</span>
+                    <span class="metric-value" id="totalShares">0.000000</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>APY Performance</h3>
+                <div class="metric">
+                    <span class="metric-label">Average APY</span>
+                    <span class="metric-value success" id="averageAPY">0.0000%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Highest APY</span>
+                    <span class="metric-value success" id="highestAPY">0.0000%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Lowest APY</span>
+                    <span class="metric-value warning" id="lowestAPY">0.0000%</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Provider Status</h3>
+                <div class="metric">
+                    <span class="metric-label">Active Providers</span>
+                    <span class="metric-value success" id="activeProviders">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Total Balance</span>
+                    <span class="metric-value" id="totalBalance">0.000000 ETH</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Recent Events</span>
+                    <span class="metric-value" id="recentEvents">0</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Quick Actions</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <button onclick="refreshData()" style="background: #667eea; color: white; border: none; padding: 1rem; border-radius: 8px; cursor: pointer; font-size: 1rem;">
+                        Refresh Data
+                    </button>
+                    <button onclick="window.open('https://arbiscan.io', '_blank')" style="background: #4caf50; color: white; border: none; padding: 1rem; border-radius: 8px; cursor: pointer; font-size: 1rem;">
+                        View on Arbiscan
+                    </button>
+                    <button onclick="window.open('https://defillama.com', '_blank')" style="background: #ff9800; color: white; border: none; padding: 1rem; border-radius: 8px; cursor: pointer; font-size: 1rem;">
+                        DeFi Llama
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vaults Tab -->
+        <div id="vaults" class="hidden">
+            <h2 style="margin-bottom: 2rem; color: #333;">Vault Status</h2>
+            <div id="vaultsGrid" class="vaults-grid">
+                <!-- Vaults will be populated here -->
+            </div>
+        </div>
+
+        <!-- Providers Tab -->
+        <div id="providers" class="hidden">
+            <h2 style="margin-bottom: 2rem; color: #333;">Provider Status</h2>
+            <div id="providersGrid" class="providers-grid">
+                <!-- Providers will be populated here -->
+            </div>
+        </div>
+
+        <!-- APY Tab -->
+        <div id="apy" class="hidden">
+            <h2 style="margin-bottom: 2rem; color: #333;">APY Analysis</h2>
+            <div id="apyGrid" class="apy-grid">
+                <!-- APY data will be populated here -->
+            </div>
+        </div>
+
+        <!-- Events Tab -->
+        <div id="events" class="hidden">
+            <h2 style="margin-bottom: 2rem; color: #333;">Recent Events</h2>
+            <div id="eventsList" class="events-list">
+                <!-- Events will be populated here -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentData = {
+            vaults: [],
+            providers: [],
+            apyData: [],
+            events: [],
+            networkInfo: {},
+            lastUpdate: null
+        };
+
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('main > div').forEach(div => {
+                if (div.id !== 'loading' && div.id !== 'error') {
+                    div.classList.add('hidden');
+                }
+            });
+
+            // Show selected tab
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.remove('hidden');
+
+            // Update content for the selected tab
+            updateTabContent(tabName);
+        }
+
+        function updateTabContent(tabName) {
+            switch(tabName) {
+                case 'dashboard':
+                    updateDashboard();
+                    break;
+                case 'vaults':
+                    updateVaults();
+                    break;
+                case 'providers':
+                    updateProviders();
+                    break;
+                case 'apy':
+                    updateAPY();
+                    break;
+                case 'events':
+                    updateEvents();
+                    break;
+            }
+        }
+
+        // Data fetching
+        async function fetchData() {
+            try {
+                showLoading(true);
+                showError(false);
+
+                const response = await fetch('/api/dashboard');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                currentData = await response.json();
+                updateNetworkInfo();
+                updateDashboard();
+                showLoading(false);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                showError(true, error.message);
+                showLoading(false);
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('hidden', !show);
+        }
+
+        function showError(show, message = 'Failed to load data') {
+            document.getElementById('error').classList.toggle('hidden', !show);
+            document.getElementById('errorMessage').textContent = message;
+        }
+
+        function refreshData() {
+            fetchData();
+        }
+
+        // Update functions
+        function updateNetworkInfo() {
+            const { networkInfo, lastUpdate } = currentData;
+            
+            document.getElementById('chainId').textContent = networkInfo.chainId || 'Unknown';
+            document.getElementById('blockNumber').textContent = networkInfo.blockNumber?.toLocaleString() || 'Unknown';
+            document.getElementById('gasPrice').textContent = networkInfo.gasPrice ? `${networkInfo.gasPrice} gwei` : 'Unknown';
+            
+            const updateTime = lastUpdate ? new Date(lastUpdate).toLocaleTimeString() : 'Never';
+            document.getElementById('lastUpdate').textContent = `Last update: ${updateTime}`;
+        }
+
+        function updateDashboard() {
+            const { vaults, providers, apyData, events } = currentData;
+
+            // Calculate total TVL
+            const totalTVL = vaults.reduce((sum, vault) => {
+                if (vault.tvl && !isNaN(parseFloat(vault.tvl))) {
+                    return sum + parseFloat(vault.tvl);
+                }
+                return sum;
+            }, 0);
+
+            // Calculate APY stats
+            const apyValues = apyData.map(apy => parseFloat(apy.apy)).filter(apy => !isNaN(apy));
+            const averageAPY = apyValues.length > 0 ? apyValues.reduce((sum, apy) => sum + apy, 0) / apyValues.length : 0;
+            const highestAPY = apyValues.length > 0 ? Math.max(...apyValues) : 0;
+            const lowestAPY = apyValues.length > 0 ? Math.min(...apyValues) : 0;
+
+            // Calculate provider stats
+            const activeProviders = providers.filter(p => p.status !== 'error').length;
+            const totalBalance = providers.reduce((sum, provider) => {
+                if (provider.balance && !isNaN(parseFloat(provider.balance))) {
+                    return sum + parseFloat(provider.balance);
+                }
+                return sum;
+            }, 0);
+
+            // Update dashboard metrics
+            document.getElementById('totalTVL').textContent = `$${totalTVL.toFixed(2)}`;
+            document.getElementById('activeVaults').textContent = vaults.filter(v => v.status !== 'error').length;
+            document.getElementById('totalShares').textContent = vaults.reduce((sum, vault) => {
+                if (vault.totalShares && !isNaN(parseFloat(vault.totalShares))) {
+                    return sum + parseFloat(vault.totalShares);
+                }
+                return sum;
+            }, 0).toFixed(6);
+
+            document.getElementById('averageAPY').textContent = `${averageAPY.toFixed(4)}%`;
+            document.getElementById('highestAPY').textContent = `${highestAPY.toFixed(4)}%`;
+            document.getElementById('lowestAPY').textContent = `${lowestAPY.toFixed(4)}%`;
+
+            document.getElementById('activeProviders').textContent = activeProviders;
+            document.getElementById('totalBalance').textContent = `${totalBalance.toFixed(6)} ETH`;
+            document.getElementById('recentEvents').textContent = events.length;
+        }
+
+        function updateVaults() {
+            const { vaults } = currentData;
+            const grid = document.getElementById('vaultsGrid');
+            
+            grid.innerHTML = vaults.map(vault => `
+                <div class="vault-card ${vault.error ? 'error' : ''}">
+                    <div class="vault-header">
+                        <div>
+                            <div class="vault-name">${vault.name}</div>
+                            <div class="vault-symbol">${vault.symbol}</div>
+                        </div>
+                        <span class="metric-value ${vault.status === 'deployed-verified-setup' ? 'success' : 'error'}">
+                            ${vault.status === 'deployed-verified-setup' ? 'Active' : vault.status}
+                        </span>
+                    </div>
+                    
+                    <div class="vault-address">${vault.address}</div>
+                    
+                    ${vault.error ? 
+                        `<div style="color: #f44336; font-size: 0.9rem;">Error: ${vault.error}</div>` :
+                        `<div>
+                            <div class="metric">
+                                <span class="metric-label">TVL</span>
+                                <span class="metric-value success">
+                                    ${vault.tvl ? `${parseFloat(vault.tvl).toFixed(6)} ${vault.token}` : '0.000000'}
+                                </span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Total Shares</span>
+                                <span class="metric-value">
+                                    ${vault.totalShares ? parseFloat(vault.totalShares).toFixed(6) : '0.000000'}
+                                </span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Active Provider</span>
+                                <span class="metric-value">${getProviderName(vault.activeProvider)}</span>
+                            </div>
+                        </div>`
+                    }
+                </div>
+            `).join('');
+        }
+
+        function updateProviders() {
+            const { providers } = currentData;
+            const grid = document.getElementById('providersGrid');
+            
+            grid.innerHTML = providers.map(provider => `
+                <div class="provider-card ${provider.error ? 'error' : ''}">
+                    <div class="vault-header">
+                        <div class="vault-name">${provider.name}</div>
+                        <span class="metric-value ${provider.status === 'deployed-verified' ? 'success' : 'error'}">
+                            ${provider.status === 'deployed-verified' ? 'Active' : provider.status}
+                        </span>
+                    </div>
+                    
+                    <div class="vault-address">${provider.address}</div>
+                    
+                    ${provider.error ? 
+                        `<div style="color: #f44336; font-size: 0.9rem;">Error: ${provider.error}</div>` :
+                        `<div>
+                            <div class="metric">
+                                <span class="metric-label">Balance</span>
+                                <span class="metric-value success">
+                                    ${provider.balance ? `${parseFloat(provider.balance).toFixed(6)} ETH` : '0.000000 ETH'}
+                                </span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Status</span>
+                                <span class="metric-value success">Active</span>
+                            </div>
+                        </div>`
+                    }
+                </div>
+            `).join('');
+        }
+
+        function updateAPY() {
+            const { apyData } = currentData;
+            const grid = document.getElementById('apyGrid');
+            
+            grid.innerHTML = apyData.map(apy => `
+                <div class="apy-card">
+                    <div class="apy-token">${apy.token}</div>
+                    <div class="apy-value">${parseFloat(apy.apy).toFixed(4)}%</div>
+                    <div class="apy-source">${apy.source}</div>
+                    <div style="font-size: 0.8rem; color: #666; margin-top: 0.5rem;">
+                        ${apy.address ? `${apy.address.slice(0, 6)}...${apy.address.slice(-4)}` : 'No address'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateEvents() {
+            const { events } = currentData;
+            const list = document.getElementById('eventsList');
+            
+            if (events.length === 0) {
+                list.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: #666;">
+                        <h3>No recent events</h3>
+                        <p>Events will appear here as they occur on the blockchain.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            list.innerHTML = events.map(event => `
+                <div class="event-item">
+                    <div class="event-info">
+                        <div class="event-type">${getEventIcon(event.type)} ${event.type}</div>
+                        <div class="event-details">
+                            ${event.vault ? `Vault: ${event.vault}` : ''}
+                            ${event.assets ? ` | Assets: ${event.assets}` : ''}
+                            ${event.txHash ? `<a href="https://arbiscan.io/tx/${event.txHash}" target="_blank" style="color: #667eea; text-decoration: none;"> | View Transaction</a>` : ''}
+                        </div>
+                        <div class="event-time">${formatTime(event.timestamp)}</div>
+                    </div>
+                    <div class="event-status ${event.success ? 'success' : 'error'}">
+                        ${event.success ? 'Success' : 'Failed'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Helper functions
+        function getProviderName(address) {
+            // Try to get provider name from current data
+            if (currentData function getProviderName(address) {function getProviderName(address) { currentData.providers) {
+                const provider = currentData.providers.find(p => p.address === address);
+                if (provider) {
+                    return provider.name;
+                }
+            }
+            
+            // Fallback to hardcoded names
+            const providerNames = {
+                '0xE1Cfb1BDb3901dcEe9F21146c1F299c775d9B65C': 'AaveV3Provider',
+                '0x4382190FDbf4befA016Ea412f34eb54593312aD5': 'CompoundV3Provider'
+            };
+            return providerNames[address] || 'Unknown Provider';
+        }
+
+        function getEventIcon(type) {
+            const icons = {
+                'RebalanceExecuted': '🔄',
+                'Deposit': '💰',
+                'Withdraw': '💸',
+                'FeeCharged': '💳'
+            };
+            return icons[type] || '📋';
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
+
+        // WebSocket connection
+        function setupWebSocket() {
+            const ws = new WebSocket('ws://localhost:8080');
+            
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+            };
+            
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                if (message.type === 'update') {
+                    currentData = message.data;
+                    updateNetworkInfo();
+                    updateDashboard();
+                }
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+            
+            ws.onclose = () => {
+                console.log('WebSocket disconnected');
+            };
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+            setupWebSocket();
+            
+            // Refresh data every 30 seconds
+            setInterval(fetchData, 30000);
+        });
+    </script>
+</body>
+</html>

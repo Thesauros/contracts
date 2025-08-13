@@ -12,7 +12,6 @@ We've built a comprehensive monitoring system for your Thesauros strategy with t
 - **`monitor-apy-real.ts`** - Real APY data from APIs
 - **`monitor-events.ts`** - Real-time event monitoring
 - **`auto-rebalance.ts`** - Automated rebalancing bot
-- **`start-monitoring.ts`** - Main monitoring dashboard
 
 ### Utility Scripts
 - **`show-addresses.ts`** - Display all contract addresses
@@ -29,7 +28,47 @@ We've built a comprehensive monitoring system for your Thesauros strategy with t
 
 ## Quick Start
 
-### 1. Environment Setup
+### 1. Web Dashboard (Recommended)
+
+For convenient monitoring through web interface:
+
+```bash
+# Start the dashboard
+npm run ui:dev
+
+# Open in browser
+http://localhost:3001
+```
+
+**Web Dashboard Features:**
+- Real-time data updates
+- Mobile responsive design
+- Live data visualization
+- Simple and intuitive interface
+- APY and TVL visualization
+
+### 2. Command Line Scripts
+
+For monitoring through command line:
+
+```bash
+# General vault monitoring
+npm run monitor:vaults
+
+# APY analysis (simple version)
+npm run monitor:apy-simple
+
+# APY analysis (real version)
+npm run monitor:apy-real
+
+# Event monitoring
+npm run monitor:events
+
+# Automatic rebalancing
+npm run monitor:rebalance
+```
+
+### 3. Environment Setup
 
 Create a `.env` file in the project root:
 
@@ -47,7 +86,7 @@ ETHERSCAN_API_KEY=your_etherscan_api_key
 ALCHEMY_API_KEY=your_alchemy_api_key
 ```
 
-### 1.1. Network Configuration
+### 4. Network Configuration
 
 The monitoring system automatically loads contract addresses from the deployment configuration. To switch networks:
 
@@ -64,21 +103,17 @@ npm run update-config polygon        # Polygon
 # - package.json scripts to use the new network
 ```
 
-### 2. Install Dependencies
+### 5. Install Dependencies
 
 ```bash
 npm install
 ```
 
-### 3. Start Monitoring
+### 6. Start Monitoring
 
 ```bash
-# Start all monitoring
-npm run monitor
-
-# Or individual monitoring
+# Individual monitoring
 npm run monitor:vaults        # Vault status
-npm run monitor:apy           # APY analysis (advanced)
 npm run monitor:apy-simple    # APY analysis (simplified - simulated data)
 npm run monitor:apy-real      # APY analysis (real data from APIs)
 npm run monitor:events        # Real-time events
@@ -87,6 +122,49 @@ npm run show:addresses        # Show contract addresses
 ```
 
 ## Types of Monitoring
+
+## Web Dashboard
+
+### Features
+
+**Dashboard Tab:**
+- General overview of TVL, APY and provider status
+- Quick actions (data refresh, Arbiscan links)
+- Live network statistics
+
+**Vaults Tab:**
+- Detailed information for each vault
+- TVL, number of shares, active provider
+- Status and contract addresses
+
+**Providers Tab:**
+- Status of all liquidity providers
+- Balances and contract state
+- Error information
+
+**APY Analysis Tab:**
+- APY comparison by tokens
+- Data sources (simulated/real)
+- Statistics (average, maximum, minimum)
+
+**Events Tab:**
+- Recent blockchain events
+- Links to transactions in Arbiscan
+- Operation execution status
+
+### Real-time Updates
+
+Dashboard uses HTTP polling for updates:
+- Automatic refresh every 30 seconds
+- Instant event notifications
+- Live network statistics
+
+### Mobile Support
+
+Fully responsive design:
+- Optimized for mobile devices
+- Touch-friendly interface
+- Responsive grid layout
 
 ## Dynamic Address Configuration
 
@@ -165,6 +243,8 @@ Our monitoring system provides different levels of APY data accuracy:
 
 **Note**: These are real rates from Aave V3 on Arbitrum One, fetched directly from smart contracts.
 
+## Detailed Monitoring Scripts
+
 ### 1. Vault Status Monitor (`monitor-vaults.ts`)
 
 **What it tracks:**
@@ -196,22 +276,7 @@ WETH Vault
    Last Rebalance: Block 12345678
 ```
 
-### 2. APY Analysis Monitor (`monitor-apy.ts`)
-
-**What it tracks:**
-- APY of all providers for each token
-- Yield comparison between providers
-- Rebalancing recommendations
-- Overall APY statistics
-
-**Run:**
-```bash
-npm run monitor:apy
-```
-
-**Note:** This is an advanced version that requires direct provider API access.
-
-### 2.1. Simple APY Monitor (`monitor-apy-simple.ts`)
+### 2. Simple APY Monitor (`monitor-apy-simple.ts`)
 
 **What it tracks:**
 - Provider status and availability
@@ -226,7 +291,7 @@ npm run monitor:apy
 npm run monitor:apy-simple
 ```
 
-### 2.2. Real APY Monitor (`monitor-apy-real.ts`)
+### 3. Real APY Monitor (`monitor-apy-real.ts`)
 
 **What it tracks:**
 - Real APY data from multiple sources
@@ -300,7 +365,7 @@ Total data points: 4
 Data sources: 1
 ```
 
-### 3. Real-time Event Monitor (`monitor-events.ts`)
+### 4. Real-time Event Monitor (`monitor-events.ts`)
 
 **What it tracks:**
 - Real-time rebalancing events
@@ -330,7 +395,7 @@ New Event Detected!
    To Provider: 0x4382...2aD5
 ```
 
-### 4. Auto-Rebalancing Bot (`auto-rebalance.ts`)
+### 5. Auto-Rebalancing Bot (`auto-rebalance.ts`)
 
 **What it does:**
 - Analyzes APY of all providers
@@ -367,26 +432,11 @@ No profitable rebalancing opportunities found
 
 ### Interval Configuration
 
-Edit the `scripts/start-monitoring.ts` file to configure intervals:
+Edit the monitoring scripts to configure intervals:
 
 ```typescript
-const monitoringConfigs: MonitoringConfig[] = [
-  {
-    name: 'Vault Status',
-    script: 'scripts/monitor-vaults.ts',
-    interval: 300, // 5 minutes
-    enabled: true,
-    description: 'Monitor TVL, APY, and vault performance'
-  },
-  {
-    name: 'APY Analysis',
-    script: 'scripts/monitor-apy.ts',
-    interval: 600, // 10 minutes
-    enabled: true,
-    description: 'Compare provider APYs and find opportunities'
-  },
-  // ...
-];
+// Example: Set monitoring interval in seconds
+const MONITORING_INTERVAL = 300; // 5 minutes
 ```
 
 ### Automatic Rebalancing Configuration
@@ -514,14 +564,13 @@ npm run test:mocking
 - [Contracts](docs/contracts/)
 - [Security](docs/security/)
 
-
 ## Usage Examples
 
 ### Production Monitoring
 
 ```bash
 # Run in background
-nohup npm run monitor > monitoring.log 2>&1 &
+nohup npm run monitor:vaults > monitoring.log 2>&1 &
 
 # Check status
 ps aux | grep "monitor"
@@ -538,14 +587,14 @@ pkill -f "monitor"
 */5 * * * * cd /path/to/project && npm run monitor:vaults
 
 # Check APY every hour
-0 * * * * cd /path/to/project && npm run monitor:apy
+0 * * * * cd /path/to/project && npm run monitor:apy-real
 ```
 
 ### Integration with External Systems
 
 ```bash
 # Send notifications to Slack
-npm run monitor:apy | curl -X POST -H 'Content-type: application/json' \
+npm run monitor:apy-real | curl -X POST -H 'Content-type: application/json' \
   --data '{"text":"APY Report: $(cat)"}' \
   https://hooks.slack.com/services/YOUR_WEBHOOK
 ```

@@ -1,4 +1,5 @@
 import { ethers } from 'hardhat';
+import { ConfigLoader } from '../utils/config';
 
 interface EventLog {
   blockNumber: number;
@@ -9,38 +10,49 @@ interface EventLog {
 }
 
 async function main() {
-  console.log('📡 Thesauros Real-time Event Monitor');
+  console.log('Thesauros Real-time Event Monitor');
   console.log('====================================\n');
 
-  // Адреса контрактов
+  // Load configuration
+  const configLoader = new ConfigLoader();
+  const config = configLoader.loadConfig();
+  
+  if (!config) {
+    console.error('Failed to load configuration');
+    return;
+  }
+
+  // Contract addresses from config
   const contractAddresses = {
-    'VaultManager': '0xAeEcf7F780e88B155df330434Ef29b2B077024e0',
-    'WETH Vault': '0x78c11f63E6840820be18fDA461Ab16f23da5884f',
-    'USDC Vault': '0xdf5AFad7f88888bEE944d14982c2d9eBA65653e6',
-    'USDT Vault': '0xe1D34AB80090da3498Fc5D0696a2Cf82971E5eC6',
-    'DAI Vault': '0xBC64abbCa87289746f2B01C8ab02A78c9fC92B89',
-    'Timelock': '0x0c5cEd804488E4AbdE6B809164e72cc0F91896b5'
+    'VaultManager': config.baseContracts.VaultManager.address,
+    'Timelock': config.baseContracts.Timelock.address,
+    ...Object.fromEntries(
+      Object.entries(config.vaults).map(([token, vault]) => [
+        `${token} Vault`, 
+        vault.address
+      ])
+    )
   };
 
   const events: EventLog[] = [];
   let isMonitoring = true;
 
-  // Функция для форматирования времени
+  // Function to format time
   const formatTime = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleString();
   };
 
-  // Функция для форматирования адреса
+  // Function to format address
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  // Функция для форматирования суммы
+  // Function to format amount
   const formatAmount = (amount: bigint, decimals: number = 18) => {
     return ethers.formatUnits(amount, decimals);
   };
 
-  // Обработчик событий
+  // Event handler
   const handleEvent = async (contractName: string, eventName: string, event: any) => {
     const block = await ethers.provider.getBlock(event.blockNumber);
     const timestamp = block?.timestamp || 0;
@@ -55,14 +67,14 @@ async function main() {
 
     events.push(eventLog);
 
-    console.log(`\n🔄 New Event Detected!`);
+    console.log(`\nNew Event Detected!`);
     console.log(`   Contract: ${contractName}`);
     console.log(`   Event: ${eventName}`);
     console.log(`   Block: ${event.blockNumber}`);
     console.log(`   Time: ${formatTime(timestamp)}`);
     console.log(`   TX: ${formatAddress(event.transactionHash)}`);
 
-    // Обрабатываем специфические события
+    // Handle specific events
     switch (eventName) {
       case 'RebalanceExecuted':
         console.log(`   Assets From: ${formatAmount(event.args.assetsFrom)}`);
@@ -98,167 +110,84 @@ async function main() {
         console.log(`   Target: ${formatAddress(event.args.target)}`);
         console.log(`   Value: ${event.args.value}`);
         console.log(`   Signature: ${event.args.signature}`);
+        console.log(`   Timestamp: ${formatTime(event.args.timestamp)}`);
+        break;
+
+      case 'Deposit':
+        console.log(`   Sender: ${formatAddress(event.args.sender)}`);
+        console.log(`   Owner: ${formatAddress(event.args.owner)}`);
+        console.log(`   Assets: ${formatAmount(event.args.assets)}`);
+        console.log(`   Shares: ${formatAmount(event.args.shares)}`);
+        break;
+
+      case 'Withdraw':
+        console.log(`   Sender: ${formatAddress(event.args.sender)}`);
+        console.log(`   Receiver: ${formatAddress(event.args.receiver)}`);
+        console.log(`   Owner: ${formatAddress(event.args.owner)}`);
+        console.log(`   Assets: ${formatAmount(event.args.assets)}`);
+        console.log(`   Shares: ${formatAmount(event.args.shares)}`);
         break;
 
       default:
         console.log(`   Data: ${JSON.stringify(event.args, null, 2)}`);
     }
 
-    console.log('   ' + '─'.repeat(50));
+    console.log('   ' + '='.repeat(50));
   };
 
-  // Настраиваем слушатели событий
-  console.log('🔧 Setting up event listeners...\n');
+  // Setup event listeners for each contract
+  const contracts = new Map();
 
-  try {
-    // VaultManager события
-    const vaultManager = await ethers.getContractAt('VaultManager', contractAddresses.VaultManager);
-    
-    vaultManager.on('RebalanceVaultExecuted', (vault, assets, from, to, fee, activateToProvider, success) => {
-      handleEvent('VaultManager', 'RebalanceVaultExecuted', {
-        blockNumber: 0, // Будет заполнено в handleEvent
-        transactionHash: '', // Будет заполнено в handleEvent
-        args: { vault, assets, from, to, fee, activateToProvider, success }
+  for (const [name, address] of Object.entries(contractAddresses)) {
+    try {
+      console.log(`Setting up monitoring for ${name} at ${formatAddress(address)}`);
+      
+      const contract = new ethers.Contract(address, [
+        'event RebalanceExecuted(address indexed from, address indexed to, uint256 assetsFrom, uint256 assetsTo)',
+        'event RebalanceVaultExecuted(address indexed vault, uint256 assets, bool success)',
+        'event FeeCharged(address indexed treasury, uint256 assets, uint256 fee)',
+        'event ActiveProviderUpdated(address indexed activeProvider)',
+        'event Queued(bytes32 indexed txHash, address indexed target, uint256 value, string signature, bytes data, uint256 timestamp)',
+        'event Executed(bytes32 indexed txHash, address indexed target, uint256 value, string signature, bytes data, uint256 timestamp)',
+        'event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares)',
+        'event Withdraw(address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares)'
+      ], ethers.provider);
+
+      contracts.set(name, contract);
+
+      // Listen for all events
+      contract.on('*', (event) => {
+        handleEvent(name, event.eventName, event);
       });
-    });
 
-    // Vault события
-    for (const [vaultName, vaultAddress] of Object.entries(contractAddresses)) {
-      if (vaultName.includes('Vault')) {
-        const vault = await ethers.getContractAt('Rebalancer', vaultAddress);
-        
-        vault.on('RebalanceExecuted', (assetsFrom, assetsTo, from, to) => {
-          handleEvent(vaultName, 'RebalanceExecuted', {
-            blockNumber: 0,
-            transactionHash: '',
-            args: { assetsFrom, assetsTo, from, to }
-          });
-        });
-
-        vault.on('FeeCharged', (treasury, assets, fee) => {
-          handleEvent(vaultName, 'FeeCharged', {
-            blockNumber: 0,
-            transactionHash: '',
-            args: { treasury, assets, fee }
-          });
-        });
-
-        vault.on('ActiveProviderUpdated', (activeProvider) => {
-          handleEvent(vaultName, 'ActiveProviderUpdated', {
-            blockNumber: 0,
-            transactionHash: '',
-            args: { activeProvider }
-          });
-        });
-
-        vault.on('Deposit', (caller, owner, assets, shares) => {
-          handleEvent(vaultName, 'Deposit', {
-            blockNumber: 0,
-            transactionHash: '',
-            args: { caller, owner, assets, shares }
-          });
-        });
-
-        vault.on('Withdraw', (caller, receiver, owner, assets, shares) => {
-          handleEvent(vaultName, 'Withdraw', {
-            blockNumber: 0,
-            transactionHash: '',
-            args: { caller, receiver, owner, assets, shares }
-          });
-        });
-      }
+    } catch (error) {
+      console.error(`Error setting up monitoring for ${name}:`, error);
     }
-
-    // Timelock события
-    const timelock = await ethers.getContractAt('Timelock', contractAddresses.Timelock);
-    
-    timelock.on('Queued', (txId, target, value, signature, data, timestamp) => {
-      handleEvent('Timelock', 'Queued', {
-        blockNumber: 0,
-        transactionHash: '',
-        args: { txId, target, value, signature, data, timestamp }
-      });
-    });
-
-    timelock.on('Executed', (txId, target, value, signature, data, timestamp) => {
-      handleEvent('Timelock', 'Executed', {
-        blockNumber: 0,
-        transactionHash: '',
-        args: { txId, target, value, signature, data, timestamp }
-      });
-    });
-
-    timelock.on('Cancelled', (txId, target, value, signature, data, timestamp) => {
-      handleEvent('Timelock', 'Cancelled', {
-        blockNumber: 0,
-        transactionHash: '',
-        args: { txId, target, value, signature, data, timestamp }
-      });
-    });
-
-  } catch (error) {
-    console.log(`❌ Error setting up event listeners: ${error}`);
-    return;
   }
 
-  console.log('✅ Event listeners configured successfully!');
-  console.log('📡 Monitoring started. Press Ctrl+C to stop.\n');
+  console.log('\nMonitoring started. Press Ctrl+C to stop.\n');
 
-  // Показываем статистику каждые 30 секунд
-  const statsInterval = setInterval(() => {
-    if (!isMonitoring) {
-      clearInterval(statsInterval);
-      return;
-    }
-
-    const now = Math.floor(Date.now() / 1000);
-    const recentEvents = events.filter(e => now - e.timestamp < 300); // Последние 5 минут
-
-    console.log(`\n📊 Monitoring Stats (Last 5 minutes):`);
-    console.log(`   Total events: ${recentEvents.length}`);
-    console.log(`   Rebalancing events: ${recentEvents.filter(e => e.eventName.includes('Rebalance')).length}`);
-    console.log(`   Deposit events: ${recentEvents.filter(e => e.eventName === 'Deposit').length}`);
-    console.log(`   Withdraw events: ${recentEvents.filter(e => e.eventName === 'Withdraw').length}`);
-    console.log(`   Timelock events: ${recentEvents.filter(e => e.eventName === 'Queued' || e.eventName === 'Executed').length}`);
-  }, 30000);
-
-  // Обработка завершения
+  // Handle graceful shutdown
   process.on('SIGINT', () => {
-    console.log('\n\n🛑 Stopping event monitor...');
+    console.log('\nStopping event monitoring...');
     isMonitoring = false;
-    clearInterval(statsInterval);
     
-    // Отключаем все слушатели
-    ethers.provider.removeAllListeners();
-    
-    console.log('📋 Event Summary:');
-    console.log(`   Total events captured: ${events.length}`);
-    
-    if (events.length > 0) {
-      console.log('\n📅 Recent Events:');
-      const recentEvents = events.slice(-10); // Последние 10 событий
-      
-      for (const event of recentEvents) {
-        console.log(`   ${formatTime(event.timestamp)} - ${event.eventName} (Block ${event.blockNumber})`);
-      }
+    // Remove all listeners
+    for (const [name, contract] of contracts) {
+      contract.removeAllListeners();
     }
     
-    console.log('✅ Monitoring stopped.');
+    console.log('Event monitoring stopped.');
     process.exit(0);
   });
 
-  // Обработка ошибок
-  process.on('unhandledRejection', (error) => {
-    console.log(`❌ Unhandled error: ${error}`);
-  });
-
-  // Держим процесс активным
-  await new Promise(() => {});
+  // Keep the process alive
+  while (isMonitoring) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+main().catch((error) => {
+  console.error('Error in event monitoring:', error);
+  process.exit(1);
+});

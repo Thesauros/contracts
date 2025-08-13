@@ -77,12 +77,12 @@ Check the browser console and server logs for detailed error messages.
 ## Comparison with React Version
 
 This simple version:
-- ✅ No build process required
-- ✅ Faster startup
-- ✅ Smaller bundle size
-- ✅ Easier to modify
-- ❌ Less interactive features
-- ❌ No real-time updates
+-  No build process required
+-  Faster startup
+-  Smaller bundle size
+-  Easier to modify
+-  Less interactive features
+-  No real-time updates
 
 ## License
 

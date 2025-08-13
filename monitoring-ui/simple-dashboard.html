@@ -589,6 +589,7 @@
 
         // Data fetching
         async function fetchData() {
+            console.log("Fetching data from API...");
             try {
                 showLoading(true);
                 showError(false);
@@ -599,6 +600,7 @@
                 }
 
                 currentData = await response.json();
+                console.log("Data received:", currentData);
                 updateNetworkInfo();
                 updateDashboard();
                 showLoading(false);
@@ -635,6 +637,7 @@
         }
 
         function updateDashboard() {
+            console.log("Updating dashboard with data:", currentData);
             const { vaults, providers, apyData, events } = currentData;
 
             // Calculate total TVL

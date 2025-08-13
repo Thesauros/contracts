@@ -16,626 +16,277 @@
 </div>
 
 
-##  Overview
+This file contains instructions for using and building documentation for the Thesauros project.
 
-Thesauros is a next-generation DeFi protocol that automatically optimizes yield across multiple lending protocols. Built with security and efficiency in mind, it provides users with the best possible returns while maintaining full transparency and control.
+## 📚 What's Included
 
-##  Technology Stack
+The documentation includes:
 
-### Smart Contracts
-- **Solidity** 0.8.23
-- **Foundry** for testing and deployment
-- **OpenZeppelin** for security standards
-- **Safe Protocol** for multi-sig transactions
+- **Complete description of all methods** of contracts with usage examples
+- **System architecture** with diagrams and schemas
+- **Security guides** and role-based access model
+- **Installation and development instructions**
+- **Integration examples** and usage
+- **Liquidity provider documentation**
 
-### Backend Services
-- **NestJS** for API services
-- **TypeScript** for type safety
-- **PostgreSQL** for data persistence
-- **Redis** for caching
+## 🚀 Quick Start
 
-### Infrastructure
-- **AWS** for cloud infrastructure
-- **Docker** for containerization
-- **GitHub Actions** for CI/CD
+### Viewing Documentation
 
-## Performance Metrics
+1. **Online version** (if published):
+   - Open the documentation website
+   - Use navigation to find the information you need
 
-### Yield Optimization
-- **Average APR Improvement**: 2.5% vs single protocol
-- **Rebalancing Frequency**: Every 1 hour
-- **Gas Optimization**: 30% reduction through batching
-- **Slippage Protection**: <0.1% average
+2. **Local version**:
+   ```bash
+   # Build documentation
+   ./scripts/build-docs.sh
+   
+   # Open in browser
+   open docs/_book/index.html
+   ```
 
-### Security Metrics
-- **Audit Score**: 95/100
-- **Bug Bounty**: $100,000+ paid
-- **Incident Response**: <1 hour
-- **Insurance Coverage**: $10M+
-
-### User Experience
-- **Transaction Success Rate**: 99.9%
-- **Average Response Time**: <200ms
-- **Uptime**: 99.99%
-- **User Satisfaction**: 4.8/5
-
-##  Supported Protocols
-
-| Protocol | Network | Status | APR Range |
-|----------|---------|--------|-----------|
-| **Aave V3** | Arbitrum, BSC, Base | ✅ Active | 3-12% |
-| **Compound V3** | Arbitrum, BSC | ✅ Active | 2-10% |
-| **Fraxlend** | Arbitrum | ✅ Active | 4-15% |
-| **Venus** | BSC | ✅ Active | 5-18% |
-| **Silo** | Arbitrum | ✅ Active | 3-11% |
-| **Radiant V2** | Arbitrum | ✅ Active | 6-20% |
-| **Dolomite** | Arbitrum | ✅ Active | 4-14% |
-
-## Quick Start
-
-### Prerequisites
-- Node.js 18+
-- Foundry
-- PostgreSQL
-- Redis
-
-### Installation
-
-This is the repository of smart contracts for interest rebalancing. The system allows automatic redistribution of funds between various liquidity providers to maximize yield.
-
-## Architecture
-
-The system consists of the following main components:
-
-- **Vault** - base vault contract with ERC4626 support
-- **Rebalancer** - contract for rebalancing between providers
-- **RebalancerWithRewards** - extended version with rewards support
-- **VaultManager** - manager for managing multiple vaults
-- **Timelock** - contract for secure governance with delay
-- **RewardsDistributor** - rewards distributor with Merkle proof
-- **ProviderManager** - liquidity provider manager
-
-## Installation
+### Building Documentation
 
 ```bash
-npm install
+# Install dependencies
+npm install -g gitbook-cli
+
+# Build
+./scripts/build-docs.sh
+
+# Or manually
+cd docs
+gitbook install
+gitbook build
 ```
 
-## Testing
+## 📖 Documentation Structure
 
+```
+docs/
+├── README.md                    # Main page
+├── SUMMARY.md                   # Table of contents
+├── book.json                    # GitBook configuration
+├── architecture.md              # System architecture
+├── contracts/                   # Contract documentation
+│   ├── vault.md                # Vault contract
+│   ├── rebalancer.md           # Rebalancer contract
+│   ├── timelock.md             # Timelock contract
+│   ├── rewards-distributor.md  # RewardsDistributor
+│   └── vault-manager.md        # VaultManager
+├── security/                    # Security
+│   └── roles.md                # Roles and access rights
+├── development/                 # Development
+│   └── installation.md         # Installation and setup
+└── README_GITBOOK.md           # GitBook instructions
+```
+
+## 🔧 Main Contracts
+
+### Vault
+- **File**: `contracts/base/Vault.sol`
+- **Description**: Base vault contract with ERC4626 support
+- **Documentation**: [docs/contracts/vault.md](docs/contracts/vault.md)
+
+### Rebalancer
+- **File**: `contracts/Rebalancer.sol`
+- **Description**: Contract for rebalancing between providers
+- **Documentation**: [docs/contracts/rebalancer.md](docs/contracts/rebalancer.md)
+
+### Timelock
+- **File**: `contracts/Timelock.sol`
+- **Description**: Contract for secure governance with delay
+- **Documentation**: [docs/contracts/timelock.md](docs/contracts/timelock.md)
+
+### RewardsDistributor
+- **File**: `contracts/RewardsDistributor.sol`
+- **Description**: Rewards distributor with Merkle proof
+- **Documentation**: [docs/contracts/rewards-distributor.md](docs/contracts/rewards-distributor.md)
+
+### VaultManager
+- **File**: `contracts/VaultManager.sol`
+- **Description**: Manager for managing multiple vaults
+- **Documentation**: [docs/contracts/vault-manager.md](docs/contracts/vault-manager.md)
+
+## 🛡️ Security
+
+### Roles and Access Rights
+- **Admin**: Full control over settings
+- **Operator**: Execute rebalancing
+- **Executor**: Management through VaultManager
+- **RootUpdater**: Update Merkle root in RewardsDistributor
+- **Timelock**: Critical operations with delay
+
+Detailed information: [docs/security/roles.md](docs/security/roles.md)
+
+### Key Security Mechanisms
+- **Timelock** for critical operations
+- **Role-based access model** with minimal privileges
+- **Fee limitations** (maximum 5% for withdrawals, 20% for rebalancing)
+- **Inflation attack protection** through `setupVault()`
+- **Merkle proof** for efficient reward distribution
+
+## 🚀 Development
+
+### Installation and Setup
 ```bash
+# Clone repository
+git clone https://github.com/your-org/rebalance-finance.git
+cd rebalance-finance
+
+# Install dependencies
+npm install
+
+# Setup environment variables
+cp .env.example .env
+# Fill in the .env file
+
+# Compile contracts
+npx hardhat compile
+
+# Run tests
 npx hardhat test
 ```
 
-## Test Coverage
+Detailed information: [docs/development/installation.md](docs/development/installation.md)
 
+### Testing
 ```bash
+# Run all tests
+npx hardhat test
+
+# Run fork tests
+npx hardhat test test/forking/
+
+# Run with coverage
 npx hardhat coverage
 ```
 
-## Method Documentation
+### Deployment
+```bash
+# Deploy to local network
+npx hardhat run deploy/deploy-timelock.ts --network localhost
+npx hardhat run deploy/deploy-providers.ts --network localhost
+npx hardhat run deploy/deploy-usdc-vault.ts --network localhost
 
-### Vault.sol
-
-Base vault contract implementing ERC4626 standard.
-
-#### Constructor
-```solidity
-constructor(
-    address asset_,
-    string memory name_,
-    string memory symbol_,
-    IProvider[] memory providers_,
-    uint256 withdrawFeePercent_,
-    address timelock_,
-    address treasury_
-)
-```
-**Parameters:**
-- `asset_` - address of the underlying asset
-- `name_` - vault token name
-- `symbol_` - vault token symbol
-- `providers_` - array of liquidity providers
-- `withdrawFeePercent_` - withdrawal fee percentage (maximum 5%)
-- `timelock_` - timelock contract address
-- `treasury_` - treasury address
-
-#### ERC4626 Methods
-
-##### `asset()`
-Returns the address of the underlying asset vault.
-```solidity
-function asset() public view returns (address)
+# Deploy to test network
+npx hardhat run deploy/deploy-timelock.ts --network goerli
 ```
 
-##### `totalAssets()`
-Returns the total amount of assets in the vault.
+## 📊 Supported Providers
+
+- **Aave V3**: Deposits and loans
+- **Compound V3**: Deposits
+- **Dolomite**: Trading and lending
+- **Fraxlend**: Lending
+- **Venus**: Deposits
+
+## 🔄 Usage Examples
+
+### Rebalancing Funds
 ```solidity
-function totalAssets() public view returns (uint256 assets)
+// Rebalance 1000 USDC from Aave to Compound
+rebalancer.rebalance(
+    1000e6,           // 1000 USDC
+    aaveProvider,     // from Aave
+    compoundProvider, // to Compound
+    10e6,             // fee 10 USDC
+    true              // activate Compound
+);
 ```
 
-##### `convertToShares(uint256 assets)`
-Converts amount of assets to amount of shares.
+### Management through VaultManager
 ```solidity
-function convertToShares(uint256 assets) public view returns (uint256 shares)
+// Rebalance all funds in vault
+vaultManager.rebalanceVault(
+    vault,            // vault address
+    type(uint256).max, // all funds
+    fromProvider,     // from provider
+    toProvider,       // to provider
+    0,                // no fee
+    true              // activate new provider
+);
 ```
 
-##### `convertToAssets(uint256 shares)`
-Converts amount of shares to amount of assets.
+### Claiming Rewards
 ```solidity
-function convertToAssets(uint256 shares) public view returns (uint256 assets)
+// Claim rewards through Merkle proof
+rewardsDistributor.claim(
+    userAddress,      // user address
+    rewardToken,      // reward token address
+    100e6,           // reward amount
+    merkleProof      // Merkle proof
+);
 ```
 
-##### `maxDeposit(address)`
-Returns the maximum amount of assets that can be deposited.
+## 📈 Monitoring and Analytics
+
+### Events to Track
+- `RebalanceExecuted`: Rebalancing execution
+- `FeeCharged`: Fee collection
+- `RewardsClaimed`: Reward claiming
+- `ActiveProviderUpdated`: Active provider change
+
+### Metrics to Monitor
+- Total Value Locked (TVL)
+- Provider yields
+- Rebalancing frequency
+- Fees and rewards
+- Gas costs
+
+## 🤝 Integration
+
+### ERC4626 Compatibility
+The system is fully compatible with the ERC4626 standard, ensuring integration with existing DeFi protocols.
+
+### Integration API
 ```solidity
-function maxDeposit(address) public view returns (uint256)
+// Get vault information
+uint256 totalAssets = vault.totalAssets();
+uint256 userShares = vault.balanceOf(user);
+uint256 userAssets = vault.convertToAssets(userShares);
+
+// Get providers
+IProvider[] memory providers = vault.getProviders();
+IProvider activeProvider = vault.activeProvider();
 ```
 
-##### `maxMint(address)`
-Returns the maximum amount of shares that can be minted.
-```solidity
-function maxMint(address) public view returns (uint256)
-```
-
-##### `maxWithdraw(address owner)`
-Returns the maximum amount of assets that the owner can withdraw.
-```solidity
-function maxWithdraw(address owner) public view returns (uint256)
-```
-
-##### `maxRedeem(address owner)`
-Returns the maximum amount of shares that the owner can redeem.
-```solidity
-function maxRedeem(address owner) public view returns (uint256)
-```
-
-##### `previewDeposit(uint256 assets)`
-Preview calculation of shares for asset deposit.
-```solidity
-function previewDeposit(uint256 assets) public view returns (uint256)
-```
-
-##### `previewMint(uint256 shares)`
-Preview calculation of assets for share minting.
-```solidity
-function previewMint(uint256 shares) public view returns (uint256)
-```
-
-##### `previewWithdraw(uint256 assets)`
-Preview calculation of shares for asset withdrawal.
-```solidity
-function previewWithdraw(uint256 assets) public view returns (uint256)
-```
-
-##### `previewRedeem(uint256 shares)`
-Preview calculation of assets for share redemption.
-```solidity
-function previewRedeem(uint256 shares) public view returns (uint256)
-```
-
-##### `deposit(uint256 assets, address receiver)`
-Deposits assets into the vault and mints shares to the receiver.
-```solidity
-function deposit(uint256 assets, address receiver) public returns (uint256)
-```
-
-##### `mint(uint256 shares, address receiver)`
-Mints shares to the receiver for assets.
-```solidity
-function mint(uint256 shares, address receiver) public returns (uint256)
-```
-
-##### `withdraw(uint256 assets, address receiver, address owner)`
-Withdraws assets from the vault and burns owner's shares.
-```solidity
-function withdraw(uint256 assets, address receiver, address owner) public returns (uint256)
-```
-
-##### `redeem(uint256 shares, address receiver, address owner)`
-Redeems owner's shares and withdraws assets to the receiver.
-```solidity
-function redeem(uint256 shares, address receiver, address owner) public returns (uint256)
-```
-
-#### Vault Management
-
-##### `setupVault(uint256 assets)`
-Initializes the vault with initial deposit to prevent inflation attacks.
-```solidity
-function setupVault(uint256 assets) external
-```
-
-##### `pause(Actions action)`
-Pauses the specified action in the vault.
-```solidity
-function pause(Actions action) external onlyAdmin
-```
-
-##### `unpause(Actions action)`
-Resumes the specified action in the vault.
-```solidity
-function unpause(Actions action) external onlyAdmin
-```
-
-##### `setTimelock(address _timelock)`
-Sets the timelock contract address.
-```solidity
-function setTimelock(address _timelock) external onlyTimelock
-```
-
-##### `setProviders(IProvider[] memory providers)`
-Sets the list of providers for the vault.
-```solidity
-function setProviders(IProvider[] memory providers) external onlyTimelock
-```
-
-##### `setActiveProvider(IProvider _activeProvider)`
-Sets the active provider for the vault.
-```solidity
-function setActiveProvider(IProvider _activeProvider) external onlyAdmin
-```
-
-##### `setTreasury(address _treasury)`
-Sets the treasury address.
-```solidity
-function setTreasury(address _treasury) external onlyAdmin
-```
-
-##### `setWithdrawFeePercent(uint256 _withdrawFeePercent)`
-Sets the withdrawal fee percentage (maximum 5%).
-```solidity
-function setWithdrawFeePercent(uint256 _withdrawFeePercent) external onlyAdmin
-```
-
-##### `setMinAmount(uint256 _minAmount)`
-Sets the minimum amount for deposits.
-```solidity
-function setMinAmount(uint256 _minAmount) external onlyAdmin
-```
-
-#### Helper Methods
-
-##### `getBalanceOfAsset(address owner)`
-Returns the amount of assets owned by the specified address.
-```solidity
-function getBalanceOfAsset(address owner) public view returns (uint256 assets)
-```
-
-##### `getProviders()`
-Returns the array of vault providers.
-```solidity
-function getProviders() public view returns (IProvider[] memory)
-```
-
-### Rebalancer.sol
-
-Contract for rebalancing funds between providers.
-
-#### Constructor
-```solidity
-constructor(
-    address asset_,
-    string memory name_,
-    string memory symbol_,
-    IProvider[] memory providers_,
-    uint256 withdrawFeePercent_,
-    address timelock_,
-    address treasury_
-)
-```
-
-#### `rebalance(uint256 assets, IProvider from, IProvider to, uint256 fee, bool activateToProvider)`
-Performs rebalancing of funds between providers.
-```solidity
-function rebalance(
-    uint256 assets,
-    IProvider from,
-    IProvider to,
-    uint256 fee,
-    bool activateToProvider
-) external onlyOperator returns (bool)
-```
-
-**Parameters:**
-- `assets` - amount of assets for rebalancing
-- `from` - provider from which funds are withdrawn
-- `to` - provider to which funds are deposited
-- `fee` - rebalancing fee (maximum 20% of amount)
-- `activateToProvider` - flag to activate the new provider
-
-### RebalancerWithRewards.sol
-
-Extended version of Rebalancer with rewards support.
-
-#### Constructor
-```solidity
-constructor(
-    address asset_,
-    string memory name_,
-    string memory symbol_,
-    IProvider[] memory providers_,
-    uint256 withdrawFeePercent_,
-    address rewardsDistributor_,
-    address timelock_,
-    address treasury_
-)
-```
-
-**Additional parameters:**
-- `rewardsDistributor_` - rewards distributor address
-
-#### `rebalance(uint256 assets, IProvider from, IProvider to, uint256 fee, bool activateToProvider)`
-Similar to the method in Rebalancer.sol, but with additional rewards logic.
-
-#### `setRewardsDistributor(address _rewardsDistributor)`
-Sets the rewards distributor address.
-```solidity
-function setRewardsDistributor(address _rewardsDistributor) external onlyAdmin
-```
-
-### VaultManager.sol
-
-Manager for managing multiple vaults.
-
-#### `rebalanceVault(IVault vault, uint256 assets, IProvider from, IProvider to, uint256 fee, bool activateToProvider)`
-Performs rebalancing for the specified vault.
-```solidity
-function rebalanceVault(
-    IVault vault,
-    uint256 assets,
-    IProvider from,
-    IProvider to,
-    uint256 fee,
-    bool activateToProvider
-) external onlyExecutor returns (bool success)
-```
-
-**Parameters:**
-- `vault` - vault address for rebalancing
-- `assets` - amount of assets (type(uint256).max for all funds)
-- `from` - provider from which funds are withdrawn
-- `to` - provider to which funds are deposited
-- `fee` - rebalancing fee
-- `activateToProvider` - flag to activate the new provider
-
-### Timelock.sol
-
-Contract for secure governance with transaction execution delay.
-
-#### Constructor
-```solidity
-constructor(address owner_, uint256 delay_)
-```
-
-**Parameters:**
-- `owner_` - contract owner address
-- `delay_` - execution delay (30 minutes - 30 days)
-
-#### `queue(address target, uint256 value, string memory signature, bytes memory data, uint256 timestamp)`
-Queues a transaction for execution.
-```solidity
-function queue(
-    address target,
-    uint256 value,
-    string memory signature,
-    bytes memory data,
-    uint256 timestamp
-) external onlyOwner
-```
-
-**Parameters:**
-- `target` - target contract address
-- `value` - amount of ETH to send
-- `signature` - function signature
-- `data` - call data
-- `timestamp` - execution time
-
-#### `execute(address target, uint256 value, string memory signature, bytes memory data, uint256 timestamp)`
-Executes a queued transaction.
-```solidity
-function execute(
-    address target,
-    uint256 value,
-    string memory signature,
-    bytes memory data,
-    uint256 timestamp
-) external payable onlyOwner
-```
-
-#### `cancel(address target, uint256 value, string memory signature, bytes memory data, uint256 timestamp)`
-Cancels a queued transaction.
-```solidity
-function cancel(
-    address target,
-    uint256 value,
-    string memory signature,
-    bytes memory data,
-    uint256 timestamp
-) external onlyOwner
-```
-
-#### `setDelay(uint256 _delay)`
-Sets a new execution delay.
-```solidity
-function setDelay(uint256 _delay) external onlySelf
-```
-
-### RewardsDistributor.sol
-
-Rewards distributor using Merkle proof for efficient distribution.
-
-#### `claim(address account, address reward, uint256 claimable, bytes32[] calldata proof)`
-Allows a user to claim rewards using Merkle proof.
-```solidity
-function claim(
-    address account,
-    address reward,
-    uint256 claimable,
-    bytes32[] calldata proof
-) external whenNotPaused
-```
-
-**Parameters:**
-- `account` - reward recipient address
-- `reward` - reward token address
-- `claimable` - amount of available rewards
-- `proof` - Merkle proof for verification
-
-#### `updateRoot(bytes32 _root)`
-Updates the Merkle tree root for new rewards distribution.
-```solidity
-function updateRoot(bytes32 _root) external onlyRootUpdater
-```
-
-#### `withdraw(address token)`
-Withdraws all tokens from the contract (admin only).
-```solidity
-function withdraw(address token) external onlyAdmin
-```
-
-#### `pause()`
-Pauses the contract.
-```solidity
-function pause() external onlyAdmin
-```
-
-#### `unpause()`
-Resumes contract operation.
-```solidity
-function unpause() external onlyAdmin
-```
-
-### ProviderManager.sol
-
-Manager for liquidity providers.
-
-#### `addProvider(IProvider provider)`
-Adds a new provider to the list.
-```solidity
-function addProvider(IProvider provider) external onlyAdmin
-```
-
-#### `removeProvider(IProvider provider)`
-Removes a provider from the list.
-```solidity
-function removeProvider(IProvider provider) external onlyAdmin
-```
-
-#### `getProviders()`
-Returns the list of all providers.
-```solidity
-function getProviders() external view returns (IProvider[] memory)
-```
-
-#### `isProvider(IProvider provider)`
-Checks if an address is a provider.
-```solidity
-function isProvider(IProvider provider) external view returns (bool)
-```
-
-## Events
-
-### Vault Events
-- `SetupCompleted(address indexed setupAddress)` - vault setup completion
-- `TimelockUpdated(address indexed timelock)` - timelock update
-- `ProvidersUpdated(IProvider[] providers)` - providers update
-- `ActiveProviderUpdated(IProvider activeProvider)` - active provider update
-- `TreasuryUpdated(address indexed treasury)` - treasury update
-- `WithdrawFeePercentUpdated(uint256 withdrawFeePercent)` - withdrawal fee update
-- `MinAmountUpdated(uint256 minAmount)` - minimum amount update
-- `FeeCharged(address indexed treasury, uint256 assets, uint256 fee)` - fee charged
-- `RebalanceExecuted(uint256 assetsFrom, uint256 assetsTo, address indexed from, address indexed to)` - rebalancing executed
-- `RewardsTransferred(address indexed to, uint256 amount)` - rewards transferred
-- `DistributorUpdated(address indexed rewardsDistributor)` - distributor update
-
-### Timelock Events
-- `DelayUpdated(uint256 indexed newDelay)` - delay update
-- `Queued(bytes32 indexed txId, address indexed target, uint256 value, string signature, bytes data, uint256 timestamp)` - transaction queued
-- `Executed(bytes32 indexed txId, address indexed target, uint256 value, string signature, bytes data, uint256 timestamp)` - transaction executed
-- `Cancelled(bytes32 indexed txId, address indexed target, uint256 value, string signature, bytes data, uint256 timestamp)` - transaction cancelled
-
-### RewardsDistributor Events
-- `RewardsClaimed(address indexed account, address indexed reward, uint256 amount)` - rewards claimed
-- `RootUpdated(bytes32 indexed root)` - Merkle root updated
-
-## Errors
-
-### Vault Errors
-- `Vault__Unauthorized()` - unauthorized access
-- `Vault__AddressZero()` - zero address
-- `Vault__InvalidInput()` - invalid input
-- `Vault__DepositLessThanMin()` - deposit less than minimum
-- `Vault__SetupAlreadyCompleted()` - setup already completed
-
-### Rebalancer Errors
-- `Rebalancer__InvalidProvider()` - invalid provider
-- `Rebalancer__ExcessRebalanceFee()` - excessive rebalancing fee
-
-### Timelock Errors
-- `Timelock__Unauthorized()` - unauthorized access
-- `Timelock__InvalidDelay()` - invalid delay
-- `Timelock__InvalidTimestamp()` - invalid timestamp
-- `Timelock__NotQueued()` - not queued
-- `Timelock__StillLocked()` - still locked
-- `Timelock__Expired()` - expired
-- `Timelock__ExecutionFailed()` - execution failed
-
-### RewardsDistributor Errors
-- `RewardsDistributor__InvalidProof()` - invalid Merkle proof
-- `RewardsDistributor__AlreadyClaimed()` - already claimed
-
-## Constants
-
-### Vault Constants
-- `PRECISION_FACTOR = 1e18` - precision factor
-- `MAX_WITHDRAW_FEE_PERCENT = 0.05 * 1e18` - maximum withdrawal fee (5%)
-- `MAX_REBALANCE_FEE_PERCENT = 0.2 * 1e18` - maximum rebalancing fee (20%)
-
-### Timelock Constants
-- `MIN_DELAY = 30 minutes` - minimum delay
-- `MAX_DELAY = 30 days` - maximum delay
-- `GRACE_PERIOD = 14 days` - grace period
-
-## Roles and Access Rights
-
-### Vault Roles
-- **Admin** - can manage vault settings
-- **Operator** - can perform rebalancing
-- **Timelock** - can change critical parameters
-
-### Timelock Roles
-- **Owner** - can queue and cancel transactions
-- **Self** - only the contract itself can change delay
-
-### RewardsDistributor Roles
-- **Admin** - can pause contract and withdraw tokens
-- **RootUpdater** - can update Merkle root
-
-## Security
-
-### Inflation Attack Protection
-Vault uses the `setupVault()` mechanism to prevent inflation attacks described in [Hats Finance](https://rokinot.github.io/hatsfinance).
-
-### Timelock for Critical Operations
-All critical operations are executed through timelock with a delay of 30 minutes - 30 days.
-
-### Merkle Proof for Rewards
-Using Merkle proof allows efficient reward distribution without storing state for each user.
-
-### Fee Limitations
-- Maximum withdrawal fee: 5%
-- Maximum rebalancing fee: 20%
-
-## Supported Providers
-
-The system supports the following liquidity providers:
-- Aave V3
-- Compound V3
-- Dolomite
-- Fraxlend
-- Venus
-
-## License
-
-MIT License
+## 📞 Support
+
+### Getting Help
+- **GitHub Issues**: Create an issue for bugs or questions
+- **Documentation**: Study the relevant documentation sections
+- **Tests**: Check tests for usage examples
+
+### Useful Links
+- [System Architecture](docs/architecture.md)
+- [Security Guide](docs/security/roles.md)
+- [Installation Instructions](docs/development/installation.md)
+- [Usage Examples](docs/contracts/)
+
+## 📝 Updating Documentation
+
+### Adding New Methods
+1. Update the corresponding documentation file in `docs/contracts/`
+2. Add usage examples
+3. Update `docs/SUMMARY.md` if necessary
+4. Rebuild documentation
+
+### Updating Architecture
+1. Update `docs/architecture.md`
+2. Add new diagrams if necessary
+3. Update related documentation sections
+
+## 🎯 Next Steps
+
+1. **Study Architecture**: Start with [docs/architecture.md](docs/architecture.md)
+2. **Run Tests**: Ensure everything works correctly
+3. **Study Contracts**: Review documentation for each contract
+4. **Start Development**: Use [docs/development/installation.md](docs/development/installation.md)
+5. **Integrate**: Use examples from documentation
+
+---
+
+**Thesauros Team**  
+*Created with ❤️ for the DeFi community* 

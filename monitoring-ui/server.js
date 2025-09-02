@@ -12,8 +12,18 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-// Initialize provider
-const provider = new ethers.JsonRpcProvider(process.env.ARBITRUM_ONE_RPC_URL || 'https://arb1.arbitrum.io/rpc');
+// Initialize provider with retry logic
+let provider;
+async function initializeProvider() {
+  try {
+    provider = new ethers.JsonRpcProvider(process.env.ARBITRUM_ONE_RPC_URL || 'https://arb1.arbitrum.io/rpc');
+    await provider.getNetwork(); // Test connection
+    console.log('Provider initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize provider:', error);
+    process.exit(1);
+  }
+}
 
 // Load configuration
 const configPath = path.join(__dirname, '..', 'deployments', 'arbitrumOne', 'deployed-vaults.json');
@@ -21,6 +31,7 @@ let config = null;
 
 try {
   config = require(configPath);
+  console.log('Configuration loaded successfully');
 } catch (error) {
   console.error('Failed to load config:', error);
 }
@@ -35,9 +46,24 @@ function serializeData(data) {
   }));
 }
 
+// Error handling middleware
+app.use((error, req, res, next) => {
+  console.error('Unhandled error:', error);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // API Routes
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    version: process.env.npm_package_version || '1.0.0'
+  });
 });
 
 app.get('/api/vaults', async (req, res) => {
@@ -45,6 +71,7 @@ app.get('/api/vaults', async (req, res) => {
     const vaults = await getVaultData();
     res.json(serializeData(vaults));
   } catch (error) {
+    console.error('Error fetching vaults:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -54,6 +81,7 @@ app.get('/api/providers', async (req, res) => {
     const providers = await getProviderData();
     res.json(serializeData(providers));
   } catch (error) {
+    console.error('Error fetching providers:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -63,6 +91,7 @@ app.get('/api/apy', async (req, res) => {
     const apyData = await getAPYData();
     res.json(serializeData(apyData));
   } catch (error) {
+    console.error('Error fetching APY data:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -72,6 +101,7 @@ app.get('/api/events', async (req, res) => {
     const events = await getRecentEvents();
     res.json(serializeData(events));
   } catch (error) {
+    console.error('Error fetching events:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -89,6 +119,7 @@ app.get('/api/dashboard', async (req, res) => {
     
     res.json(serializeData(dashboardData));
   } catch (error) {
+    console.error('Error fetching dashboard data:', error);
     res.status(500).json({ error: error.message });
   }
 });

@@ -810,7 +810,7 @@
         // Helper functions
         function getProviderName(address) {
             // Try to get provider name from current data
-            if (currentData function getProviderName(address) {function getProviderName(address) { currentData.providers) {
+            if (currentData && currentData.providers) {
                 const provider = currentData.providers.find(p => p.address === address);
                 if (provider) {
                     return provider.name;

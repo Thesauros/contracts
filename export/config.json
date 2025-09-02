@@ -1,0 +1,18 @@
+{
+  "networks": [
+    {
+      "chainId": 42161,
+      "chainName": "Arbitrum One",
+      "vaults": [
+        {
+          "coin": "USDT",
+          "address": "0xe1D34AB80090da3498Fc5D0696a2Cf82971E5eC6"
+        },
+        {
+          "coin": "USDC",
+          "address": "0xdf5AFad7f88888bEE944d14982c2d9eBA65653e6"
+        }
+      ]
+    }
+  ]
+}

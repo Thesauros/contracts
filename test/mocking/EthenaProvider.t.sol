@@ -135,5 +135,187 @@ contract EthenaProviderTest is Test {
         vm.expectRevert("EthenaProvider: Unsupported asset");
         ethenaProvider.getDepositRate(IVault(address(wrongVault)));
     }
+
+    function test_Deposit_Success() public {
+        // Setup: Vault has tokens
+        mockCollateral.mint(address(mockVault), DEPOSIT_AMOUNT);
+
+        // Setup: EthenaProvider has USDe tokens for staking
+        mockUSDe.mint(address(ethenaProvider), DEPOSIT_AMOUNT);
+
+        // Setup: Vault approves EthenaProvider to spend its tokens
+        vm.prank(address(mockVault));
+        mockCollateral.approve(address(ethenaProvider), DEPOSIT_AMOUNT);
+
+        // Execute deposit
+        vm.prank(address(mockVault));
+        bool success = ethenaProvider.deposit(DEPOSIT_AMOUNT, IVault(address(mockVault)));
+
+        // Verify
+        assertTrue(success);
+        assertEq(mockEthenaStaking.getStakedBalance(address(ethenaProvider)), DEPOSIT_AMOUNT);
+    }
+
+    function test_Deposit_ZeroAmount_Reverts() public {
+        vm.expectRevert(EthenaProvider.EthenaProvider__InvalidAmount.selector);
+        ethenaProvider.deposit(0, IVault(address(mockVault)));
+    }
+
+    function test_Deposit_InsufficientVaultBalance_Reverts() public {
+        // Setup: Vault has insufficient balance
+        mockCollateral.mint(address(mockVault), DEPOSIT_AMOUNT - 1);
+
+        vm.expectRevert("EthenaProvider: Insufficient vault balance");
+        ethenaProvider.deposit(DEPOSIT_AMOUNT, IVault(address(mockVault)));
+    }
+
+    function test_Deposit_InvalidAsset_Reverts() public {
+        // Create a vault with wrong asset
+        MockERC20 wrongAsset = new MockERC20("Wrong Asset", "WA", 18);
+        MockVault wrongVault = new MockVault(address(wrongAsset));
+
+        vm.expectRevert("EthenaProvider: Unsupported asset");
+        ethenaProvider.deposit(DEPOSIT_AMOUNT, IVault(address(wrongVault)));
+    }
+
+    function test_Withdraw_Success() public {
+        // Setup: EthenaProvider has staked tokens
+        mockUSDe.mint(address(ethenaProvider), DEPOSIT_AMOUNT);
+        vm.prank(address(ethenaProvider));
+        mockUSDe.approve(address(mockEthenaStaking), DEPOSIT_AMOUNT);
+        vm.prank(address(ethenaProvider));
+        mockEthenaStaking.stake(DEPOSIT_AMOUNT);
+
+        // Setup: EthenaProvider has collateral tokens to transfer back to vault
+        mockCollateral.mint(address(ethenaProvider), DEPOSIT_AMOUNT);
+
+        // Execute withdraw
+        bool success = ethenaProvider.withdraw(DEPOSIT_AMOUNT, IVault(address(mockVault)));
+
+        // Verify
+        assertTrue(success);
+        assertEq(mockEthenaStaking.getStakedBalance(address(ethenaProvider)), 0);
+        assertEq(mockCollateral.balanceOf(address(mockVault)), DEPOSIT_AMOUNT);
+    }
+
+    function test_Withdraw_ZeroAmount_Reverts() public {
+        vm.expectRevert(EthenaProvider.EthenaProvider__InvalidAmount.selector);
+        ethenaProvider.withdraw(0, IVault(address(mockVault)));
+    }
+
+    function test_Withdraw_InsufficientStakedBalance_Reverts() public {
+        // Setup: EthenaProvider has no staked tokens
+        vm.expectRevert("EthenaProvider: Insufficient staked balance");
+        ethenaProvider.withdraw(DEPOSIT_AMOUNT, IVault(address(mockVault)));
+    }
+
+    function test_Withdraw_InvalidAsset_Reverts() public {
+        // Create a vault with wrong asset
+        MockERC20 wrongAsset = new MockERC20("Wrong Asset", "WA", 18);
+        MockVault wrongVault = new MockVault(address(wrongAsset));
+
+        vm.expectRevert("EthenaProvider: Unsupported asset");
+        ethenaProvider.withdraw(DEPOSIT_AMOUNT, IVault(address(wrongVault)));
+    }
+
+    function test_GetDepositBalance_AfterDeposit() public {
+        // Setup: EthenaProvider has staked tokens
+        mockUSDe.mint(address(ethenaProvider), DEPOSIT_AMOUNT);
+        vm.prank(address(ethenaProvider));
+        mockUSDe.approve(address(mockEthenaStaking), DEPOSIT_AMOUNT);
+        vm.prank(address(ethenaProvider));
+        mockEthenaStaking.stake(DEPOSIT_AMOUNT);
+
+        // Test getDepositBalance
+        uint256 balance = ethenaProvider.getDepositBalance(address(ethenaProvider), IVault(address(mockVault)));
+        assertEq(balance, DEPOSIT_AMOUNT);
+    }
+
+    function test_GetDepositRate_AfterStaking() public {
+        // Setup: Some tokens are staked
+        mockUSDe.mint(address(ethenaProvider), DEPOSIT_AMOUNT);
+        vm.prank(address(ethenaProvider));
+        mockUSDe.approve(address(mockEthenaStaking), DEPOSIT_AMOUNT);
+        vm.prank(address(ethenaProvider));
+        mockEthenaStaking.stake(DEPOSIT_AMOUNT);
+
+        // Test getDepositRate
+        uint256 rate = ethenaProvider.getDepositRate(IVault(address(mockVault)));
+        assertEq(rate, TARGET_APY);
+    }
+
+    function test_GetTotalStaked_AfterStaking() public {
+        // Setup: Some tokens are staked
+        mockUSDe.mint(address(ethenaProvider), DEPOSIT_AMOUNT);
+        vm.prank(address(ethenaProvider));
+        mockUSDe.approve(address(mockEthenaStaking), DEPOSIT_AMOUNT);
+        vm.prank(address(ethenaProvider));
+        mockEthenaStaking.stake(DEPOSIT_AMOUNT);
+
+        // Test getTotalStaked
+        uint256 totalStaked = ethenaProvider.getTotalStaked(IVault(address(mockVault)));
+        assertEq(totalStaked, DEPOSIT_AMOUNT);
+    }
+
+    function test_GetPendingRewards_AfterStaking() public {
+        // Setup: Some tokens are staked
+        mockUSDe.mint(address(ethenaProvider), DEPOSIT_AMOUNT);
+        vm.prank(address(ethenaProvider));
+        mockUSDe.approve(address(mockEthenaStaking), DEPOSIT_AMOUNT);
+        vm.prank(address(ethenaProvider));
+        mockEthenaStaking.stake(DEPOSIT_AMOUNT);
+
+        // Test getPendingRewards
+        uint256 pendingRewards = ethenaProvider.getPendingRewards(address(ethenaProvider), IVault(address(mockVault)));
+        assertGe(pendingRewards, 0); // Should be >= 0
+    }
+
+    function test_ClaimRewards_AfterStaking() public {
+        // Setup: Some tokens are staked
+        mockUSDe.mint(address(ethenaProvider), DEPOSIT_AMOUNT);
+        vm.prank(address(ethenaProvider));
+        mockUSDe.approve(address(mockEthenaStaking), DEPOSIT_AMOUNT);
+        vm.prank(address(ethenaProvider));
+        mockEthenaStaking.stake(DEPOSIT_AMOUNT);
+
+        // Test claimRewards (should not revert)
+        ethenaProvider.claimRewards(IVault(address(mockVault)));
+    }
+
+    function test_InvalidAsset_AllMethods_Reverts() public {
+        // Create a vault with wrong asset
+        MockERC20 wrongAsset = new MockERC20("Wrong Asset", "WA", 18);
+        MockVault wrongVault = new MockVault(address(wrongAsset));
+
+        // Test all methods with wrong asset
+        vm.expectRevert("EthenaProvider: Unsupported asset");
+        ethenaProvider.deposit(DEPOSIT_AMOUNT, IVault(address(wrongVault)));
+
+        vm.expectRevert("EthenaProvider: Unsupported asset");
+        ethenaProvider.withdraw(DEPOSIT_AMOUNT, IVault(address(wrongVault)));
+
+        vm.expectRevert("EthenaProvider: Unsupported asset");
+        ethenaProvider.getDepositBalance(alice, IVault(address(wrongVault)));
+
+        vm.expectRevert("EthenaProvider: Unsupported asset");
+        ethenaProvider.getDepositRate(IVault(address(wrongVault)));
+
+        vm.expectRevert("EthenaProvider: Unsupported asset");
+        ethenaProvider.getTotalStaked(IVault(address(wrongVault)));
+
+        vm.expectRevert("EthenaProvider: Unsupported asset");
+        ethenaProvider.getPendingRewards(alice, IVault(address(wrongVault)));
+
+        vm.expectRevert("EthenaProvider: Unsupported asset");
+        ethenaProvider.claimRewards(IVault(address(wrongVault)));
+    }
+
+    function test_InvalidAsset_ZeroAddress_Reverts() public {
+        // Create a vault with zero address asset
+        MockVault zeroVault = new MockVault(address(0));
+
+        vm.expectRevert("EthenaProvider: Invalid asset");
+        ethenaProvider.getDepositBalance(alice, IVault(address(zeroVault)));
+    }
 }
 

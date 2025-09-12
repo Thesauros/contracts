@@ -13,9 +13,9 @@ const rebalancerDest = './export/Rebalancer.json';
 
 if (fs.existsSync(rebalancerSource)) {
     fs.copyFileSync(rebalancerSource, rebalancerDest);
-    console.log('Rebalancer.json скопирован в export/');
+    console.log('Rebalancer.json copied to export/');
 } else {
-    console.log('Rebalancer.json не найден в deployments/arbitrumOne/');
+    console.log('Rebalancer.json not found in deployments/arbitrumOne/');
 }
 
 // read deployed-vaults.json for getting information about vault's
@@ -47,7 +47,7 @@ if (fs.existsSync(deployedVaultsPath)) {
     
     // write config.json
     fs.writeFileSync('./export/config.json', JSON.stringify(config, null, 2));
-    console.log('config.json создан в export/');
+    console.log('config.json created in export/');
 } else {
-    console.log('deployed-vaults.json не найден');
+    console.log('deployed-vaults.json not found');
 }

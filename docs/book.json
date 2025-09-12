@@ -1,6 +1,6 @@
 {
   "title": "Thesauros Documentation",
-  "description": "Документация смарт-контрактов Thesauros - системы для автоматической ребалансировки процентных доходов",
+  "description": "Thesauros smart contracts documentation - system for automatic rebalancing of yield income",
   "author": "Thesauros Team",
   "language": "ru",
   "structure": {
@@ -44,10 +44,10 @@
   },
   "variables": {
     "projectName": "Thesauros",
-    "projectVersion": "1.0.0",
-    "githubUrl": "https://github.com/your-org/rebalance-finance",
-    "discordUrl": "https://discord.gg/rebalance-finance",
-    "telegramUrl": "https://t.me/rebalance_finance"
+    "projectVersion": "1.1.0",
+    "githubUrl": "https://github.com/your-org/thesauros",
+    "discordUrl": "https://discord.gg/thesauros",
+    "telegramUrl": "https://t.me/rthesauros"
   },
   "styles": {
     "website": "styles/website.css",

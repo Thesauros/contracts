@@ -246,10 +246,10 @@ export const ethenaAddresses = {
 
 ### Current Status
 
-- ✅ Provider contract implemented and tested
-- ✅ Arbitrum network configuration ready
-- ⏳ Waiting for Ethena Protocol deployment on Arbitrum
-- ⏳ Addresses need to be updated when available
+- Provider contract implemented and tested
+- Arbitrum network configuration ready
+- Waiting for Ethena Protocol deployment on Arbitrum
+- Addresses need to be updated when available
 
 ### Future Integration
 

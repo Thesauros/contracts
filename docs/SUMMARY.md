@@ -1,33 +1,33 @@
-# Содержание
+# Table of Contents
 
-* [Введение](README.md)
-* [Архитектура](architecture.md)
-* [Быстрый старт](quick-start.md)
+* [Introduction](README.md)
+* [Architecture](architecture.md)
+* [Quick Start](quick-start.md)
 
-## Контракты
+## Contracts
 
-### Основные контракты
+### Core Contracts
 * [Vault](contracts/vault.md)
 * [Rebalancer](contracts/rebalancer.md)
 * [RebalancerWithRewards](contracts/rebalancer-with-rewards.md)
 * [VaultManager](contracts/vault-manager.md)
 
-### Управление
+### Management
 * [Timelock](contracts/timelock.md)
 * [RewardsDistributor](contracts/rewards-distributor.md)
 * [ProviderManager](contracts/provider-manager.md)
 
-### Базовые контракты
+### Base Contracts
 * [AccessManager](contracts/access-manager.md)
 * [PausableActions](contracts/pausable-actions.md)
 
-## Интерфейсы
+## Interfaces
 
 * [IVault](interfaces/ivault.md)
 * [IProvider](interfaces/iprovider.md)
 * [IRewardsDistributor](interfaces/irewards-distributor.md)
 
-## Провайдеры
+## Providers
 
 * [AaveV3Provider](providers/aave-v3-provider.md)
 * [CompoundV3Provider](providers/compound-v3-provider.md)
@@ -35,24 +35,24 @@
 * [FraxlendProvider](providers/fraxlend-provider.md)
 * [VenusProvider](providers/venus-provider.md)
 
-## Разработка
+## Development
 
-* [Установка](development/installation.md)
-* [Тестирование](development/testing.md)
-* [Деплой](development/deployment.md)
-* [Аудит](development/audit.md)
+* [Installation](development/installation.md)
+* [Testing](development/testing.md)
+* [Deployment](development/deployment.md)
+* [Audit](development/audit.md)
 
-## Безопасность
+## Security
 
-* [Роли и права доступа](security/roles.md)
-* [Безопасность контрактов](security/contract-security.md)
-* [Атаки и защита](security/attacks-protection.md)
+* [Roles and Permissions](security/roles.md)
+* [Contract Security](security/contract-security.md)
+* [Attacks and Protection](security/attacks-protection.md)
 
-## События и ошибки
+## Events and Errors
 
-* [События](events/events.md)
-* [Ошибки](events/errors.md)
+* [Events](events/events.md)
+* [Errors](events/errors.md)
 
-## Константы
+## Constants
 
-* [Константы контрактов](constants/contract-constants.md) 
+* [Contract Constants](constants/contract-constants.md)

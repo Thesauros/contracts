@@ -35,6 +35,28 @@ export const cometPairs = [
   },
 ];
 
+// Ethena Protocol addresses for Arbitrum network
+// Note: Ethena Protocol is planning to deploy on Arbitrum via Converge blockchain
+// These addresses will be updated when Ethena Protocol is deployed on Arbitrum
+// For now, we use mock contracts for testing
+export const ethenaAddresses = {
+  USDe: '0x0000000000000000000000000000000000000000', // Will be set after mock deployment
+  staking: '0x0000000000000000000000000000000000000000', // Will be set after mock deployment
+};
+
+export const ethenaPairs = [
+  {
+    asset: tokenAddresses.USDT,
+    usdeToken: ethenaAddresses.USDe,
+    stakingContract: ethenaAddresses.staking,
+  },
+  {
+    asset: tokenAddresses.USDC,
+    usdeToken: ethenaAddresses.USDe,
+    stakingContract: ethenaAddresses.staking,
+  },
+];
+
 // export const vaults = [];
 
 export const ARBITRUM_CHAIN_ID = 42161n;

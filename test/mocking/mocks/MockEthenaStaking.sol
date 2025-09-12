@@ -51,4 +51,8 @@ contract MockEthenaStaking is IEthenaStaking {
     function getPendingRewards(address user) external view override returns (uint256) {
         return pendingRewards[user];
     }
+
+    function getUSDeToken() external view override returns (address) {
+        return address(usdeToken);
+    }
 }

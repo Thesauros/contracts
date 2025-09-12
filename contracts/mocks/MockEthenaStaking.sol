@@ -126,6 +126,14 @@ contract MockEthenaStaking is IEthenaStaking {
     }
 
     /**
+     * @notice Get the USDe token address
+     * @return The USDe token address
+     */
+    function getUSDeToken() external view override returns (address) {
+        return address(usdeToken);
+    }
+
+    /**
      * @dev Events
      */
     event RewardsClaimed(address indexed user, uint256 amount);

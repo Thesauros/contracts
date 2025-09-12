@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.23;
+pragma solidity 0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IProvider} from "../interfaces/IProvider.sol";
 import {IVault} from "../interfaces/IVault.sol";
+import {IProviderManager} from "../interfaces/IProviderManager.sol";
 import {IEthenaStaking} from "../interfaces/ethena/IEthenaStaking.sol";
 import {IUSDe} from "../interfaces/ethena/IUSDe.sol";
 
@@ -21,33 +22,43 @@ contract EthenaProvider is IProvider {
      */
     error EthenaProvider__AddressZero();
     error EthenaProvider__InvalidAmount();
-    error EthenaProvider__InsufficientBalance();
 
-    /**
-     * @dev State variables
-     */
-    IEthenaStaking public immutable ethenaStaking;
-    IUSDe public immutable usdeToken;
-    IERC20 public immutable collateralToken; 
+    IProviderManager private immutable _providerManager;
 
-    /**
-     * @dev Constructor
-     * @param ethenaStaking_ Address of Ethena staking contract
-     * @param usdeToken_ Address of USDe token
-     * @param collateralToken_ Address of collateral token (USDT/USDC)
-     */
-    constructor(
-        address ethenaStaking_,
-        address usdeToken_,
-        address collateralToken_
-    ) {
-        if (ethenaStaking_ == address(0) || usdeToken_ == address(0) || collateralToken_ == address(0)) {
+    constructor(address providerManager_) {
+        if (providerManager_ == address(0)) {
             revert EthenaProvider__AddressZero();
         }
+        _providerManager = IProviderManager(providerManager_);
+    }
+
+    /**
+     * @dev Validates vault asset and returns all necessary contracts.
+     * @param vault The vault to validate
+     * @return staking The Ethena staking contract
+     * @return usdeToken The USDe token contract
+     * @return collateralToken The collateral token contract
+     */
+    function _validateAndGetContracts(IVault vault) internal view returns (
+        IEthenaStaking staking,
+        IUSDe usdeToken,
+        IERC20 collateralToken
+    ) {
+        address asset = vault.asset();
+        require(asset != address(0), "EthenaProvider: Invalid asset");
         
-        ethenaStaking = IEthenaStaking(ethenaStaking_);
-        usdeToken = IUSDe(usdeToken_);
-        collateralToken = IERC20(collateralToken_);
+        address stakingAddress = _providerManager.getYieldToken(getIdentifier(), asset);
+        require(stakingAddress != address(0), "EthenaProvider: Unsupported asset");
+        
+        staking = IEthenaStaking(stakingAddress);
+        
+        // Get USDe token address from staking contract
+        // In Ethena, staking contract should have a method to get USDe token address
+        // For now, we'll assume it's stored as a state variable or can be retrieved
+        address usdeAddress = staking.getUSDeToken(); // This method should exist in IEthenaStaking
+        usdeToken = IUSDe(usdeAddress);
+        
+        collateralToken = IERC20(asset);
     }
 
     /**
@@ -60,10 +71,16 @@ contract EthenaProvider is IProvider {
         if (amount == 0) {
             revert EthenaProvider__InvalidAmount();
         }
+        
+        (IEthenaStaking staking, IUSDe usdeToken, IERC20 collateralToken) = _validateAndGetContracts(vault);
+        
+        // Check vault has sufficient balance
+        require(collateralToken.balanceOf(address(vault)) >= amount, "EthenaProvider: Insufficient vault balance");
+        
         collateralToken.safeTransferFrom(address(vault), address(this), amount);
         uint256 usdeAmount = amount;
-        IERC20(address(usdeToken)).approve(address(ethenaStaking), usdeAmount);
-        ethenaStaking.stake(usdeAmount);
+        IERC20(address(usdeToken)).approve(address(staking), usdeAmount);
+        staking.stake(usdeAmount);
 
         success = true;
     }
@@ -79,7 +96,12 @@ contract EthenaProvider is IProvider {
             revert EthenaProvider__InvalidAmount();
         }
 
-        ethenaStaking.unstake(amount);
+        (IEthenaStaking staking, , IERC20 collateralToken) = _validateAndGetContracts(vault);
+        
+        // Check provider has sufficient staked balance
+        require(staking.getStakedBalance(address(this)) >= amount, "EthenaProvider: Insufficient staked balance");
+
+        staking.unstake(amount);
 
         uint256 collateralAmount = amount;
         collateralToken.safeTransfer(address(vault), collateralAmount);
@@ -94,26 +116,27 @@ contract EthenaProvider is IProvider {
         address user,
         IVault vault
     ) external view override returns (uint256 balance) {
-
-        balance = ethenaStaking.getStakedBalance(user);
+        (IEthenaStaking staking, , ) = _validateAndGetContracts(vault);
+        balance = staking.getStakedBalance(user);
     }
 
     /**
      * @inheritdoc IProvider
      */
     function getDepositRate(IVault vault) external view override returns (uint256 rate) {
-        return ethenaStaking.getCurrentAPY();
+        (IEthenaStaking staking, , ) = _validateAndGetContracts(vault);
+        return staking.getCurrentAPY();
     }
 
     /**
      * @inheritdoc IProvider
      */
     function getSource(
-        address,
+        address asset,
         address,
         address
     ) external view override returns (address source) {
-        source = address(ethenaStaking);
+        source = _providerManager.getYieldToken(getIdentifier(), asset);
     }
 
     /**
@@ -123,36 +146,35 @@ contract EthenaProvider is IProvider {
         return "Ethena_Provider";
     }
 
+
     /**
      * @notice Claim rewards from Ethena staking
      * @dev This function can be called to claim accumulated rewards
+     * @param vault The vault for which to claim rewards
      */
-    function claimRewards() external {
-        ethenaStaking.claimRewards();
+    function claimRewards(IVault vault) external {
+        (IEthenaStaking staking, , ) = _validateAndGetContracts(vault);
+        staking.claimRewards();
     }
 
     /**
      * @notice Get pending rewards for a user
      * @param user The user address
+     * @param vault The vault for which to get pending rewards
      * @return The pending rewards amount
      */
-    function getPendingRewards(address user) external view returns (uint256) {
-        return ethenaStaking.getPendingRewards(user);
-    }
-
-    /**
-     * @notice Get the current APY from Ethena
-     * @return The current APY in basis points
-     */
-    function getCurrentAPY() external view returns (uint256) {
-        return ethenaStaking.getCurrentAPY();
+    function getPendingRewards(address user, IVault vault) external view returns (uint256) {
+        (IEthenaStaking staking, , ) = _validateAndGetContracts(vault);
+        return staking.getPendingRewards(user);
     }
 
     /**
      * @notice Get the total staked amount in Ethena
+     * @param vault The vault for which to get total staked amount
      * @return The total staked amount
      */
-    function getTotalStaked() external view returns (uint256) {
-        return ethenaStaking.getTotalStaked();
+    function getTotalStaked(IVault vault) external view returns (uint256) {
+        (IEthenaStaking staking, , ) = _validateAndGetContracts(vault);
+        return staking.getTotalStaked();
     }
 }

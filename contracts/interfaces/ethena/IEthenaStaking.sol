@@ -48,4 +48,10 @@ interface IEthenaStaking {
      * @return The pending rewards
      */
     function getPendingRewards(address user) external view returns (uint256);
+
+    /**
+     * @notice Get the USDe token address
+     * @return The USDe token address
+     */
+    function getUSDeToken() external view returns (address);
 }

@@ -8,6 +8,7 @@ import {MockMorpho} from "../../contracts/mocks/MockMorpho.sol";
 import {MockOracle} from "../../contracts/mocks/MockOracle.sol";
 import {MockIrm} from "../../contracts/mocks/MockIrm.sol";
 import {MockERC20} from "../../contracts/mocks/MockERC20.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IVault} from "../../contracts/interfaces/IVault.sol";
 import {IProviderManager} from "../../contracts/interfaces/IProviderManager.sol";
 
@@ -241,6 +242,64 @@ contract MorphoProviderTest is Test {
 
         vm.expectRevert(MorphoProvider.MorphoProvider__InvalidAsset.selector);
         morphoProvider.getDepositBalance(alice, IVault(address(zeroVault)));
+    }
+
+    function test_Deposit_InsufficientBalance_Reverts() public {
+        // Setup: Vault has sufficient balance but we'll mock the balance check to fail
+        vm.prank(address(mockVault));
+        mockAsset.approve(address(morphoProvider), DEPOSIT_AMOUNT);
+
+        // Mock the balance check to return false
+        vm.mockCall(
+            address(mockAsset),
+            abi.encodeWithSelector(IERC20.balanceOf.selector, address(mockVault)),
+            abi.encode(0) // Return 0 balance
+        );
+
+        vm.expectRevert(MorphoProvider.MorphoProvider__InsufficientBalance.selector);
+        morphoProvider.deposit(DEPOSIT_AMOUNT, IVault(address(mockVault)));
+    }
+
+    function test_Deposit_MorphoSupplyFails_Reverts() public {
+        // Setup: Vault approves MorphoProvider to spend its tokens
+        vm.prank(address(mockVault));
+        mockAsset.approve(address(morphoProvider), DEPOSIT_AMOUNT);
+
+        // Mock Morpho supply to fail by reverting
+        vm.mockCallRevert(
+            address(mockMorpho),
+            abi.encodeWithSelector(IMorpho.supply.selector),
+            "Supply failed"
+        );
+
+        // Execute deposit - should return false and transfer back to vault
+        bool success = morphoProvider.deposit(DEPOSIT_AMOUNT, IVault(address(mockVault)));
+
+        // Verify
+        assertFalse(success);
+        
+        // Check that assets were transferred back to vault
+        assertEq(mockAsset.balanceOf(address(mockVault)), INITIAL_BALANCE);
+    }
+
+    function test_Withdraw_MorphoWithdrawFails_Reverts() public {
+        // Setup: MorphoProvider has supply shares
+        vm.prank(address(mockVault));
+        mockAsset.approve(address(morphoProvider), DEPOSIT_AMOUNT);
+        morphoProvider.deposit(DEPOSIT_AMOUNT, IVault(address(mockVault)));
+
+        // Mock Morpho withdraw to fail by reverting
+        vm.mockCallRevert(
+            address(mockMorpho),
+            abi.encodeWithSelector(IMorpho.withdraw.selector),
+            "Withdraw failed"
+        );
+
+        // Execute withdraw - should return false
+        bool success = morphoProvider.withdraw(DEPOSIT_AMOUNT, IVault(address(mockVault)));
+
+        // Verify
+        assertFalse(success);
     }
 
 }

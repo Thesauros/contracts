@@ -38,7 +38,7 @@ contract ForkingUtilities is StdCheats, Test {
     address public constant VENUS_USDT_ADDRESS =
         0xB9F9117d4200dC296F9AcD1e8bE1937df834a2fD;
     address public constant USDC_ADDRESS =
-        0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;
+        0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
     address public constant COMET_USDC_ADDRESS =
         0xb125E6687d4313864e53df431d5425969c15Eb2F;
     address public constant MORPHO_SPARK_VAULT_ADDRESS =
@@ -64,9 +64,6 @@ contract ForkingUtilities is StdCheats, Test {
     uint256 public constant TIMELOCK_DELAY = 30 minutes;
 
     constructor() {
-        string memory BASE_RPC_URL = vm.envString("BASE_RPC_URL");
-        vm.createSelectFork(BASE_RPC_URL);
-
         string memory ARBITRUM_RPC_URL = vm.envString("ARBITRUM_RPC_URL");
         vm.createSelectFork(ARBITRUM_RPC_URL);
 

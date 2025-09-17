@@ -3,36 +3,20 @@ pragma solidity 0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IProvider} from "../../contracts/interfaces/IProvider.sol";
-import {VenusProvider} from "../../contracts/providers/VenusProvider.sol";
+import {MorphoProvider} from "../../contracts/providers/MorphoProvider.sol";
 import {ForkingUtilities} from "../utils/ForkingUtilities.sol";
 
-contract VenusProviderTests is ForkingUtilities {
-    VenusProvider public venusProvider;
+contract SparkMorphoProviderTests is ForkingUtilities {
+    MorphoProvider public morphoProvider;
 
     function setUp() public {
-        venusProvider = new VenusProvider(address(providerManager));
+        morphoProvider = new MorphoProvider(MORPHO_SPARK_VAULT_ADDRESS);
 
         IProvider[] memory providers = new IProvider[](1);
-        providers[0] = venusProvider;
+        providers[0] = morphoProvider;
 
-        deployVault(address(usdt), providers);
+        deployVault(address(usdc), providers);
         initializeVault(vault, MIN_AMOUNT, initializer);
-    }
-
-    // =========================================
-    // constructor
-    // =========================================
-
-    function testConstructorRevertsIfProviderManagerIsInvalid() public {
-        vm.expectRevert(VenusProvider.VenusProvider__AddressZero.selector);
-        new VenusProvider(address(0));
-    }
-
-    function testConstructor() public view {
-        assertEq(
-            address(venusProvider.getProviderManager()),
-            address(providerManager)
-        );
     }
 
     // =========================================
@@ -96,7 +80,7 @@ contract VenusProviderTests is ForkingUtilities {
     // =========================================
 
     function testDepositRate() public view {
-        assertGt(venusProvider.getDepositRate(vault), 0);
+        assertGt(morphoProvider.getDepositRate(vault), 0);
     }
 
     // =========================================
@@ -104,6 +88,6 @@ contract VenusProviderTests is ForkingUtilities {
     // =========================================
 
     function testIdentifier() public view {
-        assertEq(venusProvider.getIdentifier(), "Venus_Provider");
+        assertEq(morphoProvider.getIdentifier(), "Morpho_Provider");
     }
 }

@@ -25,6 +25,7 @@ contract ForkingUtilities is StdCheats, Test {
 
     ProviderManager public providerManager;
 
+    IERC20 public usdc;
     IERC20 public usdt;
     IERC20 public frax;
 
@@ -36,6 +37,24 @@ contract ForkingUtilities is StdCheats, Test {
         0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07;
     address public constant VENUS_USDT_ADDRESS =
         0xB9F9117d4200dC296F9AcD1e8bE1937df834a2fD;
+    address public constant USDC_ADDRESS =
+        0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
+    address public constant COMET_USDC_ADDRESS =
+        0xb125E6687d4313864e53df431d5425969c15Eb2F;
+    address public constant MORPHO_SPARK_VAULT_ADDRESS =
+        0x7BfA7C4f149E7415b73bdeDfe609237e29CBF34A;
+    address public constant MORPHO_MOONWELL_VAULT_ADDRESS =
+        0xc1256Ae5FF1cf2719D4937adb3bbCCab2E00A2Ca;
+    address public constant MORPHO_SEAMLESS_VAULT_ADDRESS =
+        0x616a4E1db48e22028f6bbf20444Cd3b8e3273738;
+    address public constant MORPHO_STEAKHOUSE_VAULT_ADDRESS =
+        0xbeeF010f9cb27031ad51e3333f9aF9C6B1228183;
+    address public constant MORPHO_GAUNTLET_PRIME_VAULT_ADDRESS =
+        0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61;
+    address public constant MORPHO_GAUNTLET_CORE_VAULT_ADDRESS =
+        0xc0c5689e6f4D256E861F65465b691aeEcC0dEb12;
+    address public constant MORPHO_APOSTRO_RESOLV_VAULT_ADDRESS =
+        0xcdDCDd18A16ED441F6CB10c3909e5e7ec2B9e8f3;
 
     uint256 public constant PRECISION_FACTOR = 1e18;
     uint256 public constant WITHDRAW_FEE_PERCENT = 0.001 ether; // 0.1%
@@ -53,6 +72,8 @@ contract ForkingUtilities is StdCheats, Test {
 
         frax = IERC20(FRAX_ADDRESS);
         vm.label(address(frax), "FRAX");
+        usdc = IERC20(USDC_ADDRESS);
+        vm.label(address(usdc), "USDC");
 
         providerManager = new ProviderManager();
         providerManager.setYieldToken(
@@ -64,6 +85,8 @@ contract ForkingUtilities is StdCheats, Test {
             "Venus_Provider",
             USDT_ADDRESS,
             VENUS_USDT_ADDRESS
+           // USDC_ADDRESS,
+           // COMET_USDC_ADDRESS
         );
 
         timelock = new Timelock(address(this), TIMELOCK_DELAY);

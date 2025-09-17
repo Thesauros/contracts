@@ -3,19 +3,21 @@ pragma solidity 0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IProvider} from "../../contracts/interfaces/IProvider.sol";
-import {DolomiteProvider} from "../../contracts/providers/DolomiteProvider.sol";
+import {MorphoProvider} from "../../contracts/providers/MorphoProvider.sol";
 import {ForkingUtilities} from "../utils/ForkingUtilities.sol";
 
-contract DolomiteProviderTests is ForkingUtilities {
-    DolomiteProvider public dolomiteProvider;
+contract ApostroResolvMorphoProviderTests is ForkingUtilities {
+    MorphoProvider public morphoProvider;
 
     function setUp() public {
-        dolomiteProvider = new DolomiteProvider();
+        morphoProvider = new MorphoProvider(
+            MORPHO_APOSTRO_RESOLV_VAULT_ADDRESS
+        );
 
         IProvider[] memory providers = new IProvider[](1);
-        providers[0] = dolomiteProvider;
+        providers[0] = morphoProvider;
 
-        deployVault(address(usdt), providers);
+        deployVault(address(usdc), providers);
         initializeVault(vault, MIN_AMOUNT, initializer);
     }
 
@@ -80,7 +82,7 @@ contract DolomiteProviderTests is ForkingUtilities {
     // =========================================
 
     function testDepositRate() public view {
-        assertGt(dolomiteProvider.getDepositRate(vault), 0);
+        assertGt(morphoProvider.getDepositRate(vault), 0);
     }
 
     // =========================================
@@ -88,6 +90,6 @@ contract DolomiteProviderTests is ForkingUtilities {
     // =========================================
 
     function testIdentifier() public view {
-        assertEq(dolomiteProvider.getIdentifier(), "Dolomite_Provider");
+        assertEq(morphoProvider.getIdentifier(), "Morpho_Provider");
     }
 }

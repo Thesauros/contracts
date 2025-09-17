@@ -1,17 +1,25 @@
-// SPDX-License-Identifier: MIT
-pragma solidity 0.8.23;
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma solidity >=0.5.0;
 
-import {IMorpho} from "./IMorpho.sol";
+import {MarketParams, Market} from "./IMorpho.sol";
 
 /// @title IIrm
-/// @notice Interface for Interest Rate Models used by Morpho
+/// @author Morpho Labs
+/// @custom:contact security@morpho.org
+/// @notice Interface that Interest Rate Models (IRMs) used by Morpho must implement.
 interface IIrm {
-    /// @notice Get the current borrow rate for a market
-    /// @param marketParams The market parameters
-    /// @param market The market data
-    /// @return The current borrow rate (in ray, 1e27)
+    /// @notice Returns the borrow rate per second (scaled by WAD) of the market `marketParams`.
+    /// @dev Assumes that `market` corresponds to `marketParams`.
     function borrowRate(
-        IMorpho.MarketParams memory marketParams,
-        IMorpho.Market memory market
+        MarketParams memory marketParams,
+        Market memory market
+    ) external returns (uint256);
+
+    /// @notice Returns the borrow rate per second (scaled by WAD) of the market `marketParams` without modifying any
+    /// storage.
+    /// @dev Assumes that `market` corresponds to `marketParams`.
+    function borrowRateView(
+        MarketParams memory marketParams,
+        Market memory market
     ) external view returns (uint256);
 }

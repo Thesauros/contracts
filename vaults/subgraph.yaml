@@ -6,7 +6,7 @@ dataSources:
     name: Vault
     network: arbitrum-one
     source:
-      address: "0x78c11f63E6840820be18fDA461Ab16f23da5884f"
+      address: "0x57C10bd3fdB2849384dDe954f63d37DfAD9d7d70"  # USDC Vault address
       abi: Vault
       startBlock: 0
     mapping:

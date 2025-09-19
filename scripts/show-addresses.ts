@@ -47,16 +47,9 @@ async function main() {
   console.log('\nVaults Vaults:');
   console.log('----------');
   
-  // Known vault addresses from our deployments
-  const vaultAddresses = {
-    'WETH Vault': '0x78c11f63E6840820be18fDA461Ab16f23da5884f',
-    'USDC Vault': '0xdf5AFad7f88888bEE944d14982c2d9eBA65653e6',
-    'USDT Vault': '0xe1D34AB80090da3498Fc5D0696a2Cf82971E5eC6',
-  };
-
-  for (const [name, address] of Object.entries(vaultAddresses)) {
-    console.log(`${name}: ${address}`);
-  }
+  // Vault addresses from latest deployment
+  console.log('USDC Vault: 0x57C10bd3fdB2849384dDe954f63d37DfAD9d7d70');
+  console.log('USDT Vault: 0xcd72118C0707D315fa13350a63596dCd9B294A30');
 
   console.log('\n  Token Addresses:');
   console.log('------------------');

@@ -6,11 +6,11 @@
       "vaults": [
         {
           "coin": "USDT",
-          "address": "0xe1D34AB80090da3498Fc5D0696a2Cf82971E5eC6"
+          "address": "0xcd72118C0707D315fa13350a63596dCd9B294A30"
         },
         {
           "coin": "USDC",
-          "address": "0xdf5AFad7f88888bEE944d14982c2d9eBA65653e6"
+          "address": "0x57C10bd3fdB2849384dDe954f63d37DfAD9d7d70"
         }
       ],
       "tokens": [

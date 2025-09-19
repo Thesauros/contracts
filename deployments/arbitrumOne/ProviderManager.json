@@ -1,24 +1,37 @@
 {
-  "address": "0x30dC35B78a401Fd0227C229ADF6d0F5097358EF9",
+  "address": "0x5F9F7ae7a8Ea732220E19694fb07da3f296386c5",
   "abi": [
     {
-      "inputs": [],
-      "name": "AccessManager__CallerIsNotAdmin",
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner_",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableInvalidOwner",
       "type": "error"
     },
     {
-      "inputs": [],
-      "name": "AccessManager__CallerIsNotExecutor",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "AccessManager__CallerIsNotOperator",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "AccessManager__CallerIsNotRootUpdater",
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableUnauthorizedAccount",
       "type": "error"
     },
     {
@@ -57,24 +70,18 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "indexed": true,
           "internalType": "address",
-          "name": "account",
+          "name": "previousOwner",
           "type": "address"
         },
         {
           "indexed": true,
           "internalType": "address",
-          "name": "sender",
+          "name": "newOwner",
           "type": "address"
         }
       ],
-      "name": "RoleGranted",
+      "name": "OwnershipTransferStarted",
       "type": "event"
     },
     {
@@ -82,24 +89,18 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "indexed": true,
           "internalType": "address",
-          "name": "account",
+          "name": "previousOwner",
           "type": "address"
         },
         {
           "indexed": true,
           "internalType": "address",
-          "name": "sender",
+          "name": "newOwner",
           "type": "address"
         }
       ],
-      "name": "RoleRevoked",
+      "name": "OwnershipTransferred",
       "type": "event"
     },
     {
@@ -129,54 +130,9 @@
     },
     {
       "inputs": [],
-      "name": "ADMIN_ROLE",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "EXECUTOR_ROLE",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "OPERATOR_ROLE",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "ROOT_UPDATER_ROLE",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
+      "name": "acceptOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -246,61 +202,34 @@
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "grantRole",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "account",
-          "type": "address"
-        }
-      ],
-      "name": "hasRole",
+      "inputs": [],
+      "name": "owner",
       "outputs": [
         {
-          "internalType": "bool",
+          "internalType": "address",
           "name": "",
-          "type": "bool"
+          "type": "address"
         }
       ],
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "role",
-          "type": "bytes32"
-        },
+      "inputs": [],
+      "name": "pendingOwner",
+      "outputs": [
         {
           "internalType": "address",
-          "name": "account",
+          "name": "",
           "type": "address"
         }
       ],
-      "name": "revokeRole",
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -355,51 +284,70 @@
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     }
   ],
-  "transactionHash": "0xba7f35bb67646cda8f38b2c290dd241e0014edcbc53e8faaf45851e4643ae243",
+  "transactionHash": "0x15a30bfc2bc91b7ca83489213a54c361bb2114af41b0e9d33da3b5d9bb56a97f",
   "receipt": {
     "to": null,
     "from": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
-    "contractAddress": "0x30dC35B78a401Fd0227C229ADF6d0F5097358EF9",
-    "transactionIndex": 14,
-    "gasUsed": "773680",
-    "logsBloom": "0x00000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000800000000004000002000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000008000000000000000001001000000000000000000000000000000000000000000000000000000000000100000000000020000000000000000000000000000000000000000000000000000000000000000000",
-    "blockHash": "0x03e2715d81cd5d76dda5823b94ca5ab2401d7ff02882db2c704104df027583a4",
-    "transactionHash": "0xba7f35bb67646cda8f38b2c290dd241e0014edcbc53e8faaf45851e4643ae243",
+    "contractAddress": "0x5F9F7ae7a8Ea732220E19694fb07da3f296386c5",
+    "transactionIndex": 2,
+    "gasUsed": "718980",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000001000000000000000000000000000000000000020000000000000000000800000000000000000000000000000000400000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000100000000200000000002000000000000020000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x1616167f80c0f478380ea601fdb7f2d8aa7bda8946899141f3424fadf1f86f52",
+    "transactionHash": "0x15a30bfc2bc91b7ca83489213a54c361bb2114af41b0e9d33da3b5d9bb56a97f",
     "logs": [
       {
-        "transactionIndex": 14,
-        "blockNumber": 367710878,
-        "transactionHash": "0xba7f35bb67646cda8f38b2c290dd241e0014edcbc53e8faaf45851e4643ae243",
-        "address": "0x30dC35B78a401Fd0227C229ADF6d0F5097358EF9",
+        "transactionIndex": 2,
+        "blockNumber": 380759296,
+        "transactionHash": "0x15a30bfc2bc91b7ca83489213a54c361bb2114af41b0e9d33da3b5d9bb56a97f",
+        "address": "0x5F9F7ae7a8Ea732220E19694fb07da3f296386c5",
         "topics": [
-          "0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d",
+          "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0",
           "0x0000000000000000000000000000000000000000000000000000000000000000",
-          "0x000000000000000000000000afa9ed53c33bbd8de300481ce150db3d35738f9d",
           "0x000000000000000000000000afa9ed53c33bbd8de300481ce150db3d35738f9d"
         ],
         "data": "0x",
-        "logIndex": 13,
-        "blockHash": "0x03e2715d81cd5d76dda5823b94ca5ab2401d7ff02882db2c704104df027583a4"
+        "logIndex": 0,
+        "blockHash": "0x1616167f80c0f478380ea601fdb7f2d8aa7bda8946899141f3424fadf1f86f52"
       }
     ],
-    "blockNumber": 367710878,
-    "cumulativeGasUsed": "2045474",
+    "blockNumber": 380759296,
+    "cumulativeGasUsed": "787393",
     "status": 1,
     "byzantium": true
   },
-  "args": [],
+  "args": [
+    "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D"
+  ],
   "numDeployments": 1,
-  "solcInputHash": "08e9f5ef185e61f929e85712217423f8",
-  "metadata": "{\"compiler\":{\"version\":\"0.8.23+commit.f704f362\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"AccessManager__CallerIsNotAdmin\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"AccessManager__CallerIsNotExecutor\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"AccessManager__CallerIsNotOperator\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"AccessManager__CallerIsNotRootUpdater\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"string\",\"name\":\"identifier\",\"type\":\"string\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"assetOne\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"assetTwo\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"market\",\"type\":\"address\"}],\"name\":\"MarketUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleGranted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"RoleRevoked\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"string\",\"name\":\"identifier\",\"type\":\"string\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"yieldToken\",\"type\":\"address\"}],\"name\":\"YieldTokenUpdated\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"ADMIN_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"EXECUTOR_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"OPERATOR_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"ROOT_UPDATER_ROLE\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getIdentifiers\",\"outputs\":[{\"internalType\":\"string[]\",\"name\":\"\",\"type\":\"string[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"identifier\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"assetOne\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"assetTwo\",\"type\":\"address\"}],\"name\":\"getMarket\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"identifier\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"}],\"name\":\"getYieldToken\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"grantRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"hasRole\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"role\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"revokeRole\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"identifier\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"assetOne\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"assetTwo\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"market\",\"type\":\"address\"}],\"name\":\"setMarket\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"identifier\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"yieldToken\",\"type\":\"address\"}],\"name\":\"setYieldToken\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"errors\":{\"AccessManager__CallerIsNotAdmin()\":[{\"details\":\"Errors\"}]},\"events\":{\"MarketUpdated(string,address,address,address)\":{\"details\":\"Emitted when the market is set for two assets.\",\"params\":{\"assetOne\":\"The address of the first asset.\",\"assetTwo\":\"The address of the second asset.\",\"identifier\":\"The identifier of the provider.\",\"market\":\"The address of the corresponding market.\"}},\"RoleGranted(bytes32,address,address)\":{\"details\":\"Emitted when `account` is granted `role`.\"},\"RoleRevoked(bytes32,address,address)\":{\"details\":\"Emitted when `account` is revoked `role`.\"},\"YieldTokenUpdated(string,address,address)\":{\"details\":\"Emitted when the yield token is set for an asset.\",\"params\":{\"asset\":\"The address of the asset.\",\"identifier\":\"The identifier of the provider.\",\"yieldToken\":\"The address of the corresponding yield token.\"}}},\"kind\":\"dev\",\"methods\":{\"getMarket(string,address,address)\":{\"params\":{\"assetOne\":\"The address of the first asset.\",\"assetTwo\":\"The address of the second asset.\",\"identifier\":\"The identifier of the provider.\"}},\"getYieldToken(string,address)\":{\"params\":{\"asset\":\"The address of the asset.\",\"identifier\":\"The identifier of the provider.\"}},\"grantRole(bytes32,address)\":{\"details\":\"Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have the admin role. May emit a {RoleGranted} event.\"},\"hasRole(bytes32,address)\":{\"details\":\"Returns `true` if `account` has been granted `role`.\"},\"revokeRole(bytes32,address)\":{\"details\":\"Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have the admin role. May emit a {RoleRevoked} event.\"},\"setMarket(string,address,address,address)\":{\"params\":{\"assetOne\":\"The address of the first asset.\",\"assetTwo\":\"The address of the second asset.\",\"identifier\":\"The identifier of the provider.\",\"market\":\"The address of the corresponding market.\"}},\"setYieldToken(string,address,address)\":{\"params\":{\"asset\":\"The address of the asset.\",\"identifier\":\"The identifier of the provider.\",\"yieldToken\":\"The address of the corresponding yield token.\"}}},\"title\":\"ProviderManager\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"getIdentifiers()\":{\"notice\":\"Returns the list of all the provider identifiers.\"},\"getMarket(string,address,address)\":{\"notice\":\"Returns the market for two assets and a provider identifier.\"},\"getYieldToken(string,address)\":{\"notice\":\"Returns the yield token for a given asset and provider identifier.\"},\"setMarket(string,address,address,address)\":{\"notice\":\"Sets the market for two assets and a provider identifier.\"},\"setYieldToken(string,address,address)\":{\"notice\":\"Sets the yield token for a given asset and provider identifier.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/providers/ProviderManager.sol\":\"ProviderManager\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":1},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/utils/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.1) (utils/Context.sol)\\n\\npragma solidity ^0.8.20;\\n\\n/**\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract Context {\\n    function _msgSender() internal view virtual returns (address) {\\n        return msg.sender;\\n    }\\n\\n    function _msgData() internal view virtual returns (bytes calldata) {\\n        return msg.data;\\n    }\\n\\n    function _contextSuffixLength() internal view virtual returns (uint256) {\\n        return 0;\\n    }\\n}\\n\",\"keccak256\":\"0x493033a8d1b176a037b2cc6a04dad01a5c157722049bbecf632ca876224dd4b2\",\"license\":\"MIT\"},\"contracts/access/AccessManager.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.8.23;\\n\\nimport \\\"@openzeppelin/contracts/utils/Context.sol\\\";\\n\\n/**\\n * @title AccessManager\\n *\\n * @dev Inspired and modified from OpenZeppelin's AccessControl contract.\\n */\\ncontract AccessManager is Context {\\n    /**\\n     * @dev Errors\\n     */\\n    error AccessManager__CallerIsNotAdmin();\\n    error AccessManager__CallerIsNotOperator();\\n    error AccessManager__CallerIsNotExecutor();\\n    error AccessManager__CallerIsNotRootUpdater();\\n\\n    mapping(bytes32 role => mapping(address account => bool)) private _roles;\\n\\n    bytes32 public constant ADMIN_ROLE = 0x00;\\n    bytes32 public constant OPERATOR_ROLE = keccak256(\\\"OPERATOR_ROLE\\\");\\n    bytes32 public constant EXECUTOR_ROLE = keccak256(\\\"EXECUTOR_ROLE\\\");\\n    bytes32 public constant ROOT_UPDATER_ROLE = keccak256(\\\"ROOT_UPDATER_ROLE\\\");\\n\\n    /**\\n     * @dev Emitted when `account` is granted `role`.\\n     */\\n    event RoleGranted(\\n        bytes32 indexed role,\\n        address indexed account,\\n        address indexed sender\\n    );\\n\\n    /**\\n     * @dev Emitted when `account` is revoked `role`.\\n     */\\n    event RoleRevoked(\\n        bytes32 indexed role,\\n        address indexed account,\\n        address indexed sender\\n    );\\n\\n    /**\\n     * @dev Modifier that checks that an account has an admin role. Reverts\\n     * with an {AccessManager__CallerIsNotAdmin} error.\\n     */\\n    modifier onlyAdmin() {\\n        if (!hasRole(ADMIN_ROLE, _msgSender())) {\\n            revert AccessManager__CallerIsNotAdmin();\\n        }\\n        _;\\n    }\\n\\n    /**\\n     * @dev Modifier that checks that an account has an operator role. Reverts\\n     * with an {AccessManager__CallerIsNotOperator} error.\\n     */\\n    modifier onlyOperator() {\\n        if (!hasRole(OPERATOR_ROLE, _msgSender())) {\\n            revert AccessManager__CallerIsNotOperator();\\n        }\\n        _;\\n    }\\n\\n    /**\\n     * @dev Modifier that checks that an account has an executor role. Reverts\\n     * with an {AccessManager__CallerIsNotExecutor} error.\\n     */\\n    modifier onlyExecutor() {\\n        if (!hasRole(EXECUTOR_ROLE, _msgSender())) {\\n            revert AccessManager__CallerIsNotExecutor();\\n        }\\n        _;\\n    }\\n\\n    /**\\n     * @dev Modifier that checks that an account has a root updater role. Reverts\\n     * with an {AccessManager__CallerIsNotRootUpdater} error.\\n     */\\n    modifier onlyRootUpdater() {\\n        if (!hasRole(ROOT_UPDATER_ROLE, _msgSender())) {\\n            revert AccessManager__CallerIsNotRootUpdater();\\n        }\\n        _;\\n    }\\n\\n    /**\\n     * @dev Sets the deployer of the contract as the initial admin.\\n     */\\n    constructor() {\\n        _grantRole(ADMIN_ROLE, _msgSender());\\n    }\\n\\n    /**\\n     * @dev Returns `true` if `account` has been granted `role`.\\n     */\\n    function hasRole(\\n        bytes32 role,\\n        address account\\n    ) public view virtual returns (bool) {\\n        return _roles[role][account];\\n    }\\n\\n    /**\\n     * @dev Grants `role` to `account`.\\n     *\\n     * If `account` had not been already granted `role`, emits a {RoleGranted}\\n     * event.\\n     *\\n     * Requirements:\\n     *\\n     * - the caller must have the admin role.\\n     *\\n     * May emit a {RoleGranted} event.\\n     */\\n    function grantRole(bytes32 role, address account) public onlyAdmin {\\n        _grantRole(role, account);\\n    }\\n\\n    /**\\n     * @dev Revokes `role` from `account`.\\n     *\\n     * If `account` had been granted `role`, emits a {RoleRevoked} event.\\n     *\\n     * Requirements:\\n     *\\n     * - the caller must have the admin role.\\n     *\\n     * May emit a {RoleRevoked} event.\\n     */\\n    function revokeRole(bytes32 role, address account) public onlyAdmin {\\n        _revokeRole(role, account);\\n    }\\n\\n    /**\\n     * @dev Attempts to grant `role` to `account`.\\n     *\\n     * Internal function without access restriction.\\n     *\\n     * May emit a {RoleGranted} event.\\n     */\\n    function _grantRole(bytes32 role, address account) internal {\\n        if (!hasRole(role, account)) {\\n            _roles[role][account] = true;\\n            emit RoleGranted(role, account, _msgSender());\\n        }\\n    }\\n\\n    /**\\n     * @dev Attempts to revoke `role` from `account`.\\n     *\\n     * Internal function without access restriction.\\n     *\\n     * May emit a {RoleRevoked} event.\\n     */\\n    function _revokeRole(bytes32 role, address account) internal {\\n        if (hasRole(role, account)) {\\n            _roles[role][account] = false;\\n            emit RoleRevoked(role, account, _msgSender());\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x29343100e267489847efb757b9c88c094ba5fe6deb7c4554c68e1b50ec1b4220\",\"license\":\"MIT\"},\"contracts/interfaces/IProviderManager.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.8.23;\\n\\n/**\\n * @title IProviderManager\\n */\\ninterface IProviderManager {\\n    /**\\n     * @dev Emitted when the yield token is set for an asset.\\n     * @param identifier The identifier of the provider.\\n     * @param asset The address of the asset.\\n     * @param yieldToken The address of the corresponding yield token.\\n     */\\n    event YieldTokenUpdated(\\n        string identifier,\\n        address indexed asset,\\n        address yieldToken\\n    );\\n\\n    /**\\n     * @dev Emitted when the market is set for two assets.\\n     * @param identifier The identifier of the provider.\\n     * @param assetOne The address of the first asset.\\n     * @param assetTwo The address of the second asset.\\n     * @param market The address of the corresponding market.\\n     */\\n    event MarketUpdated(\\n        string identifier,\\n        address indexed assetOne,\\n        address indexed assetTwo,\\n        address market\\n    );\\n\\n    /**\\n     * @notice Returns the yield token for a given asset and provider identifier.\\n     * @param identifier The identifier of the provider.\\n     * @param asset The address of the asset.\\n     */\\n    function getYieldToken(\\n        string memory identifier,\\n        address asset\\n    ) external view returns (address yieldToken);\\n\\n    /**\\n     * @notice Returns the market for two assets and a provider identifier.\\n     * @param identifier The identifier of the provider.\\n     * @param assetOne The address of the first asset.\\n     * @param assetTwo The address of the second asset.\\n     */\\n    function getMarket(\\n        string memory identifier,\\n        address assetOne,\\n        address assetTwo\\n    ) external view returns (address market);\\n\\n    /**\\n     * @notice Sets the yield token for a given asset and provider identifier.\\n     * @param identifier The identifier of the provider.\\n     * @param asset The address of the asset.\\n     * @param yieldToken The address of the corresponding yield token.\\n     */\\n    function setYieldToken(\\n        string memory identifier,\\n        address asset,\\n        address yieldToken\\n    ) external;\\n\\n    /**\\n     * @notice Sets the market for two assets and a provider identifier.\\n     * @param identifier The identifier of the provider.\\n     * @param assetOne The address of the first asset.\\n     * @param assetTwo The address of the second asset.\\n     * @param market The address of the corresponding market.\\n     */\\n    function setMarket(\\n        string memory identifier,\\n        address assetOne,\\n        address assetTwo,\\n        address market\\n    ) external;\\n}\\n\",\"keccak256\":\"0x84c85d32f1eab7e217a44998dcdb80194bce33568ad4d32be32a91f37f08c18f\",\"license\":\"MIT\"},\"contracts/providers/ProviderManager.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.8.23;\\n\\nimport {IProviderManager} from \\\"../interfaces/IProviderManager.sol\\\";\\nimport {AccessManager} from \\\"../access/AccessManager.sol\\\";\\n\\n/**\\n * @title ProviderManager\\n */\\ncontract ProviderManager is IProviderManager, AccessManager {\\n    // identifier => asset address => yield token address\\n    mapping(string => mapping(address => address)) private _assetToYieldToken;\\n\\n    // identifier => asset1 address => asset2 address => market address\\n    mapping(string => mapping(address => mapping(address => address)))\\n        private _assetsToMarket;\\n\\n    mapping(string => bool) private _identifierRegistered;\\n\\n    string[] private _providerIdentifiers;\\n\\n    /**\\n     * @inheritdoc IProviderManager\\n     */\\n    function setYieldToken(\\n        string memory identifier,\\n        address asset,\\n        address yieldToken\\n    ) public override onlyAdmin {\\n        if (!_identifierRegistered[identifier]) {\\n            _identifierRegistered[identifier] = true;\\n            _providerIdentifiers.push(identifier);\\n        }\\n        _assetToYieldToken[identifier][asset] = yieldToken;\\n        emit YieldTokenUpdated(identifier, asset, yieldToken);\\n    }\\n\\n    /**\\n     * @inheritdoc IProviderManager\\n     */\\n    function setMarket(\\n        string memory identifier,\\n        address assetOne,\\n        address assetTwo,\\n        address market\\n    ) public override onlyAdmin {\\n        if (!_identifierRegistered[identifier]) {\\n            _identifierRegistered[identifier] = true;\\n            _providerIdentifiers.push(identifier);\\n        }\\n        _assetsToMarket[identifier][assetOne][assetTwo] = market;\\n        emit MarketUpdated(identifier, assetOne, assetTwo, market);\\n    }\\n\\n    /**\\n     * @inheritdoc IProviderManager\\n     */\\n    function getYieldToken(\\n        string memory identifier,\\n        address asset\\n    ) external view override returns (address) {\\n        return _assetToYieldToken[identifier][asset];\\n    }\\n\\n    /**\\n     * @inheritdoc IProviderManager\\n     */\\n    function getMarket(\\n        string memory identifier,\\n        address assetOne,\\n        address assetTwo\\n    ) external view override returns (address) {\\n        return _assetsToMarket[identifier][assetOne][assetTwo];\\n    }\\n\\n    /**\\n     * @notice Returns the list of all the provider identifiers.\\n     */\\n    function getIdentifiers() public view returns (string[] memory) {\\n        return _providerIdentifiers;\\n    }\\n}\\n\",\"keccak256\":\"0xe2737ff8702eba85aa0ea4f081a2879423cde18cdaa4514e05ffe50a70b4e578\",\"license\":\"MIT\"}},\"version\":1}",
-  "bytecode": "0x608060405234801561001057600080fd5b5061001c600033610021565b6100c0565b6000828152602081815260408083206001600160a01b038516845290915290205460ff166100bc576000828152602081815260408083206001600160a01b03851684529091529020805460ff1916600117905561007b3390565b6001600160a01b0316816001600160a01b0316837f2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d60405160405180910390a45b5050565b610bf2806100cf6000396000f3fe608060405234801561001057600080fd5b50600436106100a45760003560e01c806307bd0265146100a95780632f2ff15d146100e357806375b238fc146100f8578063784260d61461010057806391d148541461012b57806395c8193a1461014e578063a4770a8814610161578063a8d01ca914610176578063c41adf5014610189578063d547741f1461019c578063d9ab2c5c146101af578063f5b541a6146101d5575b600080fd5b6100d07fd8aa0f3194971a2a116679f7c2090f6939c8d4e01a2a8d7e41d55e5351469e6381565b6040519081526020015b60405180910390f35b6100f66100f136600461077b565b6101fc565b005b6100d0600081565b61011361010e366004610849565b610232565b6040516001600160a01b0390911681526020016100da565b61013e61013936600461077b565b610281565b60405190151581526020016100da565b6100f661015c366004610849565b6102aa565b6101696103e3565b6040516100da91906108f6565b6100f661018436600461095a565b6104bc565b6101136101973660046109c8565b610603565b6100f66101aa36600461077b565b610644565b6100d07e9ab23a1010d07a0450a1fbea1d84169b57d2c2273b54bff0f20c3e90199b5d81565b6100d07f97667070c54ef182b0f5858b034beac1b6f3089aa2d3188bb1e8929f4fa9b92981565b610207600033610281565b61022457604051633dcaff7960e21b815260040160405180910390fd5b61022e8282610676565b5050565b60006002846040516102449190610a0c565b908152604080519182900360209081019092206001600160a01b038087166000908152918452828220868216835290935220541690509392505050565b6000918252602082815260408084206001600160a01b0393909316845291905290205460ff1690565b6102b5600033610281565b6102d257604051633dcaff7960e21b815260040160405180910390fd5b6003836040516102e29190610a0c565b9081526040519081900360200190205460ff1661035757600160038460405161030b9190610a0c565b908152604051908190036020019020805491151560ff1990921691909117905560048054600181018255600091909152600080516020610b9d833981519152016103558482610ab3565b505b806001846040516103689190610a0c565b90815260408051602092819003830181206001600160a01b0387811660008181529290955292902080546001600160a01b03191694909216939093179055907fc277be270aa676292d0cbddf713f8160bb9528890b12a3c5b2fc6e30052d07e1906103d69086908590610b72565b60405180910390a2505050565b60606004805480602002602001604051908101604052809291908181526020016000905b828210156104b357838290600052602060002001805461042690610a28565b80601f016020809104026020016040519081016040528092919081815260200182805461045290610a28565b801561049f5780601f106104745761010080835404028352916020019161049f565b820191906000526020600020905b81548152906001019060200180831161048257829003601f168201915b505050505081526020019060010190610407565b50505050905090565b6104c7600033610281565b6104e457604051633dcaff7960e21b815260040160405180910390fd5b6003846040516104f49190610a0c565b9081526040519081900360200190205460ff1661056957600160038560405161051d9190610a0c565b908152604051908190036020019020805491151560ff1990921691909117905560048054600181018255600091909152600080516020610b9d833981519152016105678582610ab3565b505b8060028560405161057a9190610a0c565b90815260408051602092819003830181206001600160a01b03888116600081815292865284832089831680855296529390912080546001600160a01b031916959091169490941790935590917fb2fa499914f4084c208b861c88d34ceb30d98d3e817ddff6468c1a9af5fd9bb4906105f59088908690610b72565b60405180910390a350505050565b60006001836040516106159190610a0c565b90815260408051602092819003830190206001600160a01b039485166000908152925290205490911692915050565b61064f600033610281565b61066c57604051633dcaff7960e21b815260040160405180910390fd5b61022e82826106fa565b6106808282610281565b61022e576000828152602081815260408083206001600160a01b03851684529091529020805460ff191660011790556106b63390565b6001600160a01b0316816001600160a01b0316837f2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d60405160405180910390a45050565b6107048282610281565b1561022e576000828152602081815260408083206001600160a01b0385168085529252808320805460ff1916905551339285917ff6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b9190a45050565b80356001600160a01b038116811461077657600080fd5b919050565b6000806040838503121561078e57600080fd5b8235915061079e6020840161075f565b90509250929050565b634e487b7160e01b600052604160045260246000fd5b600082601f8301126107ce57600080fd5b81356001600160401b03808211156107e8576107e86107a7565b604051601f8301601f19908116603f01168101908282118183101715610810576108106107a7565b8160405283815286602085880101111561082957600080fd5b836020870160208301376000602085830101528094505050505092915050565b60008060006060848603121561085e57600080fd5b83356001600160401b0381111561087457600080fd5b610880868287016107bd565b93505061088f6020850161075f565b915061089d6040850161075f565b90509250925092565b60005b838110156108c15781810151838201526020016108a9565b50506000910152565b600081518084526108e28160208601602086016108a6565b601f01601f19169290920160200192915050565b600060208083016020845280855180835260408601915060408160051b87010192506020870160005b8281101561094d57603f1988860301845261093b8583516108ca565b9450928501929085019060010161091f565b5092979650505050505050565b6000806000806080858703121561097057600080fd5b84356001600160401b0381111561098657600080fd5b610992878288016107bd565b9450506109a16020860161075f565b92506109af6040860161075f565b91506109bd6060860161075f565b905092959194509250565b600080604083850312156109db57600080fd5b82356001600160401b038111156109f157600080fd5b6109fd858286016107bd565b92505061079e6020840161075f565b60008251610a1e8184602087016108a6565b9190910192915050565b600181811c90821680610a3c57607f821691505b602082108103610a5c57634e487b7160e01b600052602260045260246000fd5b50919050565b601f821115610aae576000816000526020600020601f850160051c81016020861015610a8b5750805b601f850160051c820191505b81811015610aaa57828155600101610a97565b5050505b505050565b81516001600160401b03811115610acc57610acc6107a7565b610ae081610ada8454610a28565b84610a62565b602080601f831160018114610b155760008415610afd5750858301515b600019600386901b1c1916600185901b178555610aaa565b600085815260208120601f198616915b82811015610b4457888601518255948401946001909101908401610b25565b5085821015610b625787850151600019600388901b60f8161c191681555b5050505050600190811b01905550565b604081526000610b8560408301856108ca565b905060018060a01b0383166020830152939250505056fe8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19ba26469706673582212203c1b2bbd062a7432b38838091c5914e3d48719c9a2fcd358096f631c3b3ded6664736f6c63430008170033",
-  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100a45760003560e01c806307bd0265146100a95780632f2ff15d146100e357806375b238fc146100f8578063784260d61461010057806391d148541461012b57806395c8193a1461014e578063a4770a8814610161578063a8d01ca914610176578063c41adf5014610189578063d547741f1461019c578063d9ab2c5c146101af578063f5b541a6146101d5575b600080fd5b6100d07fd8aa0f3194971a2a116679f7c2090f6939c8d4e01a2a8d7e41d55e5351469e6381565b6040519081526020015b60405180910390f35b6100f66100f136600461077b565b6101fc565b005b6100d0600081565b61011361010e366004610849565b610232565b6040516001600160a01b0390911681526020016100da565b61013e61013936600461077b565b610281565b60405190151581526020016100da565b6100f661015c366004610849565b6102aa565b6101696103e3565b6040516100da91906108f6565b6100f661018436600461095a565b6104bc565b6101136101973660046109c8565b610603565b6100f66101aa36600461077b565b610644565b6100d07e9ab23a1010d07a0450a1fbea1d84169b57d2c2273b54bff0f20c3e90199b5d81565b6100d07f97667070c54ef182b0f5858b034beac1b6f3089aa2d3188bb1e8929f4fa9b92981565b610207600033610281565b61022457604051633dcaff7960e21b815260040160405180910390fd5b61022e8282610676565b5050565b60006002846040516102449190610a0c565b908152604080519182900360209081019092206001600160a01b038087166000908152918452828220868216835290935220541690509392505050565b6000918252602082815260408084206001600160a01b0393909316845291905290205460ff1690565b6102b5600033610281565b6102d257604051633dcaff7960e21b815260040160405180910390fd5b6003836040516102e29190610a0c565b9081526040519081900360200190205460ff1661035757600160038460405161030b9190610a0c565b908152604051908190036020019020805491151560ff1990921691909117905560048054600181018255600091909152600080516020610b9d833981519152016103558482610ab3565b505b806001846040516103689190610a0c565b90815260408051602092819003830181206001600160a01b0387811660008181529290955292902080546001600160a01b03191694909216939093179055907fc277be270aa676292d0cbddf713f8160bb9528890b12a3c5b2fc6e30052d07e1906103d69086908590610b72565b60405180910390a2505050565b60606004805480602002602001604051908101604052809291908181526020016000905b828210156104b357838290600052602060002001805461042690610a28565b80601f016020809104026020016040519081016040528092919081815260200182805461045290610a28565b801561049f5780601f106104745761010080835404028352916020019161049f565b820191906000526020600020905b81548152906001019060200180831161048257829003601f168201915b505050505081526020019060010190610407565b50505050905090565b6104c7600033610281565b6104e457604051633dcaff7960e21b815260040160405180910390fd5b6003846040516104f49190610a0c565b9081526040519081900360200190205460ff1661056957600160038560405161051d9190610a0c565b908152604051908190036020019020805491151560ff1990921691909117905560048054600181018255600091909152600080516020610b9d833981519152016105678582610ab3565b505b8060028560405161057a9190610a0c565b90815260408051602092819003830181206001600160a01b03888116600081815292865284832089831680855296529390912080546001600160a01b031916959091169490941790935590917fb2fa499914f4084c208b861c88d34ceb30d98d3e817ddff6468c1a9af5fd9bb4906105f59088908690610b72565b60405180910390a350505050565b60006001836040516106159190610a0c565b90815260408051602092819003830190206001600160a01b039485166000908152925290205490911692915050565b61064f600033610281565b61066c57604051633dcaff7960e21b815260040160405180910390fd5b61022e82826106fa565b6106808282610281565b61022e576000828152602081815260408083206001600160a01b03851684529091529020805460ff191660011790556106b63390565b6001600160a01b0316816001600160a01b0316837f2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d60405160405180910390a45050565b6107048282610281565b1561022e576000828152602081815260408083206001600160a01b0385168085529252808320805460ff1916905551339285917ff6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b9190a45050565b80356001600160a01b038116811461077657600080fd5b919050565b6000806040838503121561078e57600080fd5b8235915061079e6020840161075f565b90509250929050565b634e487b7160e01b600052604160045260246000fd5b600082601f8301126107ce57600080fd5b81356001600160401b03808211156107e8576107e86107a7565b604051601f8301601f19908116603f01168101908282118183101715610810576108106107a7565b8160405283815286602085880101111561082957600080fd5b836020870160208301376000602085830101528094505050505092915050565b60008060006060848603121561085e57600080fd5b83356001600160401b0381111561087457600080fd5b610880868287016107bd565b93505061088f6020850161075f565b915061089d6040850161075f565b90509250925092565b60005b838110156108c15781810151838201526020016108a9565b50506000910152565b600081518084526108e28160208601602086016108a6565b601f01601f19169290920160200192915050565b600060208083016020845280855180835260408601915060408160051b87010192506020870160005b8281101561094d57603f1988860301845261093b8583516108ca565b9450928501929085019060010161091f565b5092979650505050505050565b6000806000806080858703121561097057600080fd5b84356001600160401b0381111561098657600080fd5b610992878288016107bd565b9450506109a16020860161075f565b92506109af6040860161075f565b91506109bd6060860161075f565b905092959194509250565b600080604083850312156109db57600080fd5b82356001600160401b038111156109f157600080fd5b6109fd858286016107bd565b92505061079e6020840161075f565b60008251610a1e8184602087016108a6565b9190910192915050565b600181811c90821680610a3c57607f821691505b602082108103610a5c57634e487b7160e01b600052602260045260246000fd5b50919050565b601f821115610aae576000816000526020600020601f850160051c81016020861015610a8b5750805b601f850160051c820191505b81811015610aaa57828155600101610a97565b5050505b505050565b81516001600160401b03811115610acc57610acc6107a7565b610ae081610ada8454610a28565b84610a62565b602080601f831160018114610b155760008415610afd5750858301515b600019600386901b1c1916600185901b178555610aaa565b600085815260208120601f198616915b82811015610b4457888601518255948401946001909101908401610b25565b5085821015610b625787850151600019600388901b60f8161c191681555b5050505050600190811b01905550565b604081526000610b8560408301856108ca565b905060018060a01b0383166020830152939250505056fe8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19ba26469706673582212203c1b2bbd062a7432b38838091c5914e3d48719c9a2fcd358096f631c3b3ded6664736f6c63430008170033",
+  "solcInputHash": "53845f148122078400c4117c15408892",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.23+commit.f704f362\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner_\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"string\",\"name\":\"identifier\",\"type\":\"string\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"assetOne\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"assetTwo\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"market\",\"type\":\"address\"}],\"name\":\"MarketUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferStarted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"string\",\"name\":\"identifier\",\"type\":\"string\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"yieldToken\",\"type\":\"address\"}],\"name\":\"YieldTokenUpdated\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"acceptOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getIdentifiers\",\"outputs\":[{\"internalType\":\"string[]\",\"name\":\"\",\"type\":\"string[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"identifier\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"assetOne\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"assetTwo\",\"type\":\"address\"}],\"name\":\"getMarket\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"identifier\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"}],\"name\":\"getYieldToken\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pendingOwner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"identifier\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"assetOne\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"assetTwo\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"market\",\"type\":\"address\"}],\"name\":\"setMarket\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"identifier\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"asset\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"yieldToken\",\"type\":\"address\"}],\"name\":\"setYieldToken\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"errors\":{\"OwnableInvalidOwner(address)\":[{\"details\":\"The owner is not a valid owner account. (eg. `address(0)`)\"}],\"OwnableUnauthorizedAccount(address)\":[{\"details\":\"The caller account is not authorized to perform an operation.\"}]},\"events\":{\"MarketUpdated(string,address,address,address)\":{\"details\":\"Emitted when the market is set for two assets.\",\"params\":{\"assetOne\":\"The address of the first asset.\",\"assetTwo\":\"The address of the second asset.\",\"identifier\":\"The identifier of the provider.\",\"market\":\"The address of the corresponding market.\"}},\"YieldTokenUpdated(string,address,address)\":{\"details\":\"Emitted when the yield token is set for an asset.\",\"params\":{\"asset\":\"The address of the asset.\",\"identifier\":\"The identifier of the provider.\",\"yieldToken\":\"The address of the corresponding yield token.\"}}},\"kind\":\"dev\",\"methods\":{\"acceptOwnership()\":{\"details\":\"The new owner accepts the ownership transfer.\"},\"constructor\":{\"details\":\"Initializes the ProviderManager contract with the specified parameters.\",\"params\":{\"owner_\":\"The address of the initial owner of the contract.\"}},\"getMarket(string,address,address)\":{\"params\":{\"assetOne\":\"The address of the first asset.\",\"assetTwo\":\"The address of the second asset.\",\"identifier\":\"The identifier of the provider.\"}},\"getYieldToken(string,address)\":{\"params\":{\"asset\":\"The address of the asset.\",\"identifier\":\"The identifier of the provider.\"}},\"owner()\":{\"details\":\"Returns the address of the current owner.\"},\"pendingOwner()\":{\"details\":\"Returns the address of the pending owner.\"},\"renounceOwnership()\":{\"details\":\"Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner.\"},\"setMarket(string,address,address,address)\":{\"params\":{\"assetOne\":\"The address of the first asset.\",\"assetTwo\":\"The address of the second asset.\",\"identifier\":\"The identifier of the provider.\",\"market\":\"The address of the corresponding market.\"}},\"setYieldToken(string,address,address)\":{\"params\":{\"asset\":\"The address of the asset.\",\"identifier\":\"The identifier of the provider.\",\"yieldToken\":\"The address of the corresponding yield token.\"}},\"transferOwnership(address)\":{\"details\":\"Starts the ownership transfer of the contract to a new account. Replaces the pending transfer if there is one. Can only be called by the current owner. Setting `newOwner` to the zero address is allowed; this can be used to cancel an initiated ownership transfer.\"}},\"title\":\"ProviderManager\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"getIdentifiers()\":{\"notice\":\"Returns the list of all the provider identifiers.\"},\"getMarket(string,address,address)\":{\"notice\":\"Returns the market for two assets and a provider identifier.\"},\"getYieldToken(string,address)\":{\"notice\":\"Returns the yield token for a given asset and provider identifier.\"},\"setMarket(string,address,address,address)\":{\"notice\":\"Sets the market for two assets and a provider identifier.\"},\"setYieldToken(string,address,address)\":{\"notice\":\"Sets the yield token for a given asset and provider identifier.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/providers/ProviderManager.sol\":\"ProviderManager\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":1},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/access/Ownable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.0) (access/Ownable.sol)\\n\\npragma solidity ^0.8.20;\\n\\nimport {Context} from \\\"../utils/Context.sol\\\";\\n\\n/**\\n * @dev Contract module which provides a basic access control mechanism, where\\n * there is an account (an owner) that can be granted exclusive access to\\n * specific functions.\\n *\\n * The initial owner is set to the address provided by the deployer. This can\\n * later be changed with {transferOwnership}.\\n *\\n * This module is used through inheritance. It will make available the modifier\\n * `onlyOwner`, which can be applied to your functions to restrict their use to\\n * the owner.\\n */\\nabstract contract Ownable is Context {\\n    address private _owner;\\n\\n    /**\\n     * @dev The caller account is not authorized to perform an operation.\\n     */\\n    error OwnableUnauthorizedAccount(address account);\\n\\n    /**\\n     * @dev The owner is not a valid owner account. (eg. `address(0)`)\\n     */\\n    error OwnableInvalidOwner(address owner);\\n\\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\n\\n    /**\\n     * @dev Initializes the contract setting the address provided by the deployer as the initial owner.\\n     */\\n    constructor(address initialOwner) {\\n        if (initialOwner == address(0)) {\\n            revert OwnableInvalidOwner(address(0));\\n        }\\n        _transferOwnership(initialOwner);\\n    }\\n\\n    /**\\n     * @dev Throws if called by any account other than the owner.\\n     */\\n    modifier onlyOwner() {\\n        _checkOwner();\\n        _;\\n    }\\n\\n    /**\\n     * @dev Returns the address of the current owner.\\n     */\\n    function owner() public view virtual returns (address) {\\n        return _owner;\\n    }\\n\\n    /**\\n     * @dev Throws if the sender is not the owner.\\n     */\\n    function _checkOwner() internal view virtual {\\n        if (owner() != _msgSender()) {\\n            revert OwnableUnauthorizedAccount(_msgSender());\\n        }\\n    }\\n\\n    /**\\n     * @dev Leaves the contract without owner. It will not be possible to call\\n     * `onlyOwner` functions. Can only be called by the current owner.\\n     *\\n     * NOTE: Renouncing ownership will leave the contract without an owner,\\n     * thereby disabling any functionality that is only available to the owner.\\n     */\\n    function renounceOwnership() public virtual onlyOwner {\\n        _transferOwnership(address(0));\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Can only be called by the current owner.\\n     */\\n    function transferOwnership(address newOwner) public virtual onlyOwner {\\n        if (newOwner == address(0)) {\\n            revert OwnableInvalidOwner(address(0));\\n        }\\n        _transferOwnership(newOwner);\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Internal function without access restriction.\\n     */\\n    function _transferOwnership(address newOwner) internal virtual {\\n        address oldOwner = _owner;\\n        _owner = newOwner;\\n        emit OwnershipTransferred(oldOwner, newOwner);\\n    }\\n}\\n\",\"keccak256\":\"0xff6d0bb2e285473e5311d9d3caacb525ae3538a80758c10649a4d61029b017bb\",\"license\":\"MIT\"},\"@openzeppelin/contracts/access/Ownable2Step.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.1.0) (access/Ownable2Step.sol)\\n\\npragma solidity ^0.8.20;\\n\\nimport {Ownable} from \\\"./Ownable.sol\\\";\\n\\n/**\\n * @dev Contract module which provides access control mechanism, where\\n * there is an account (an owner) that can be granted exclusive access to\\n * specific functions.\\n *\\n * This extension of the {Ownable} contract includes a two-step mechanism to transfer\\n * ownership, where the new owner must call {acceptOwnership} in order to replace the\\n * old one. This can help prevent common mistakes, such as transfers of ownership to\\n * incorrect accounts, or to contracts that are unable to interact with the\\n * permission system.\\n *\\n * The initial owner is specified at deployment time in the constructor for `Ownable`. This\\n * can later be changed with {transferOwnership} and {acceptOwnership}.\\n *\\n * This module is used through inheritance. It will make available all functions\\n * from parent (Ownable).\\n */\\nabstract contract Ownable2Step is Ownable {\\n    address private _pendingOwner;\\n\\n    event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);\\n\\n    /**\\n     * @dev Returns the address of the pending owner.\\n     */\\n    function pendingOwner() public view virtual returns (address) {\\n        return _pendingOwner;\\n    }\\n\\n    /**\\n     * @dev Starts the ownership transfer of the contract to a new account. Replaces the pending transfer if there is one.\\n     * Can only be called by the current owner.\\n     *\\n     * Setting `newOwner` to the zero address is allowed; this can be used to cancel an initiated ownership transfer.\\n     */\\n    function transferOwnership(address newOwner) public virtual override onlyOwner {\\n        _pendingOwner = newOwner;\\n        emit OwnershipTransferStarted(owner(), newOwner);\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`) and deletes any pending owner.\\n     * Internal function without access restriction.\\n     */\\n    function _transferOwnership(address newOwner) internal virtual override {\\n        delete _pendingOwner;\\n        super._transferOwnership(newOwner);\\n    }\\n\\n    /**\\n     * @dev The new owner accepts the ownership transfer.\\n     */\\n    function acceptOwnership() public virtual {\\n        address sender = _msgSender();\\n        if (pendingOwner() != sender) {\\n            revert OwnableUnauthorizedAccount(sender);\\n        }\\n        _transferOwnership(sender);\\n    }\\n}\\n\",\"keccak256\":\"0xdcad8898fda432696597752e8ec361b87d85c82cb258115427af006dacf7128c\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.1) (utils/Context.sol)\\n\\npragma solidity ^0.8.20;\\n\\n/**\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract Context {\\n    function _msgSender() internal view virtual returns (address) {\\n        return msg.sender;\\n    }\\n\\n    function _msgData() internal view virtual returns (bytes calldata) {\\n        return msg.data;\\n    }\\n\\n    function _contextSuffixLength() internal view virtual returns (uint256) {\\n        return 0;\\n    }\\n}\\n\",\"keccak256\":\"0x493033a8d1b176a037b2cc6a04dad01a5c157722049bbecf632ca876224dd4b2\",\"license\":\"MIT\"},\"contracts/interfaces/IProviderManager.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.8.23;\\n\\n/**\\n * @title IProviderManager\\n */\\ninterface IProviderManager {\\n    /**\\n     * @dev Emitted when the yield token is set for an asset.\\n     * @param identifier The identifier of the provider.\\n     * @param asset The address of the asset.\\n     * @param yieldToken The address of the corresponding yield token.\\n     */\\n    event YieldTokenUpdated(\\n        string identifier,\\n        address indexed asset,\\n        address yieldToken\\n    );\\n\\n    /**\\n     * @dev Emitted when the market is set for two assets.\\n     * @param identifier The identifier of the provider.\\n     * @param assetOne The address of the first asset.\\n     * @param assetTwo The address of the second asset.\\n     * @param market The address of the corresponding market.\\n     */\\n    event MarketUpdated(\\n        string identifier,\\n        address indexed assetOne,\\n        address indexed assetTwo,\\n        address market\\n    );\\n\\n    /**\\n     * @notice Returns the yield token for a given asset and provider identifier.\\n     * @param identifier The identifier of the provider.\\n     * @param asset The address of the asset.\\n     */\\n    function getYieldToken(\\n        string memory identifier,\\n        address asset\\n    ) external view returns (address yieldToken);\\n\\n    /**\\n     * @notice Returns the market for two assets and a provider identifier.\\n     * @param identifier The identifier of the provider.\\n     * @param assetOne The address of the first asset.\\n     * @param assetTwo The address of the second asset.\\n     */\\n    function getMarket(\\n        string memory identifier,\\n        address assetOne,\\n        address assetTwo\\n    ) external view returns (address market);\\n\\n    /**\\n     * @notice Sets the yield token for a given asset and provider identifier.\\n     * @param identifier The identifier of the provider.\\n     * @param asset The address of the asset.\\n     * @param yieldToken The address of the corresponding yield token.\\n     */\\n    function setYieldToken(\\n        string memory identifier,\\n        address asset,\\n        address yieldToken\\n    ) external;\\n\\n    /**\\n     * @notice Sets the market for two assets and a provider identifier.\\n     * @param identifier The identifier of the provider.\\n     * @param assetOne The address of the first asset.\\n     * @param assetTwo The address of the second asset.\\n     * @param market The address of the corresponding market.\\n     */\\n    function setMarket(\\n        string memory identifier,\\n        address assetOne,\\n        address assetTwo,\\n        address market\\n    ) external;\\n}\\n\",\"keccak256\":\"0x84c85d32f1eab7e217a44998dcdb80194bce33568ad4d32be32a91f37f08c18f\",\"license\":\"MIT\"},\"contracts/providers/ProviderManager.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.8.23;\\n\\nimport {IProviderManager} from \\\"../interfaces/IProviderManager.sol\\\";\\nimport {Ownable2Step, Ownable} from \\\"@openzeppelin/contracts/access/Ownable2Step.sol\\\";\\n\\n/**\\n * @title ProviderManager\\n */\\ncontract ProviderManager is Ownable2Step, IProviderManager {\\n    // identifier => asset address => yield token address\\n    mapping(string => mapping(address => address)) private _assetToYieldToken;\\n\\n    // identifier => asset1 address => asset2 address => market address\\n    mapping(string => mapping(address => mapping(address => address)))\\n        private _assetsToMarket;\\n\\n    mapping(string => bool) private _identifierRegistered;\\n\\n    string[] private _providerIdentifiers;\\n\\n    /**\\n     * @dev Initializes the ProviderManager contract with the specified parameters.\\n     * @param owner_ The address of the initial owner of the contract.\\n     */\\n    constructor(address owner_) Ownable(owner_) {}\\n\\n    /**\\n     * @inheritdoc IProviderManager\\n     */\\n    function setYieldToken(\\n        string memory identifier,\\n        address asset,\\n        address yieldToken\\n    ) public override onlyOwner {\\n        if (!_identifierRegistered[identifier]) {\\n            _identifierRegistered[identifier] = true;\\n            _providerIdentifiers.push(identifier);\\n        }\\n        _assetToYieldToken[identifier][asset] = yieldToken;\\n        emit YieldTokenUpdated(identifier, asset, yieldToken);\\n    }\\n\\n    /**\\n     * @inheritdoc IProviderManager\\n     */\\n    function setMarket(\\n        string memory identifier,\\n        address assetOne,\\n        address assetTwo,\\n        address market\\n    ) public override onlyOwner {\\n        if (!_identifierRegistered[identifier]) {\\n            _identifierRegistered[identifier] = true;\\n            _providerIdentifiers.push(identifier);\\n        }\\n        _assetsToMarket[identifier][assetOne][assetTwo] = market;\\n        emit MarketUpdated(identifier, assetOne, assetTwo, market);\\n    }\\n\\n    /**\\n     * @inheritdoc IProviderManager\\n     */\\n    function getYieldToken(\\n        string memory identifier,\\n        address asset\\n    ) external view override returns (address) {\\n        return _assetToYieldToken[identifier][asset];\\n    }\\n\\n    /**\\n     * @inheritdoc IProviderManager\\n     */\\n    function getMarket(\\n        string memory identifier,\\n        address assetOne,\\n        address assetTwo\\n    ) external view override returns (address) {\\n        return _assetsToMarket[identifier][assetOne][assetTwo];\\n    }\\n\\n    /**\\n     * @notice Returns the list of all the provider identifiers.\\n     */\\n    function getIdentifiers() public view returns (string[] memory) {\\n        return _providerIdentifiers;\\n    }\\n}\\n\",\"keccak256\":\"0x13ce074962c879bdba5c699b07415e713ba492075df89b4754cd0a3546073ec8\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b50604051610c1d380380610c1d83398101604081905261002f916100da565b806001600160a01b03811661005e57604051631e4fbdf760e01b81526000600482015260240160405180910390fd5b6100678161006e565b505061010a565b600180546001600160a01b03191690556100878161008a565b50565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b6000602082840312156100ec57600080fd5b81516001600160a01b038116811461010357600080fd5b9392505050565b610b04806101196000396000f3fe608060405234801561001057600080fd5b506004361061008e5760003560e01c8063715018a614610093578063784260d61461009d57806379ba5097146100c65780638da5cb5b146100ce57806395c8193a146100d6578063a4770a88146100e9578063a8d01ca9146100fe578063c41adf5014610111578063e30c397814610124578063f2fde38b1461012c575b600080fd5b61009b61013f565b005b6100b06100ab36600461071c565b610153565b6040516100bd9190610779565b60405180910390f35b61009b6101a2565b6100b06101ea565b61009b6100e436600461071c565b6101f9565b6100f1610312565b6040516100bd91906107dd565b61009b61010c366004610841565b6103eb565b6100b061011f3660046108af565b610512565b6100b0610553565b61009b61013a3660046108fc565b610562565b6101476105c8565b61015160006105fa565b565b6000600384604051610165919061091e565b908152604080519182900360209081019092206001600160a01b038087166000908152918452828220868216835290935220541690509392505050565b33806101ac610553565b6001600160a01b0316146101de578060405163118cdaa760e01b81526004016101d59190610779565b60405180910390fd5b6101e7816105fa565b50565b6000546001600160a01b031690565b6102016105c8565b600483604051610211919061091e565b9081526040519081900360200190205460ff1661028657600160048460405161023a919061091e565b908152604051908190036020019020805491151560ff1990921691909117905560058054600181018255600091909152600080516020610aaf8339815191520161028484826109c5565b505b80600284604051610297919061091e565b90815260408051602092819003830181206001600160a01b0387811660008181529290955292902080546001600160a01b03191694909216939093179055907fc277be270aa676292d0cbddf713f8160bb9528890b12a3c5b2fc6e30052d07e1906103059086908590610a84565b60405180910390a2505050565b60606005805480602002602001604051908101604052809291908181526020016000905b828210156103e25783829060005260206000200180546103559061093a565b80601f01602080910402602001604051908101604052809291908181526020018280546103819061093a565b80156103ce5780601f106103a3576101008083540402835291602001916103ce565b820191906000526020600020905b8154815290600101906020018083116103b157829003601f168201915b505050505081526020019060010190610336565b50505050905090565b6103f36105c8565b600484604051610403919061091e565b9081526040519081900360200190205460ff1661047857600160048560405161042c919061091e565b908152604051908190036020019020805491151560ff1990921691909117905560058054600181018255600091909152600080516020610aaf8339815191520161047685826109c5565b505b80600385604051610489919061091e565b90815260408051602092819003830181206001600160a01b03888116600081815292865284832089831680855296529390912080546001600160a01b031916959091169490941790935590917fb2fa499914f4084c208b861c88d34ceb30d98d3e817ddff6468c1a9af5fd9bb4906105049088908690610a84565b60405180910390a350505050565b6000600283604051610524919061091e565b90815260408051602092819003830190206001600160a01b039485166000908152925290205490911692915050565b6001546001600160a01b031690565b61056a6105c8565b600180546001600160a01b0319166001600160a01b0383169081179091556105906101ea565b6001600160a01b03167f38d16b8cac22d99fc7c124b9cd0de2d3fa1faef420bfe791d8c362d765e2270060405160405180910390a350565b336105d16101ea565b6001600160a01b031614610151573360405163118cdaa760e01b81526004016101d59190610779565b600180546001600160a01b03191690556101e781600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b634e487b7160e01b600052604160045260246000fd5b600082601f83011261068557600080fd5b81356001600160401b038082111561069f5761069f61065e565b604051601f8301601f19908116603f011681019082821181831017156106c7576106c761065e565b816040528381528660208588010111156106e057600080fd5b836020870160208301376000602085830101528094505050505092915050565b80356001600160a01b038116811461071757600080fd5b919050565b60008060006060848603121561073157600080fd5b83356001600160401b0381111561074757600080fd5b61075386828701610674565b93505061076260208501610700565b915061077060408501610700565b90509250925092565b6001600160a01b0391909116815260200190565b60005b838110156107a8578181015183820152602001610790565b50506000910152565b600081518084526107c981602086016020860161078d565b601f01601f19169290920160200192915050565b600060208083016020845280855180835260408601915060408160051b87010192506020870160005b8281101561083457603f198886030184526108228583516107b1565b94509285019290850190600101610806565b5092979650505050505050565b6000806000806080858703121561085757600080fd5b84356001600160401b0381111561086d57600080fd5b61087987828801610674565b94505061088860208601610700565b925061089660408601610700565b91506108a460608601610700565b905092959194509250565b600080604083850312156108c257600080fd5b82356001600160401b038111156108d857600080fd5b6108e485828601610674565b9250506108f360208401610700565b90509250929050565b60006020828403121561090e57600080fd5b61091782610700565b9392505050565b6000825161093081846020870161078d565b9190910192915050565b600181811c9082168061094e57607f821691505b60208210810361096e57634e487b7160e01b600052602260045260246000fd5b50919050565b601f8211156109c0576000816000526020600020601f850160051c8101602086101561099d5750805b601f850160051c820191505b818110156109bc578281556001016109a9565b5050505b505050565b81516001600160401b038111156109de576109de61065e565b6109f2816109ec845461093a565b84610974565b602080601f831160018114610a275760008415610a0f5750858301515b600019600386901b1c1916600185901b1785556109bc565b600085815260208120601f198616915b82811015610a5657888601518255948401946001909101908401610a37565b5085821015610a745787850151600019600388901b60f8161c191681555b5050505050600190811b01905550565b604081526000610a9760408301856107b1565b905060018060a01b0383166020830152939250505056fe036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0a26469706673582212202d4debd17d65a0895318cd78b68a4caa200d740ebb647344b972645a52a4495b64736f6c63430008170033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061008e5760003560e01c8063715018a614610093578063784260d61461009d57806379ba5097146100c65780638da5cb5b146100ce57806395c8193a146100d6578063a4770a88146100e9578063a8d01ca9146100fe578063c41adf5014610111578063e30c397814610124578063f2fde38b1461012c575b600080fd5b61009b61013f565b005b6100b06100ab36600461071c565b610153565b6040516100bd9190610779565b60405180910390f35b61009b6101a2565b6100b06101ea565b61009b6100e436600461071c565b6101f9565b6100f1610312565b6040516100bd91906107dd565b61009b61010c366004610841565b6103eb565b6100b061011f3660046108af565b610512565b6100b0610553565b61009b61013a3660046108fc565b610562565b6101476105c8565b61015160006105fa565b565b6000600384604051610165919061091e565b908152604080519182900360209081019092206001600160a01b038087166000908152918452828220868216835290935220541690509392505050565b33806101ac610553565b6001600160a01b0316146101de578060405163118cdaa760e01b81526004016101d59190610779565b60405180910390fd5b6101e7816105fa565b50565b6000546001600160a01b031690565b6102016105c8565b600483604051610211919061091e565b9081526040519081900360200190205460ff1661028657600160048460405161023a919061091e565b908152604051908190036020019020805491151560ff1990921691909117905560058054600181018255600091909152600080516020610aaf8339815191520161028484826109c5565b505b80600284604051610297919061091e565b90815260408051602092819003830181206001600160a01b0387811660008181529290955292902080546001600160a01b03191694909216939093179055907fc277be270aa676292d0cbddf713f8160bb9528890b12a3c5b2fc6e30052d07e1906103059086908590610a84565b60405180910390a2505050565b60606005805480602002602001604051908101604052809291908181526020016000905b828210156103e25783829060005260206000200180546103559061093a565b80601f01602080910402602001604051908101604052809291908181526020018280546103819061093a565b80156103ce5780601f106103a3576101008083540402835291602001916103ce565b820191906000526020600020905b8154815290600101906020018083116103b157829003601f168201915b505050505081526020019060010190610336565b50505050905090565b6103f36105c8565b600484604051610403919061091e565b9081526040519081900360200190205460ff1661047857600160048560405161042c919061091e565b908152604051908190036020019020805491151560ff1990921691909117905560058054600181018255600091909152600080516020610aaf8339815191520161047685826109c5565b505b80600385604051610489919061091e565b90815260408051602092819003830181206001600160a01b03888116600081815292865284832089831680855296529390912080546001600160a01b031916959091169490941790935590917fb2fa499914f4084c208b861c88d34ceb30d98d3e817ddff6468c1a9af5fd9bb4906105049088908690610a84565b60405180910390a350505050565b6000600283604051610524919061091e565b90815260408051602092819003830190206001600160a01b039485166000908152925290205490911692915050565b6001546001600160a01b031690565b61056a6105c8565b600180546001600160a01b0319166001600160a01b0383169081179091556105906101ea565b6001600160a01b03167f38d16b8cac22d99fc7c124b9cd0de2d3fa1faef420bfe791d8c362d765e2270060405160405180910390a350565b336105d16101ea565b6001600160a01b031614610151573360405163118cdaa760e01b81526004016101d59190610779565b600180546001600160a01b03191690556101e781600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b634e487b7160e01b600052604160045260246000fd5b600082601f83011261068557600080fd5b81356001600160401b038082111561069f5761069f61065e565b604051601f8301601f19908116603f011681019082821181831017156106c7576106c761065e565b816040528381528660208588010111156106e057600080fd5b836020870160208301376000602085830101528094505050505092915050565b80356001600160a01b038116811461071757600080fd5b919050565b60008060006060848603121561073157600080fd5b83356001600160401b0381111561074757600080fd5b61075386828701610674565b93505061076260208501610700565b915061077060408501610700565b90509250925092565b6001600160a01b0391909116815260200190565b60005b838110156107a8578181015183820152602001610790565b50506000910152565b600081518084526107c981602086016020860161078d565b601f01601f19169290920160200192915050565b600060208083016020845280855180835260408601915060408160051b87010192506020870160005b8281101561083457603f198886030184526108228583516107b1565b94509285019290850190600101610806565b5092979650505050505050565b6000806000806080858703121561085757600080fd5b84356001600160401b0381111561086d57600080fd5b61087987828801610674565b94505061088860208601610700565b925061089660408601610700565b91506108a460608601610700565b905092959194509250565b600080604083850312156108c257600080fd5b82356001600160401b038111156108d857600080fd5b6108e485828601610674565b9250506108f360208401610700565b90509250929050565b60006020828403121561090e57600080fd5b61091782610700565b9392505050565b6000825161093081846020870161078d565b9190910192915050565b600181811c9082168061094e57607f821691505b60208210810361096e57634e487b7160e01b600052602260045260246000fd5b50919050565b601f8211156109c0576000816000526020600020601f850160051c8101602086101561099d5750805b601f850160051c820191505b818110156109bc578281556001016109a9565b5050505b505050565b81516001600160401b038111156109de576109de61065e565b6109f2816109ec845461093a565b84610974565b602080601f831160018114610a275760008415610a0f5750858301515b600019600386901b1c1916600185901b1785556109bc565b600085815260208120601f198616915b82811015610a5657888601518255948401946001909101908401610a37565b5085821015610a745787850151600019600388901b60f8161c191681555b5050505050600190811b01905550565b604081526000610a9760408301856107b1565b905060018060a01b0383166020830152939250505056fe036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0a26469706673582212202d4debd17d65a0895318cd78b68a4caa200d740ebb647344b972645a52a4495b64736f6c63430008170033",
   "devdoc": {
     "errors": {
-      "AccessManager__CallerIsNotAdmin()": [
+      "OwnableInvalidOwner(address)": [
         {
-          "details": "Errors"
+          "details": "The owner is not a valid owner account. (eg. `address(0)`)"
+        }
+      ],
+      "OwnableUnauthorizedAccount(address)": [
+        {
+          "details": "The caller account is not authorized to perform an operation."
         }
       ]
     },
@@ -413,12 +361,6 @@
           "market": "The address of the corresponding market."
         }
       },
-      "RoleGranted(bytes32,address,address)": {
-        "details": "Emitted when `account` is granted `role`."
-      },
-      "RoleRevoked(bytes32,address,address)": {
-        "details": "Emitted when `account` is revoked `role`."
-      },
       "YieldTokenUpdated(string,address,address)": {
         "details": "Emitted when the yield token is set for an asset.",
         "params": {
@@ -430,6 +372,15 @@
     },
     "kind": "dev",
     "methods": {
+      "acceptOwnership()": {
+        "details": "The new owner accepts the ownership transfer."
+      },
+      "constructor": {
+        "details": "Initializes the ProviderManager contract with the specified parameters.",
+        "params": {
+          "owner_": "The address of the initial owner of the contract."
+        }
+      },
       "getMarket(string,address,address)": {
         "params": {
           "assetOne": "The address of the first asset.",
@@ -443,14 +394,14 @@
           "identifier": "The identifier of the provider."
         }
       },
-      "grantRole(bytes32,address)": {
-        "details": "Grants `role` to `account`. If `account` had not been already granted `role`, emits a {RoleGranted} event. Requirements: - the caller must have the admin role. May emit a {RoleGranted} event."
+      "owner()": {
+        "details": "Returns the address of the current owner."
       },
-      "hasRole(bytes32,address)": {
-        "details": "Returns `true` if `account` has been granted `role`."
+      "pendingOwner()": {
+        "details": "Returns the address of the pending owner."
       },
-      "revokeRole(bytes32,address)": {
-        "details": "Revokes `role` from `account`. If `account` had been granted `role`, emits a {RoleRevoked} event. Requirements: - the caller must have the admin role. May emit a {RoleRevoked} event."
+      "renounceOwnership()": {
+        "details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner."
       },
       "setMarket(string,address,address,address)": {
         "params": {
@@ -466,6 +417,9 @@
           "identifier": "The identifier of the provider.",
           "yieldToken": "The address of the corresponding yield token."
         }
+      },
+      "transferOwnership(address)": {
+        "details": "Starts the ownership transfer of the contract to a new account. Replaces the pending transfer if there is one. Can only be called by the current owner. Setting `newOwner` to the zero address is allowed; this can be used to cancel an initiated ownership transfer."
       }
     },
     "title": "ProviderManager",
@@ -495,43 +449,51 @@
   "storageLayout": {
     "storage": [
       {
-        "astId": 9559,
+        "astId": 8,
         "contract": "contracts/providers/ProviderManager.sol:ProviderManager",
-        "label": "_roles",
+        "label": "_owner",
         "offset": 0,
         "slot": "0",
-        "type": "t_mapping(t_bytes32,t_mapping(t_address,t_bool))"
+        "type": "t_address"
       },
       {
-        "astId": 14546,
+        "astId": 156,
+        "contract": "contracts/providers/ProviderManager.sol:ProviderManager",
+        "label": "_pendingOwner",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "astId": 15398,
         "contract": "contracts/providers/ProviderManager.sol:ProviderManager",
         "label": "_assetToYieldToken",
         "offset": 0,
-        "slot": "1",
+        "slot": "2",
         "type": "t_mapping(t_string_memory_ptr,t_mapping(t_address,t_address))"
       },
       {
-        "astId": 14554,
+        "astId": 15406,
         "contract": "contracts/providers/ProviderManager.sol:ProviderManager",
         "label": "_assetsToMarket",
         "offset": 0,
-        "slot": "2",
+        "slot": "3",
         "type": "t_mapping(t_string_memory_ptr,t_mapping(t_address,t_mapping(t_address,t_address)))"
       },
       {
-        "astId": 14558,
+        "astId": 15410,
         "contract": "contracts/providers/ProviderManager.sol:ProviderManager",
         "label": "_identifierRegistered",
         "offset": 0,
-        "slot": "3",
+        "slot": "4",
         "type": "t_mapping(t_string_memory_ptr,t_bool)"
       },
       {
-        "astId": 14561,
+        "astId": 15413,
         "contract": "contracts/providers/ProviderManager.sol:ProviderManager",
         "label": "_providerIdentifiers",
         "offset": 0,
-        "slot": "4",
+        "slot": "5",
         "type": "t_array(t_string_storage)dyn_storage"
       }
     ],
@@ -552,11 +514,6 @@
         "label": "bool",
         "numberOfBytes": "1"
       },
-      "t_bytes32": {
-        "encoding": "inplace",
-        "label": "bytes32",
-        "numberOfBytes": "32"
-      },
       "t_mapping(t_address,t_address)": {
         "encoding": "mapping",
         "key": "t_address",
@@ -564,26 +521,12 @@
         "numberOfBytes": "32",
         "value": "t_address"
       },
-      "t_mapping(t_address,t_bool)": {
-        "encoding": "mapping",
-        "key": "t_address",
-        "label": "mapping(address => bool)",
-        "numberOfBytes": "32",
-        "value": "t_bool"
-      },
       "t_mapping(t_address,t_mapping(t_address,t_address))": {
         "encoding": "mapping",
         "key": "t_address",
         "label": "mapping(address => mapping(address => address))",
         "numberOfBytes": "32",
         "value": "t_mapping(t_address,t_address)"
-      },
-      "t_mapping(t_bytes32,t_mapping(t_address,t_bool))": {
-        "encoding": "mapping",
-        "key": "t_bytes32",
-        "label": "mapping(bytes32 => mapping(address => bool))",
-        "numberOfBytes": "32",
-        "value": "t_mapping(t_address,t_bool)"
       },
       "t_mapping(t_string_memory_ptr,t_bool)": {
         "encoding": "mapping",

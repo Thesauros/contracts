@@ -20,12 +20,12 @@ const deployProviders: DeployFunction = async function (
 
   const providerManager = await deploy('ProviderManager', {
     from: deployer,
-    args: [],
+    args: [deployer],
     log: true,
   });
 
   if ((await ethers.provider.getNetwork()).chainId === ARBITRUM_CHAIN_ID) {
-    await verify(providerManager.address, []);
+    await verify(providerManager.address, [deployer]);
   }
 
   log(`ProviderManager at ${providerManager.address}`);

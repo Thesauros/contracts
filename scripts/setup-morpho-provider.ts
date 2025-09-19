@@ -29,7 +29,6 @@ async function main() {
         process.env.USDC_ADDRESS,
         process.env.WETH_ADDRESS,
         process.env.USDT_ADDRESS,
-        process.env.DAI_ADDRESS
     ].filter(Boolean);
 
     console.log("Configuring MorphoProvider for assets:", assets);

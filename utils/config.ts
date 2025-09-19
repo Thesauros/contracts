@@ -146,7 +146,6 @@ export class ConfigLoader {
       'WETH': 18,
       'USDC': 6,
       'USDT': 6,
-      'DAI': 18,
       'USDC_e': 6
     };
     

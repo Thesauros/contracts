@@ -267,7 +267,6 @@ private async execute() {
   [
     new CompoundV3Provider('0x2CeB49E36c23364082e8b476777D94Dba79E6571', Enums.NetworkEnum.Arbitrum),
     new AaveV3Provider('0xD275d04BCd03898d54d3aA8229F1e9ceE0f6afc1', Enums.NetworkEnum.Arbitrum),
-    new DolomiteProvider('0x2277758D77b3FD7F834fa95ecDCc0739094CCf46', Enums.NetworkEnum.Arbitrum),
   ],
   Enums.NetworkEnum.Arbitrum,
   '0x0cA0872857D12f9921a7aF71716055E52FE476c3', // Safe address
@@ -279,11 +278,10 @@ private async execute() {
 
 | Token | Providers |
 |-------|-----------|
-| USDT | Compound V3, Aave V3, Dolomite |
-| wETH | Compound V3, Aave V3, Dolomite |
-| USDC | Compound V3, Aave V3, Dolomite |
-| USDC.e | Compound V3, Aave V3, Dolomite |
-| DAI | Aave V3, Dolomite |
+| USDT | Compound V3, Aave V3 |
+| wETH | Compound V3, Aave V3 |
+| USDC | Compound V3, Aave V3 |
+| USDC.e | Compound V3, Aave V3 |
 
 ## Service Business Tasks
 

@@ -160,10 +160,8 @@ graph LR
     subgraph "Lending Protocols"
         AAVE[Aave V3]
         COMPOUND[Compound V3]
-        VENUS[Venus]
         SILO[Silo]
         RADIANT[Radiant V2]
-        DOLOMITE[Dolomite]
         KINZA[Kinza Binance]
         LODESTAR[Lodestar]
     end
@@ -186,10 +184,8 @@ graph LR
     
     AAVE --> POOL_MANAGER
     COMPOUND --> POOL_MANAGER
-    VENUS --> POOL_MANAGER
     SILO --> POOL_MANAGER
     RADIANT --> POOL_MANAGER
-    DOLOMITE --> POOL_MANAGER
     KINZA --> POOL_MANAGER
     LODESTAR --> POOL_MANAGER
     

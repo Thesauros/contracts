@@ -221,8 +221,6 @@ npx hardhat run deploy/deploy-vault-manager.ts --network mainnet
 # Deploy USDC Vault
 npx hardhat run deploy/deploy-usdc-vault.ts --network mainnet
 
-# Deploy DAI Vault
-npx hardhat run deploy/deploy-dai-vault.ts --network mainnet
 
 # Deploy WETH Vault
 npx hardhat run deploy/deploy-weth-vault.ts --network mainnet

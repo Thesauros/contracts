@@ -1,7 +1,7 @@
 {
   "network": "arbitrumOne",
   "chainId": 42161,
-  "deployedAt": "2024-12-19",
+  "deployedAt": "2025-08-12",
   "vaults": {
     "WETH": {
       "address": "0x78c11f63E6840820be18fDA461Ab16f23da5884f",
@@ -59,8 +59,7 @@
     "USDC": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
     "USDT": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
     "DAI": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-    "FRAX": "0x17FC002b466eEc40DaE837Fc4bE5c67993ddBd6F",
     "USDC_e": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"
   },
-  "treasury": "0xc8a682F0991323777253ffa5fa6F19035685E723"
+  "treasury": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D"
 }

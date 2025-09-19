@@ -1,11 +1,10 @@
 import { ethers } from 'hardhat';
-
+// ARBITRUM ONE TOKEN ADDRESSES
 export const tokenAddresses = {
   WETH: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
   USDT: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
   USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
   DAI: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
-  FRAX: '0x17FC002b466eEc40DaE837Fc4bE5c67993ddBd6F',
   USDC_e: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
 };
 
@@ -40,7 +39,7 @@ export const cometPairs = [
 // These addresses will be updated when Ethena Protocol is deployed on Arbitrum
 // For now, we use mock contracts for testing
 export const ethenaAddresses = {
-  USDe: '0x0000000000000000000000000000000000000000', // Will be set after mock deployment
+  USDe: '0x4c9edd5852cd905f086c759e8383e09bff1e68b3', // Will be set after mock deployment
   staking: '0x0000000000000000000000000000000000000000', // Will be set after mock deployment
 };
 
@@ -62,7 +61,7 @@ export const ethenaPairs = [
 export const ARBITRUM_CHAIN_ID = 42161n;
 export const ARBITRUM_SEPOLIA_CHAIN_ID = 421614n;
 
-export const TREASURY_ADDRESS = '0xc8a682F0991323777253ffa5fa6F19035685E723';
+export const TREASURY_ADDRESS = '0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D';
 
 export const ADMIN_ROLE = ethers.ZeroHash;
 export const OPERATOR_ROLE = ethers.id('OPERATOR_ROLE');

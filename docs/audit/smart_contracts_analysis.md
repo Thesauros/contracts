@@ -16,7 +16,6 @@ REBALANCE Protocol Architecture
 │   ├── AaveV3Provider.sol
 │   ├── CompoundV3Provider.sol
 │   ├── DolomiteProvider.sol
-│   ├── FraxlendProvider.sol
 │   └── VenusProvider.sol
 ├── Access Control
 │   ├── AccessManager.sol (Role-based permissions)

@@ -114,9 +114,6 @@ The system supports the following providers:
 - **File:** `contracts/providers/DolomiteProvider.sol`
 - **Functions:** Trading and lending in Dolomite
 
-### FraxlendProvider
-- **File:** `contracts/providers/FraxlendProvider.sol`
-- **Functions:** Lending in Fraxlend
 
 ### VenusProvider
 - **File:** `contracts/providers/VenusProvider.sol`

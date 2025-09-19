@@ -160,7 +160,6 @@ graph LR
     subgraph "Lending Protocols"
         AAVE[Aave V3]
         COMPOUND[Compound V3]
-        FRAXLEND[Fraxlend]
         VENUS[Venus]
         SILO[Silo]
         RADIANT[Radiant V2]
@@ -187,7 +186,6 @@ graph LR
     
     AAVE --> POOL_MANAGER
     COMPOUND --> POOL_MANAGER
-    FRAXLEND --> POOL_MANAGER
     VENUS --> POOL_MANAGER
     SILO --> POOL_MANAGER
     RADIANT --> POOL_MANAGER

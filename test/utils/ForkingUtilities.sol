@@ -27,12 +27,9 @@ contract ForkingUtilities is StdCheats, Test {
 
     IERC20 public usdc;
     IERC20 public usdt;
-    IERC20 public frax;
 
     address public constant USDT_ADDRESS =
         0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9;
-    address public constant FRAX_ADDRESS =
-        0x17FC002b466eEc40DaE837Fc4bE5c67993ddBd6F;
     address public constant COMET_USDT_ADDRESS =
         0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07;
     address public constant VENUS_USDT_ADDRESS =
@@ -70,12 +67,10 @@ contract ForkingUtilities is StdCheats, Test {
         usdt = IERC20(USDT_ADDRESS);
         vm.label(address(usdt), "USDT");
 
-        frax = IERC20(FRAX_ADDRESS);
-        vm.label(address(frax), "FRAX");
         usdc = IERC20(USDC_ADDRESS);
         vm.label(address(usdc), "USDC");
 
-        providerManager = new ProviderManager();
+        providerManager = new ProviderManager(address(this));
         providerManager.setYieldToken(
             "Compound_V3_Provider",
             USDT_ADDRESS,

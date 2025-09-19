@@ -33,7 +33,6 @@
 * [CompoundV3Provider](providers/compound-v3-provider.md)
 * [DolomiteProvider](providers/dolomite-provider.md)
 * [EthenaProvider](providers/ethena-provider.md)
-* [FraxlendProvider](providers/fraxlend-provider.md)
 * [MorphoProvider](providers/morpho-provider.md)
 * [VenusProvider](providers/venus-provider.md)
 

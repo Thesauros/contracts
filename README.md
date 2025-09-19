@@ -179,7 +179,6 @@ npx hardhat run deploy/deploy-timelock.ts --network goerli
 - **Aave V3**: Deposits and loans
 - **Compound V3**: Deposits
 - **Dolomite**: Trading and lending
-- **Fraxlend**: Lending
 - **Venus**: Deposits
 
 ##  Usage Examples

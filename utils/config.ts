@@ -147,7 +147,6 @@ export class ConfigLoader {
       'USDC': 6,
       'USDT': 6,
       'DAI': 18,
-      'FRAX': 18,
       'USDC_e': 6
     };
     

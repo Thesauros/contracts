@@ -49,7 +49,7 @@ backend-ts/
 - **Base**
 
 ### Tokens
-- **Stablecoins:** USDT, USDC, USDC.e, FRAX, DAI
+- **Stablecoins:** USDT, USDC, USDC.e, DAI
 - **Major tokens:** wBTC, wETH, wBNB, ARB
 
 ## Integrated Protocols
@@ -58,7 +58,6 @@ The project supports over 15 DeFi lending protocols:
 
 - **Aave V3** - Largest lending protocol
 - **Compound V3** - Protocol with algorithmic rates
-- **Fraxlend** - Protocol with flexible parameters
 - **Venus** - Leading protocol on BSC
 - **Silo** - Protocol with isolated pools
 - **Radiant V2** - Cross-chain protocol

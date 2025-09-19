@@ -284,7 +284,6 @@ private async execute() {
 | USDC | Compound V3, Aave V3, Dolomite |
 | USDC.e | Compound V3, Aave V3, Dolomite |
 | DAI | Aave V3, Dolomite |
-| FRAX | Aave V3, Fraxlend, Venus, Spark Morpho, Moonwell Morpho, Seamless Morpho, Steakhouse Morpho, Gauntlet Core Morpho, Gauntlet Prime Morpho, Apostro Resolv Morpho |
 
 ## Service Business Tasks
 

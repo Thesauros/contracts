@@ -32,14 +32,12 @@ graph TB
     AaveV3Provider[  AaveV3Provider]
     CompoundV3Provider[   CompoundV3Provider]
     DolomiteProvider[Diamond DolomiteProvider]
-    FraxlendProvider[  FraxlendProvider]
     VenusProvider[🌙 VenusProvider]
     
     %% External Protocols
     AaveV3[  Aave V3 Protocol]
     CompoundV3[   Compound V3 Protocol]
     Dolomite[Diamond Dolomite Protocol]
-    Fraxlend[  Fraxlend Protocol]
     Venus[🌙 Venus Protocol]
     
     %% Treasury and Tokens
@@ -76,7 +74,6 @@ graph TB
     Vault -->|interact| AaveV3Provider
     Vault -->|interact| CompoundV3Provider
     Vault -->|interact| DolomiteProvider
-    Vault -->|interact| FraxlendProvider
     Vault -->|interact| VenusProvider
     Vault -->|send fees| Treasury
     Vault -->|hold| ERC20Token
@@ -87,7 +84,6 @@ graph TB
     Rebalancer -->|interact| AaveV3Provider
     Rebalancer -->|interact| CompoundV3Provider
     Rebalancer -->|interact| DolomiteProvider
-    Rebalancer -->|interact| FraxlendProvider
     Rebalancer -->|interact| VenusProvider
     Rebalancer -->|send fees| Treasury
     
@@ -99,14 +95,12 @@ graph TB
     ProviderManager -->|manage| AaveV3Provider
     ProviderManager -->|manage| CompoundV3Provider
     ProviderManager -->|manage| DolomiteProvider
-    ProviderManager -->|manage| FraxlendProvider
     ProviderManager -->|manage| VenusProvider
     
     %% Provider to Protocol Interactions
     AaveV3Provider -->|interact| AaveV3
     CompoundV3Provider -->|interact| CompoundV3
     DolomiteProvider -->|interact| Dolomite
-    FraxlendProvider -->|interact| Fraxlend
     VenusProvider -->|interact| Venus
     
     %% Rewards System
@@ -124,8 +118,8 @@ graph TB
     class User,DAO userLayer
     class VaultManager,Timelock,AccessManager coreLayer
     class Vault,Rebalancer,RebalancerWithRewards,RewardsDistributor vaultLayer
-    class ProviderManager,AaveV3Provider,CompoundV3Provider,DolomiteProvider,FraxlendProvider,VenusProvider providerLayer
-    class AaveV3,CompoundV3,Dolomite,Fraxlend,Venus externalLayer
+    class ProviderManager,AaveV3Provider,CompoundV3Provider,DolomiteProvider,VenusProvider providerLayer
+    class AaveV3,CompoundV3,Dolomite,Venus externalLayer
     class Treasury,ERC20Token treasuryLayer
 ```
 
@@ -240,7 +234,6 @@ graph LR
     AaveV3Provider --> IProvider
     CompoundV3Provider --> IProvider
     DolomiteProvider --> IProvider
-    FraxlendProvider --> IProvider
     VenusProvider --> IProvider
     
     Vault --> IVault
@@ -312,7 +305,6 @@ DAO → Timelock → Target Contract
 - Aave V3: Lending and borrowing
 - Compound V3: Supply and borrow
 - Dolomite: Trading and lending
-- Fraxlend: Lending
 - Venus: Supply and borrow
 
 ### Token Integration

@@ -22,7 +22,7 @@ contract ProviderManagerTests is MockingUtilities {
     );
 
     function setUp() public {
-        lenderManager = new ProviderManager();
+        lenderManager = new ProviderManager(address(this));
     }
 
     // =========================================

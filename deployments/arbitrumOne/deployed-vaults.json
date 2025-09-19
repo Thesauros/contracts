@@ -39,11 +39,9 @@
     "usdt": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
     "usdcE": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"
   },
-  "treasury": "0xc8a682F0991323777253ffa5fa6F19035685E723",
+  "treasury": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
   "deploymentInfo": {
     "deployer": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
-    "gasUsed": "~15,000,000",
-    "deploymentCost": "~0.1 ETH",
     "verificationStatus": "All contracts verified on Arbiscan"
   }
 }

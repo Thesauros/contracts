@@ -76,9 +76,9 @@ vaultManager.rebalanceVault(
     true                // activate Compound
 );
 
-// Rebalance all funds in DAI vault
+// Rebalance all funds in vault
 vaultManager.rebalanceVault(
-    daiVault,           // DAI vault
+    vault,              // vault
     type(uint256).max,  // all funds
     compoundProvider,   // from Compound
     aaveProvider,       // to Aave

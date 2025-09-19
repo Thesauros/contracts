@@ -110,14 +110,8 @@ The system supports the following providers:
 - **File:** `contracts/providers/CompoundV3Provider.sol`
 - **Functions:** Deposits in Compound V3
 
-### DolomiteProvider
-- **File:** `contracts/providers/DolomiteProvider.sol`
-- **Functions:** Trading and lending in Dolomite
 
 
-### VenusProvider
-- **File:** `contracts/providers/VenusProvider.sol`
-- **Functions:** Deposits in Venus Protocol
 
 ## Role-Based Access Control
 

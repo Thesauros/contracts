@@ -103,7 +103,6 @@ MorphoProvider can be configured to support any ERC20 token that has a correspon
 - USDC
 - WETH
 - USDT
-- DAI
 - And other Morpho-supported assets
 
 ## Error Handling

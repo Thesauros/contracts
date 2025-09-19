@@ -15,8 +15,6 @@ REBALANCE Protocol Architecture
 │   ├── ProviderManager.sol (Registry)
 │   ├── AaveV3Provider.sol
 │   ├── CompoundV3Provider.sol
-│   ├── DolomiteProvider.sol
-│   └── VenusProvider.sol
 ├── Access Control
 │   ├── AccessManager.sol (Role-based permissions)
 │   ├── Timelock.sol (Upgrade delays)

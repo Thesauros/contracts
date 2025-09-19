@@ -19,8 +19,6 @@ Thesauros is a decentralized system that automatically redistributes funds betwe
 
 - Aave V3
 - Compound V3
-- Dolomite
-- Venus
 
 ## Quick Start
 

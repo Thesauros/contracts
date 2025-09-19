@@ -166,15 +166,6 @@ graph LR
         LODESTAR[Lodestar]
     end
     
-    subgraph "Morpho Protocols"
-        SPARK[Spark Morpho]
-        MOONWELL[Moonwell Morpho]
-        SEAMLESS[Seamless Morpho]
-        STEAKHOUSE[Steakhouse Morpho]
-        GAUNTLET_CORE[Gauntlet Core Morpho]
-        GAUNTLET_PRIME[Gauntlet Prime Morpho]
-        APOSTRO[Apostro Resolv Morpho]
-    end
     
     subgraph "Management"
         POOL_MANAGER[Pool Manager]
@@ -189,13 +180,6 @@ graph LR
     KINZA --> POOL_MANAGER
     LODESTAR --> POOL_MANAGER
     
-    SPARK --> POOL_MANAGER
-    MOONWELL --> POOL_MANAGER
-    SEAMLESS --> POOL_MANAGER
-    STEAKHOUSE --> POOL_MANAGER
-    GAUNTLET_CORE --> POOL_MANAGER
-    GAUNTLET_PRIME --> POOL_MANAGER
-    APOSTRO --> POOL_MANAGER
     
     POOL_MANAGER --> VAULT_MANAGER
     VAULT_MANAGER --> REBALANCER

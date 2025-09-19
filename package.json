@@ -10,9 +10,6 @@
     "monitor:apy-real": "npx hardhat run scripts/monitor-apy-real.ts --network arbitrumOne",
     "show:addresses": "npx hardhat run scripts/show-addresses.ts --network arbitrumOne",
     "update-config": "node scripts/update-config.js",
-    "deploy:morpho-provider": "npx hardhat run deploy/deploy-morpho-provider.ts --network arbitrumOne",
-    "setup:morpho-provider": "npx hardhat run scripts/setup-morpho-provider.ts --network arbitrumOne",
-    "verify:morpho-provider": "npx hardhat verify --network arbitrumOne",
     "ui:dev": "cd monitoring-ui && npm run dev",
     "ui:start": "cd monitoring-ui && npm start",
     "ui:test-api": "curl -s http://localhost:3001/api/health && echo ' - Health OK' && curl -s http://localhost:3001/api/dashboard | jq '.networkInfo'"

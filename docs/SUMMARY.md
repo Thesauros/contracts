@@ -32,7 +32,6 @@
 * [AaveV3Provider](providers/aave-v3-provider.md)
 * [CompoundV3Provider](providers/compound-v3-provider.md)
 * [EthenaProvider](providers/ethena-provider.md)
-* [MorphoProvider](providers/morpho-provider.md)
 
 ## Development
 

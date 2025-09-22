@@ -1,4 +1,4 @@
-export const BASE_URL = `https://base-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_PROJECT_ID}`;
+export const BASE_URL = process.env.BASE_RPC_URL || 'https://mainnet.base.org';
 
 export const networkConfig = {
   localhost: {

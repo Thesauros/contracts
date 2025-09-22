@@ -9,7 +9,7 @@ import {IProvider} from "./interfaces/IProvider.sol";
 import {Vault} from "./base/Vault.sol";
 
 /**
- * @title Rebalancer
+ * @title Thesauros Vault Rebalancer
  */
 contract Rebalancer is Vault {
     using SafeERC20 for IERC20Metadata;

@@ -2,12 +2,12 @@
 pragma solidity 0.8.23;
 
 import {IProviderManager} from "../interfaces/IProviderManager.sol";
-import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {AccessManager} from "../access/AccessManager.sol";
 
 /**
  * @title ProviderManager
  */
-contract ProviderManager is Ownable2Step, IProviderManager {
+contract ProviderManager is IProviderManager, AccessManager {
     // identifier => asset address => yield token address
     mapping(string => mapping(address => address)) private _assetToYieldToken;
 
@@ -20,19 +20,13 @@ contract ProviderManager is Ownable2Step, IProviderManager {
     string[] private _providerIdentifiers;
 
     /**
-     * @dev Initializes the ProviderManager contract with the specified parameters.
-     * @param owner_ The address of the initial owner of the contract.
-     */
-    constructor(address owner_) Ownable(owner_) {}
-
-    /**
      * @inheritdoc IProviderManager
      */
     function setYieldToken(
         string memory identifier,
         address asset,
         address yieldToken
-    ) public override onlyOwner {
+    ) public override onlyAdmin {
         if (!_identifierRegistered[identifier]) {
             _identifierRegistered[identifier] = true;
             _providerIdentifiers.push(identifier);
@@ -49,7 +43,7 @@ contract ProviderManager is Ownable2Step, IProviderManager {
         address assetOne,
         address assetTwo,
         address market
-    ) public override onlyOwner {
+    ) public override onlyAdmin {
         if (!_identifierRegistered[identifier]) {
             _identifierRegistered[identifier] = true;
             _providerIdentifiers.push(identifier);

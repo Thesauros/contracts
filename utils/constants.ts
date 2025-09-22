@@ -1,68 +1,56 @@
 import { ethers } from 'hardhat';
-// ARBITRUM ONE TOKEN ADDRESSES
+
 export const tokenAddresses = {
-  WETH: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
-  USDT: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
-  USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
-  USDC_e: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
+  USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
 };
 
 export const cometTokens = {
-  cWETH: '0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486',
-  cUSDT: '0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07',
-  cUSDC: '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf',
-  cUSDC_e: '0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA',
+  cUSDC: '0xb125E6687d4313864e53df431d5425969c15Eb2F',
 };
 
 export const cometPairs = [
   {
-    asset: tokenAddresses.WETH,
-    cToken: cometTokens.cWETH,
-  },
-  {
-    asset: tokenAddresses.USDT,
-    cToken: cometTokens.cUSDT,
-  },
-  {
     asset: tokenAddresses.USDC,
     cToken: cometTokens.cUSDC,
   },
+];
+
+export const morphoVaults = [
   {
-    asset: tokenAddresses.USDC_e,
-    cToken: cometTokens.cUSDC_e,
+    strategy: 'Spark',
+    vaultAddress: '0x7BfA7C4f149E7415b73bdeDfe609237e29CBF34A',
+  },
+  {
+    strategy: 'Moonwell',
+    vaultAddress: '0xc1256Ae5FF1cf2719D4937adb3bbCCab2E00A2Ca',
+  },
+  {
+    strategy: 'Seamless',
+    vaultAddress: '0x616a4E1db48e22028f6bbf20444Cd3b8e3273738',
+  },
+  {
+    strategy: 'Steakhouse',
+    vaultAddress: '0xbeeF010f9cb27031ad51e3333f9aF9C6B1228183',
+  },
+  {
+    strategy: 'Gauntlet Prime',
+    vaultAddress: '0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61',
+  },
+  {
+    strategy: 'Gauntlet Core',
+    vaultAddress: '0xc0c5689e6f4D256E861F65465b691aeEcC0dEb12',
+  },
+  {
+    strategy: 'Apostro Resolv',
+    vaultAddress: '0xcdDCDd18A16ED441F6CB10c3909e5e7ec2B9e8f3',
   },
 ];
 
-// Ethena Protocol addresses for Arbitrum network
-// Note: Ethena Protocol is planning to deploy on Arbitrum via Converge blockchain
-// These addresses will be updated when Ethena Protocol is deployed on Arbitrum
-// For now, we use mock contracts for testing
-export const ethenaAddresses = {
-  USDe: '0x4c9edd5852cd905f086c759e8383e09bff1e68b3', // Will be set after mock deployment
-  staking: '0x0000000000000000000000000000000000000000', // Will be set after mock deployment
-};
-
-export const ethenaPairs = [
-  {
-    asset: tokenAddresses.USDT,
-    usdeToken: ethenaAddresses.USDe,
-    stakingContract: ethenaAddresses.staking,
-  },
-  {
-    asset: tokenAddresses.USDC,
-    usdeToken: ethenaAddresses.USDe,
-    stakingContract: ethenaAddresses.staking,
-  },
-];
-
-// export const vaults = [];
-
-export const ARBITRUM_CHAIN_ID = 42161n;
-export const ARBITRUM_SEPOLIA_CHAIN_ID = 421614n;
+export const BASE_CHAIN_ID = 8453n;
 
 export const TREASURY_ADDRESS = '0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D';
 
-export const ADMIN_ROLE = '0x50662aEDe1e73a1f6ffc6b3bBB1EA5C4D8083eD5';
+export const ADMIN_ROLE = ethers.ZeroHash;
 export const OPERATOR_ROLE = ethers.id('OPERATOR_ROLE');
 export const EXECUTOR_ROLE = ethers.id('EXECUTOR_ROLE');
 

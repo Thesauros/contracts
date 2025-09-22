@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-import { ARBITRUM_CHAIN_ID, cometPairs } from '../utils/constants';
+import { BASE_CHAIN_ID, cometPairs, morphoVaults } from '../utils/constants';
 import { verify } from '../utils/verify';
 
 const deployProviders: DeployFunction = async function (
@@ -13,21 +13,20 @@ const deployProviders: DeployFunction = async function (
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const providersToDeploy = ['AaveV3Provider', 'CompoundV3Provider'];
+  const chainId = (await ethers.provider.getNetwork()).chainId;
+  const waitConfirmations = chainId === BASE_CHAIN_ID ? 2 : 0;
 
   log('----------------------------------------------------');
   log('Deploying ProviderManager...');
 
   const providerManager = await deploy('ProviderManager', {
     from: deployer,
-    args: [deployer],
+    args: [],
     log: true,
+    waitConfirmations: waitConfirmations,
   });
 
-  if ((await ethers.provider.getNetwork()).chainId === ARBITRUM_CHAIN_ID) {
-    await verify(providerManager.address, [deployer]);
-  }
-
+  log('----------------------------------------------------');
   log(`ProviderManager at ${providerManager.address}`);
 
   const providerManagerInstance = await ethers.getContractAt(
@@ -46,8 +45,35 @@ const deployProviders: DeployFunction = async function (
     );
   }
 
+  if (chainId === BASE_CHAIN_ID) {
+    await verify(providerManager.address, []);
+  }
+
   log('----------------------------------------------------');
-  log('Deploying all the providers...');
+  log('Deploying Morpho providers...');
+
+  for (const { strategy, vaultAddress } of morphoVaults) {
+    const provider = await deploy('MorphoProvider', {
+      from: deployer,
+      args: [vaultAddress],
+      log: true,
+      waitConfirmations: waitConfirmations,
+    });
+
+    log('----------------------------------------------------');
+    log(
+      `MorphoProvider for ${strategy} strategy deployed at ${provider.address}`
+    );
+
+    if (chainId === BASE_CHAIN_ID) {
+      await verify(provider.address, [vaultAddress]);
+    }
+  }
+
+  log('----------------------------------------------------');
+  log('Deploying AaveV3 and CompoundV3 providers...');
+
+  const providersToDeploy = ['AaveV3Provider', 'CompoundV3Provider'];
 
   for (const providerName of providersToDeploy) {
     const args =
@@ -57,12 +83,13 @@ const deployProviders: DeployFunction = async function (
       from: deployer,
       args: args,
       log: true,
+      waitConfirmations: waitConfirmations,
     });
 
-    log(`${providerName} deployed at ${provider.address}`);
     log('----------------------------------------------------');
+    log(`${providerName} deployed at ${provider.address}`);
 
-    if ((await ethers.provider.getNetwork()).chainId === ARBITRUM_CHAIN_ID) {
+    if (chainId === BASE_CHAIN_ID) {
       await verify(provider.address, args);
     }
   }

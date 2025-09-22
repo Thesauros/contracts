@@ -2,7 +2,7 @@ import { ethers } from 'hardhat';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
-import { ARBITRUM_CHAIN_ID } from '../utils/constants';
+import { BASE_CHAIN_ID } from '../utils/constants';
 import { verify } from '../utils/verify';
 
 const deployTimelock: DeployFunction = async function (
@@ -13,6 +13,9 @@ const deployTimelock: DeployFunction = async function (
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
+  const chainId = (await ethers.provider.getNetwork()).chainId;
+  const waitConfirmations = chainId === BASE_CHAIN_ID ? 2 : 0;
+
   log('----------------------------------------------------');
   log('Deploying Timelock...');
 
@@ -22,15 +25,13 @@ const deployTimelock: DeployFunction = async function (
     from: deployer,
     args: [deployer, halfHour],
     log: true,
+    waitConfirmations: waitConfirmations,
   });
 
+  log('----------------------------------------------------');
   log(`Timelock at ${timelock.address}`);
 
-  log('----------------------------------------------------');
-
-  const chainId = (await ethers.provider.getNetwork()).chainId;
-
-  if (chainId === ARBITRUM_CHAIN_ID) {
+  if (chainId === BASE_CHAIN_ID) {
     await verify(timelock.address, [deployer, halfHour]);
   }
 };

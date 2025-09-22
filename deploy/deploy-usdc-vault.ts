@@ -87,15 +87,15 @@ const deployUsdcVault: DeployFunction = async function (
   log('----------------------------------------------------');
   log(`USDC Thesauros Vault at ${usdcRebalancer.address}`);
 
-  const usdcInstance = await ethers.getContractAt('IERC20', usdcAddress);
-  await usdcInstance.approve(usdcRebalancer.address, initialDeposit);
+  // const usdcInstance = await ethers.getContractAt('IERC20', usdcAddress);
+  // await usdcInstance.approve(usdcRebalancer.address, initialDeposit);
 
   const usdcRebalancerInstance = await ethers.getContractAt(
     'Rebalancer',
     usdcRebalancer.address
   );
   await usdcRebalancerInstance.grantRole(OPERATOR_ROLE, vaultManager.address);
-  await usdcRebalancerInstance.setupVault(initialDeposit);
+  // await usdcRebalancerInstance.setupVault(initialDeposit);
 
   if (chainId === BASE_CHAIN_ID) {
     await verify(usdcRebalancer.address, args);

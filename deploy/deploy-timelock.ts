@@ -19,11 +19,11 @@ const deployTimelock: DeployFunction = async function (
   log('----------------------------------------------------');
   log('Deploying Timelock...');
 
-  const oneMinute = 60;
+  const thirtyMinutes = 1800; // 30 minutes - minimum required by Timelock contract
 
   const timelock = await deploy('Timelock', {
     from: deployer,
-    args: [deployer, oneMinute],
+    args: [deployer, thirtyMinutes],
     log: true,
     waitConfirmations: waitConfirmations,
   });
@@ -32,7 +32,7 @@ const deployTimelock: DeployFunction = async function (
   log(`Timelock at ${timelock.address}`);
 
   if (chainId === BASE_CHAIN_ID) {
-    await verify(timelock.address, [deployer, oneMinute]);
+    await verify(timelock.address, [deployer, thirtyMinutes]);
   }
 };
 

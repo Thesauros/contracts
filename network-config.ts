@@ -8,6 +8,6 @@ export const networkConfig = {
     url: BASE_URL,
     accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     chainId: 8453,
-    gasPrice: 4000000,
+    gasPrice: 8000000, // Further increased gas price
   },
 };

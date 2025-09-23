@@ -21,7 +21,7 @@ const deployProviders: DeployFunction = async function (
 
   const providerManager = await deploy('ProviderManager', {
     from: deployer,
-    args: [],
+    args: [deployer],
     log: true,
     waitConfirmations: waitConfirmations,
   });
@@ -46,7 +46,7 @@ const deployProviders: DeployFunction = async function (
   }
 
   if (chainId === BASE_CHAIN_ID) {
-    await verify(providerManager.address, []);
+    await verify(providerManager.address, [deployer]);
   }
 
   log('----------------------------------------------------');
@@ -61,9 +61,7 @@ const deployProviders: DeployFunction = async function (
     });
 
     log('----------------------------------------------------');
-    log(
-      `MorphoProvider for ${strategy} strategy deployed at ${provider.address}`
-    );
+    log(`MorphoProvider for ${strategy} strategy at ${provider.address}`);
 
     if (chainId === BASE_CHAIN_ID) {
       await verify(provider.address, [vaultAddress]);
@@ -87,7 +85,7 @@ const deployProviders: DeployFunction = async function (
     });
 
     log('----------------------------------------------------');
-    log(`${providerName} deployed at ${provider.address}`);
+    log(`${providerName} at ${provider.address}`);
 
     if (chainId === BASE_CHAIN_ID) {
       await verify(provider.address, args);

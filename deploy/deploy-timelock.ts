@@ -19,11 +19,11 @@ const deployTimelock: DeployFunction = async function (
   log('----------------------------------------------------');
   log('Deploying Timelock...');
 
-  const halfHour = 1800;
+  const oneMinute = 60;
 
   const timelock = await deploy('Timelock', {
     from: deployer,
-    args: [deployer, halfHour],
+    args: [deployer, oneMinute],
     log: true,
     waitConfirmations: waitConfirmations,
   });
@@ -32,7 +32,7 @@ const deployTimelock: DeployFunction = async function (
   log(`Timelock at ${timelock.address}`);
 
   if (chainId === BASE_CHAIN_ID) {
-    await verify(timelock.address, [deployer, halfHour]);
+    await verify(timelock.address, [deployer, oneMinute]);
   }
 };
 

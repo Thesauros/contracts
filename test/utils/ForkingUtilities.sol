@@ -12,9 +12,8 @@ import {ProviderManager} from "../../contracts/providers/ProviderManager.sol";
 import {CompoundV3Provider} from "../../contracts/providers/CompoundV3Provider.sol";
 import {AaveV3Provider} from "../../contracts/providers/AaveV3Provider.sol";
 import {Test} from "forge-std/Test.sol";
-import {StdCheats} from "forge-std/StdCheats.sol";
 
-contract ForkingUtilities is StdCheats, Test {
+contract ForkingUtilities is Test {
     address public alice = makeAddr("alice");
     address public bob = makeAddr("bob");
     address public initializer = makeAddr("initializer");
@@ -29,6 +28,7 @@ contract ForkingUtilities is StdCheats, Test {
 
     address public constant USDC_ADDRESS =
         0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;
+
     address public constant COMET_USDC_ADDRESS =
         0xb125E6687d4313864e53df431d5425969c15Eb2F;
     address public constant MORPHO_SPARK_VAULT_ADDRESS =
@@ -46,7 +46,7 @@ contract ForkingUtilities is StdCheats, Test {
     address public constant MORPHO_APOSTRO_RESOLV_VAULT_ADDRESS =
         0xcdDCDd18A16ED441F6CB10c3909e5e7ec2B9e8f3;
 
-    uint256 public constant PRECISION_FACTOR = 1e18;
+    uint256 public constant PRECISION_FACTOR = 1 ether;
     uint256 public constant WITHDRAW_FEE_PERCENT = 0.001 ether; // 0.1%
 
     uint256 public constant MIN_AMOUNT = 1e6;
@@ -60,7 +60,7 @@ contract ForkingUtilities is StdCheats, Test {
         usdc = IERC20(USDC_ADDRESS);
         vm.label(address(usdc), "USDC");
 
-        providerManager = new ProviderManager();
+        providerManager = new ProviderManager(address(this));
         providerManager.setYieldToken(
             "Compound_V3_Provider",
             USDC_ADDRESS,

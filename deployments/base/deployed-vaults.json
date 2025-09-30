@@ -1,58 +1,21 @@
 {
   "network": "base",
   "chainId": 8453,
-  "deploymentDate": "2025-09-23",
-  "contracts": {
-    "Timelock": {
-      "address": "0x2fe36048F394A0732E8F28C43DbF351F0253C6E5"
-    },
-    "ProviderManager": {
-      "address": "0xB7d7e747b583bDE56f5277a6E4820Cfec7e0f587"
-    },
-    "MorphoProviders": {
-      "Spark": {
-        "address": "0xb8637850cd66EC9E72058d7fEBb89e146a59b307",
-        "vaultAddress": "0x7BfA7C4f149E7415b73bdeDfe609237e29CBF34A"
-      },
-      "Moonwell": {
-        "address": "0x90C748a428e52A6f94721c566980713910d5d1d1",
-        "vaultAddress": "0xc1256Ae5FF1cf2719D4937adb3bbCCab2E00A2Ca"
-      },
-      "Seamless": {
-        "address": "0xb8c25fBD91a8a907Bf0Eeb0ef7D52D7ec8cABd70",
-        "vaultAddress": "0x616a4E1db48e22028f6bbf20444Cd3b8e3273738"
-      },
-      "Steakhouse": {
-        "address": "0x14C1E06B09AB6C7A04B4b9ef1E029d0e89935ce6",
-        "vaultAddress": "0xbeeF010f9cb27031ad51e3333f9aF9C6B1228183"
-      },
-      "GauntletPrime": {
-        "address": "0x38c88EF793B14b5b84a9c4468FEB13D9ca71C62D",
-        "vaultAddress": "0xeE8F4eC5672F09119b96Ab6fB59C27E1b7e44b61"
-      },
-      "GauntletCore": {
-        "address": "0x7a5Ae7F0a2FE2F555b92C2e237381c04040F60Bc",
-        "vaultAddress": "0xc0c5689e6f4D256E861F65465b691aeEcC0dEb12"
-      },
-      "ApostroResolv": {
-        "address": "0xaFD923cc87EA625916BEa07743e5E73B75ABD91e",
-        "vaultAddress": "0xcdDCDd18A16ED441F6CB10c3909e5e7ec2B9e8f3"
-      }
-    },
-    "AaveV3Provider": {
-      "address": "0x2a8b5c1d089c224ddaBA3a1D7C00c2788642D80E"
-    },
-    "CompoundV3Provider": {
-      "address": "0x8cDc56bE22Bd7a74A9568aBa0fB7521D1882C7eC"
-    },
-    "VaultManager": {
-      "address": "0xE3c28C1Cd740c8CD530677337de0b7C082824711"
-    },
-    "USDCVault": {
+  "deployedAt": "2025-09-23T00:00:00.000Z",
+  "baseContracts": {
+    "timelock": "0x2fe36048F394A0732E8F28C43DbF351F0253C6E5",
+    "vaultManager": "0xE3c28C1Cd740c8CD530677337de0b7C082824711",
+    "providerManager": "0xB7d7e747b583bDE56f5277a6E4820Cfec7e0f587",
+    "aaveV3Provider": "0x2a8b5c1d089c224ddaBA3a1D7C00c2788642D80E",
+    "compoundV3Provider": "0x8cDc56bE22Bd7a74A9568aBa0fB7521D1882C7eC"
+  },
+  "vaults": {
+    "usdc": {
       "address": "0x386b6872358981f199BF23f12c369dB26a5F2869",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
       "name": "Thesauros USDC",
       "symbol": "tUSDC",
-      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "activeProvider": "0xb8637850cd66EC9E72058d7fEBb89e146a59b307",
       "providers": [
         "0xb8637850cd66EC9E72058d7fEBb89e146a59b307",
         "0x90C748a428e52A6f94721c566980713910d5d1d1",
@@ -63,10 +26,16 @@
         "0xaFD923cc87EA625916BEa07743e5E73B75ABD91e",
         "0x8cDc56bE22Bd7a74A9568aBa0fB7521D1882C7eC",
         "0x2a8b5c1d089c224ddaBA3a1D7C00c2788642D80E"
-      ],
-      "withdrawFeePercent": "0.001 (0.1%)",
-      "timelock": "0x2fe36048F394A0732E8F28C43DbF351F0253C6E5",
-      "treasury": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D"
+      ]
     }
+  },
+  "tokens": {
+    "weth": "0x4200000000000000000000000000000000000006",
+    "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+  },
+  "treasury": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
+  "deploymentInfo": {
+    "deployer": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
+    "verificationStatus": "All contracts verified on Basescan"
   }
 }

@@ -76,4 +76,18 @@ contract MockERC20 is ERC20 {
     ) public view returns (uint256) {
         return _depositBalance[provider][user];
     }
+    
+    /**
+     * @notice Simulates profit by increasing deposit balance
+     * @param user The user address
+     * @param provider The provider identifier
+     * @param amount The amount to add to the deposit balance
+     */
+    function simulateProfit(
+        address user,
+        string memory provider,
+        uint256 amount
+    ) external {
+        _depositBalance[provider][user] += amount;
+    }
 }

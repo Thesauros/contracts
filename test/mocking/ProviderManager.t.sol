@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {ProviderManager} from "../../contracts/providers/ProviderManager.sol";
-import {AccessManager} from "../../contracts/access/AccessManager.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {MockingUtilities} from "../utils/MockingUtilities.sol";
 
 contract ProviderManagerTests is MockingUtilities {
@@ -34,7 +34,7 @@ contract ProviderManagerTests is MockingUtilities {
         address asset,
         address yieldToken
     ) public {
-        vm.expectRevert(AccessManager.AccessManager__CallerIsNotAdmin.selector);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, alice));
         vm.prank(alice);
         lenderManager.setYieldToken(identifier, asset, yieldToken);
     }
@@ -72,7 +72,7 @@ contract ProviderManagerTests is MockingUtilities {
         address assetTwo,
         address market
     ) public {
-        vm.expectRevert(AccessManager.AccessManager__CallerIsNotAdmin.selector);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, alice));
         vm.prank(alice);
         lenderManager.setMarket(identifier, assetOne, assetTwo, market);
     }

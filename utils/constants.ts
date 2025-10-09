@@ -67,3 +67,21 @@ export const OPERATOR_ROLE = ethers.id('OPERATOR_ROLE');
 export const EXECUTOR_ROLE = ethers.id('EXECUTOR_ROLE');
 
 export const WITHDRAW_FEE_PERCENT = ethers.parseEther('0.001'); // 0.1%
+
+// Dolomite Protocol addresses for Arbitrum network
+export const dolomiteAddresses = {
+  margin: '0x6Bd780E7fDf01D77e4d475c821f1e7AE05409072', // DolomiteMargin
+  getter: '0x9381942De7A66fdB4741272EaB4fc0A362F7a16a', // DolomiteGetter
+  proxy: '0xAdB9D68c613df4AA363B42161E1282117C7B9594', // DepositWithdrawalProxy
+};
+
+export const dolomitePairs = [
+  {
+    asset: tokenAddresses.USDC,
+    marketId: 0, // USDC market ID in Dolomite
+  },
+  {
+    asset: tokenAddresses.USDT,
+    marketId: 1, // USDT market ID in Dolomite
+  },
+];

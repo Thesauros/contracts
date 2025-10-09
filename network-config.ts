@@ -18,7 +18,7 @@ export const networkConfig = {
     url: networkUrls.arbitrumOne,
     accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     chainId: 42161,
-    gasPrice: 100000000,
+    gasPrice: 120000000, // Increased to 0.12 gwei
   },
   arbitrumSepolia: {
     url: networkUrls.arbitrumSepolia,

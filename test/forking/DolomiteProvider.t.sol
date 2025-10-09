@@ -15,7 +15,7 @@ contract DolomiteProviderTests is ForkingUtilities {
         IProvider[] memory providers = new IProvider[](1);
         providers[0] = dolomiteProvider;
 
-        deployVault(address(usdt), providers);
+        deployVault(address(usdc), providers);
         initializeVault(vault, MIN_AMOUNT, initializer);
     }
 

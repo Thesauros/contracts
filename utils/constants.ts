@@ -1,24 +1,18 @@
 import { ethers } from 'hardhat';
 // ARBITRUM ONE TOKEN ADDRESSES
 export const tokenAddresses = {
-  WETH: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
   USDT: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
   USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
   USDC_e: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
 };
 
 export const cometTokens = {
-  cWETH: '0x6f7D514bbD4aFf3BcD1140B7344b32f063dEe486',
   cUSDT: '0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07',
   cUSDC: '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf',
   cUSDC_e: '0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA',
 };
 
 export const cometPairs = [
-  {
-    asset: tokenAddresses.WETH,
-    cToken: cometTokens.cWETH,
-  },
   {
     asset: tokenAddresses.USDT,
     cToken: cometTokens.cUSDT,
@@ -55,10 +49,37 @@ export const ethenaPairs = [
   },
 ];
 
-// export const vaults = [];
+// Morpho Blue Protocol addresses for Arbitrum network
+export const morphoAddresses = {
+  morpho: '0x6c247b1f6182318877311737bac0844baa518f5e'
+};
+
+// Available MetaMorpho vaults on Arbitrum
+export const morphoVaults = [
+  {
+    strategy: 'Steakhouse Financial',
+    vaultAddress: '0x5c0C306Aaa9F877de636f4d5822cA9F2E81563BA',
+  },
+  {
+    strategy: 'MEV Capital',
+    vaultAddress: '0xa60643c90A542A95026C0F1dbdB0615fF42019Cf',
+  },
+  {
+    strategy: 'Hyperithm',
+    vaultAddress: '0x4B6F1C9E5d470b97181786b26da0d0945A7cf027',
+  },
+  {
+    strategy: 'Gauntlet Prime',
+    vaultAddress: '0x7c574174DA4b2be3f705c6244B4BfA0815a8B3Ed',
+  },
+  {
+    strategy: 'Gauntlet Core',
+    vaultAddress: '0x7e97fa6893871A2751B5fE961978DCCb2c201E65',
+  }
+];
+
 
 export const ARBITRUM_CHAIN_ID = 42161n;
-export const ARBITRUM_SEPOLIA_CHAIN_ID = 421614n;
 
 export const TREASURY_ADDRESS = '0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D';
 

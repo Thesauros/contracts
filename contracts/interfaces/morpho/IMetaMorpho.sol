@@ -2,7 +2,7 @@
 pragma solidity >=0.5.0;
 
 import {IERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
-import {IMorpho, Id, MarketParams} from "./IMorpho.sol";
+import {IMorpho, Id, MarketParams} from "morpho-blue/interfaces/IMorpho.sol";
 
 struct MarketAllocation {
     /// @notice The market to allocate.

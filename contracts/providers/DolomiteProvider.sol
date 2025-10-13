@@ -9,6 +9,48 @@ import {IDolomiteGetter} from "../interfaces/dolomite/IDolomiteGetter.sol";
 
 /**
  * @title DolomiteProvider
+ * @notice Provider implementation for Dolomite protocol integration
+ * @dev This provider integrates with Dolomite's margin trading protocol to provide
+ *      yield generation through lending operations with advanced margin capabilities.
+ * 
+ * @custom:integration The provider works with Dolomite by:
+ * - Depositing assets into Dolomite's margin accounts
+ * - Earning interest from margin traders and borrowers
+ * - Supporting multiple markets through market ID system
+ * - Leveraging Dolomite's sophisticated margin trading infrastructure
+ * 
+ * @custom:yield-mechanism Yield generation through:
+ * - Supply APY from margin traders paying interest
+ * - Dolomite's interest rate models and fee structures
+ * - Margin trading activity and leverage usage
+ * - Protocol fees and trading volume
+ * 
+ * @custom:security Features:
+ * - Uses Dolomite's audited margin trading protocol
+ * - Implements proper market ID validation
+ * - Supports emergency pause mechanisms
+ * - Integrates with DolomiteMargin for core operations
+ * 
+ * @custom:architecture The provider uses:
+ * - DepositWithdrawalProxy for simplified deposit/withdraw operations
+ * - DolomiteMargin for core protocol interactions
+ * - Market ID system for asset identification
+ * - Default account system for simplified management
+ * 
+ * @custom:usage Example:
+ * ```solidity
+ * // Deploy with Dolomite contract addresses
+ * DolomiteProvider provider = new DolomiteProvider(
+ *     depositWithdrawalProxy,
+ *     dolomiteMargin,
+ *     dolomiteGetter
+ * );
+ * 
+ * // The vault can now deposit/withdraw through this provider
+ * provider.deposit(amount, vault);
+ * uint256 balance = provider.getDepositBalance(user, vault);
+ * uint256 apy = provider.getDepositRate(vault);
+ * ```
  */
 contract DolomiteProvider is IProvider {
     /**

@@ -5,8 +5,39 @@ import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 
 /**
  * @title PausableActions
- *
- * @dev Inspired and modified from OpenZeppelin's Pausable contract.
+ * @notice Granular pausing mechanism for specific actions
+ * @dev This contract provides fine-grained control over pausing specific actions
+ *      rather than pausing the entire contract. It's inspired by OpenZeppelin's
+ *      Pausable contract but allows for selective action pausing.
+ * 
+ * @custom:features The contract supports:
+ * - Individual action pausing (Deposit, Withdraw)
+ * - Granular control over different operations
+ * - Event emission for pause/unpause actions
+ * - Modifier-based access control
+ * 
+ * @custom:security Benefits:
+ * - Prevents emergency situations from affecting all operations
+ * - Allows selective disabling of problematic functions
+ * - Maintains transparency through events
+ * - Easy to extend with new action types
+ * 
+ * @custom:usage Example:
+ * ```solidity
+ * contract MyVault is PausableActions {
+ *     function deposit() external whenNotPaused(Actions.Deposit) {
+ *         // Deposit logic
+ *     }
+ *     
+ *     function withdraw() external whenNotPaused(Actions.Withdraw) {
+ *         // Withdraw logic
+ *     }
+ *     
+ *     function emergencyPauseDeposits() external onlyOwner {
+ *         _pause(Actions.Deposit);
+ *     }
+ * }
+ * ```
  */
 abstract contract PausableActions is Context {
     /**
@@ -15,11 +46,15 @@ abstract contract PausableActions is Context {
     error PausableActions__ActionPaused();
     error PausableActions__ActionNotPaused();
 
+    /// @notice Enumeration of pausable actions
+    /// @dev Each action can be paused independently
     enum Actions {
-        Deposit,
-        Withdraw
+        Deposit,  /// @dev Pausing deposits prevents new funds from entering the vault
+        Withdraw  /// @dev Pausing withdrawals prevents users from exiting the vault
     }
 
+    /// @notice Mapping of actions to their paused state
+    /// @dev true = paused, false = active
     mapping(Actions => bool) private _actionPaused;
 
     /**

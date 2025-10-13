@@ -8,6 +8,41 @@ import {CometInterface} from "../interfaces/compoundV3/CometInterface.sol";
 
 /**
  * @title CompoundV3Provider
+ * @notice Provider implementation for Compound V3 (Comet) protocol integration
+ * @dev This provider integrates with Compound V3's Comet lending protocol to provide
+ *      yield generation through supply-side lending operations with enhanced efficiency.
+ * 
+ * @custom:integration The provider works with Compound V3 by:
+ * - Supplying assets to the Comet lending market
+ * - Earning interest from borrowers through supply APY
+ * - Supporting multiple assets through ProviderManager configuration
+ * - Leveraging Compound's efficient monolithic money market design
+ * 
+ * @custom:yield-mechanism Yield generation through:
+ * - Supply APY from borrowers paying interest
+ * - Compound's efficient interest rate models
+ * - Automatic yield accrual through supply balances
+ * - Optimized gas usage and capital efficiency
+ * 
+ * @custom:security Features:
+ * - Uses Compound V3's audited Comet protocol
+ * - Integrates with ProviderManager for asset configuration
+ * - Implements proper access controls through IProvider interface
+ * - Supports emergency pause mechanisms
+ * 
+ * @custom:usage Example:
+ * ```solidity
+ * // Deploy with ProviderManager address
+ * CompoundV3Provider provider = new CompoundV3Provider(providerManager);
+ * 
+ * // Configure assets in ProviderManager first
+ * providerManager.setYieldToken("CompoundV3_Provider", usdc, comet);
+ * 
+ * // The vault can now deposit/withdraw through this provider
+ * provider.deposit(amount, vault);
+ * uint256 balance = provider.getDepositBalance(user, vault);
+ * uint256 apy = provider.getDepositRate(vault);
+ * ```
  */
 contract CompoundV3Provider is IProvider {
     /**

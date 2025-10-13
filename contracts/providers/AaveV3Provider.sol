@@ -9,6 +9,38 @@ import {IProvider} from "../interfaces/IProvider.sol";
 
 /**
  * @title AaveV3Provider
+ * @notice Provider implementation for Aave V3 protocol integration
+ * @dev This provider integrates with Aave V3's lending pool to provide
+ *      yield generation through supply-side lending operations.
+ * 
+ * @custom:integration The provider works with Aave V3 by:
+ * - Supplying assets to the Aave V3 lending pool
+ * - Earning interest from borrowers
+ * - Supporting aTokens for automatic yield accrual
+ * - Leveraging Aave's battle-tested lending infrastructure
+ * 
+ * @custom:yield-mechanism Yield generation through:
+ * - Supply APY from borrowers paying interest
+ * - Liquidation bonuses (if applicable)
+ * - Aave's reserve factor and protocol fees
+ * - Dynamic interest rate models
+ * 
+ * @custom:security Features:
+ * - Uses Aave V3's audited and secure lending pool
+ * - Leverages aTokens for automatic yield accrual
+ * - Implements proper access controls through IProvider interface
+ * - Supports emergency pause mechanisms
+ * 
+ * @custom:usage Example:
+ * ```solidity
+ * // Deploy with Aave V3 pool addresses provider
+ * AaveV3Provider provider = new AaveV3Provider(poolAddressesProvider);
+ * 
+ * // The vault can now deposit/withdraw through this provider
+ * provider.deposit(amount, vault);
+ * uint256 balance = provider.getDepositBalance(user, vault);
+ * uint256 apy = provider.getDepositRate(vault);
+ * ```
  */
 contract AaveV3Provider is IProvider {
     /**

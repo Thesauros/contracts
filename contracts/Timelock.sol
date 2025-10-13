@@ -5,6 +5,38 @@ import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step
 
 /**
  * @title Timelock
+ * @notice A time-delayed execution contract for critical operations
+ * @dev This contract implements a governance mechanism that requires a time delay
+ *      before executing critical operations, providing security against malicious
+ *      or accidental changes to the protocol.
+ * 
+ * @custom:security The timelock provides several security features:
+ * - Minimum delay of 30 minutes prevents immediate execution
+ * - Maximum delay of 30 days prevents indefinite delays
+ * - Grace period of 14 days for execution after delay expires
+ * - Only owner can queue and execute transactions
+ * - Transactions can be cancelled before execution
+ * 
+ * @custom:usage Example usage:
+ * ```solidity
+ * // Queue a transaction to update vault providers
+ * timelock.queue(
+ *     vaultAddress,
+ *     0,
+ *     "setProviders(address[])",
+ *     encodedData,
+ *     block.timestamp + delay
+ * );
+ * 
+ * // After delay period, execute the transaction
+ * timelock.execute(
+ *     vaultAddress,
+ *     0,
+ *     "setProviders(address[])",
+ *     encodedData,
+ *     executionTimestamp
+ * );
+ * ```
  */
 contract Timelock is Ownable2Step {
     /**
@@ -18,13 +50,24 @@ contract Timelock is Ownable2Step {
     error Timelock__Expired();
     error Timelock__ExecutionFailed();
 
-    // Transaction ids => queued
+    /// @notice Mapping of transaction IDs to their queued status
+    /// @dev Transaction ID is computed as keccak256(abi.encode(target, value, signature, data, timestamp))
     mapping(bytes32 => bool) public queued;
 
+    /// @notice Minimum delay for queued transactions (30 minutes)
+    /// @dev Prevents immediate execution of critical operations
     uint256 public constant MIN_DELAY = 30 minutes;
+    
+    /// @notice Maximum delay for queued transactions (30 days)
+    /// @dev Prevents indefinite delays that could lock the protocol
     uint256 public constant MAX_DELAY = 30 days;
+    
+    /// @notice Grace period for executing queued transactions (14 days)
+    /// @dev After this period, transactions expire and cannot be executed
     uint256 public constant GRACE_PERIOD = 14 days;
 
+    /// @notice Current delay for queued transactions
+    /// @dev Can be updated by the contract itself through setDelay()
     uint256 public delay;
 
     /**
@@ -92,12 +135,30 @@ contract Timelock is Ownable2Step {
     fallback() external payable {}
 
     /**
-     * @notice Queues a transaction.
-     * @param target The address of the contract to call.
-     * @param value The amount of ether to send with the call.
-     * @param signature The function signature of the target contract.
-     * @param data The calldata for the function called on the target address.
-     * @param timestamp The time when the transaction can be executed.
+     * @notice Queues a transaction for delayed execution
+     * @param target The address of the contract to call
+     * @param value The amount of ether to send with the call (0 for most calls)
+     * @param signature The function signature of the target contract (e.g., "setProviders(address[])")
+     * @param data The ABI-encoded parameters for the function call (without function selector)
+     * @param timestamp The timestamp when the transaction can be executed (must be >= block.timestamp + delay)
+     * @return txId The unique transaction ID for this queued transaction
+     * 
+     * @dev The transaction ID is computed as keccak256(abi.encode(target, value, signature, data, timestamp))
+     * @dev The timestamp must be at least `delay` seconds in the future
+     * @dev Only the contract owner can queue transactions
+     * 
+     * @custom:example
+     * ```solidity
+     * // Queue a transaction to update vault providers
+     * bytes memory data = abi.encode(newProviders);
+     * bytes32 txId = timelock.queue(
+     *     vaultAddress,
+     *     0,
+     *     "setProviders(address[])",
+     *     data,
+     *     block.timestamp + 24 hours
+     * );
+     * ```
      */
     function queue(
         address target,
@@ -143,12 +204,31 @@ contract Timelock is Ownable2Step {
     }
 
     /**
-     * @notice Executes a queued transaction.
-     * @param target The address of the contract to call.
-     * @param value The amount of ether to send with the call.
-     * @param signature The function signature of the target contract.
-     * @param data The calldata for the function called.
-     * @param timestamp The time when the transaction can be executed.
+     * @notice Executes a previously queued transaction
+     * @param target The address of the contract to call
+     * @param value The amount of ether to send with the call
+     * @param signature The function signature of the target contract
+     * @param data The ABI-encoded parameters for the function call
+     * @param timestamp The original timestamp when the transaction was queued
+     * @return returnData The return data from the executed function call
+     * 
+     * @dev The transaction must have been previously queued
+     * @dev The current timestamp must be >= the execution timestamp
+     * @dev The transaction must not have expired (timestamp + GRACE_PERIOD)
+     * @dev Only the contract owner can execute transactions
+     * @dev The transaction is removed from the queue after execution
+     * 
+     * @custom:example
+     * ```solidity
+     * // Execute a previously queued transaction
+     * bytes memory result = timelock.execute(
+     *     vaultAddress,
+     *     0,
+     *     "setProviders(address[])",
+     *     data,
+     *     originalTimestamp
+     * );
+     * ```
      */
     function execute(
         address target,

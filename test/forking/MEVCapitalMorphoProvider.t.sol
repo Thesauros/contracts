@@ -71,7 +71,7 @@ contract MEVCapitalMorphoProviderTests is ForkingUtilities {
     // getDepositRate
     // =========================================
 
-    function testDepositRate() public {
+    function testDepositRate() public view {
         uint256 rate = morphoProvider.getDepositRate(vault);
 
         assertGt(rate, 0);
@@ -81,7 +81,7 @@ contract MEVCapitalMorphoProviderTests is ForkingUtilities {
     // getIdentifier
     // =========================================
 
-    function testIdentifier() public {
+    function testIdentifier() public view {
         string memory identifier = morphoProvider.getIdentifier();
 
         assertEq(identifier, "Morpho_Provider");

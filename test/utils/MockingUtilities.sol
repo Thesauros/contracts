@@ -7,10 +7,8 @@ import {MockProviderA, MockProviderB} from "../../contracts/mocks/MockProvider.s
 import {IVault} from "../../contracts/interfaces/IVault.sol";
 import {Vault} from "../../contracts/base/Vault.sol";
 import {Rebalancer} from "../../contracts/Rebalancer.sol";
-import {RebalancerWithRewards} from "../../contracts/RebalancerWithRewards.sol";
 import {VaultManager} from "../../contracts/VaultManager.sol";
 import {Timelock} from "../../contracts/Timelock.sol";
-import {RewardsDistributor} from "../../contracts/RewardsDistributor.sol";
 import {Test} from "forge-std/Test.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 
@@ -21,11 +19,9 @@ contract MockingUtilities is StdCheats, Test {
     address public treasury = makeAddr("treasury");
 
     Rebalancer public vault;
-    RebalancerWithRewards public vaultWithRewards;
     VaultManager public vaultManager;
 
     Timelock public timelock;
-    RewardsDistributor public rewardsDistributor;
 
     IProvider public mockProviderA;
     IProvider public mockProviderB;
@@ -65,7 +61,6 @@ contract MockingUtilities is StdCheats, Test {
         providers[1] = mockProviderB;
 
         timelock = new Timelock(address(this), TIMELOCK_DELAY);
-        rewardsDistributor = new RewardsDistributor();
 
         vault = new Rebalancer(
             address(asset),
@@ -77,24 +72,10 @@ contract MockingUtilities is StdCheats, Test {
             treasury
         );
 
-        vaultWithRewards = new RebalancerWithRewards(
-            address(asset),
-            "Rebalance tUSDT",
-            "rtUSDT",
-            providers,
-            WITHDRAW_FEE_PERCENT,
-            address(rewardsDistributor),
-            address(this), // Testing purposes
-            treasury
-        );
-
         vaultManager = new VaultManager();
 
         vault.grantRole(OPERATOR_ROLE, address(this));
         vault.grantRole(OPERATOR_ROLE, address(vaultManager));
-
-        vaultWithRewards.grantRole(OPERATOR_ROLE, address(this));
-        vaultWithRewards.grantRole(OPERATOR_ROLE, address(vaultManager));
 
         vaultManager.grantRole(EXECUTOR_ROLE, address(this));
     }

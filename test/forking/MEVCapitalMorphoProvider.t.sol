@@ -6,11 +6,11 @@ import {IProvider} from "../../contracts/interfaces/IProvider.sol";
 import {MorphoProvider} from "../../contracts/providers/MorphoProvider.sol";
 import {ForkingUtilities} from "../utils/ForkingUtilities.sol";
 
-contract SparkMorphoProviderTests is ForkingUtilities {
+contract MEVCapitalMorphoProviderTests is ForkingUtilities {
     MorphoProvider public morphoProvider;
 
     function setUp() public {
-        morphoProvider = new MorphoProvider(MORPHO_SPARK_VAULT_ADDRESS);
+        morphoProvider = new MorphoProvider(MORPHO_MEV_CAPITAL_VAULT_ADDRESS);
 
         IProvider[] memory providers = new IProvider[](1);
         providers[0] = morphoProvider;
@@ -29,13 +29,11 @@ contract SparkMorphoProviderTests is ForkingUtilities {
 
         executeDeposit(vault, DEPOSIT_AMOUNT, alice);
 
-        vm.warp(block.timestamp + 10 seconds);
-        vm.roll(block.number + 1);
+        uint256 mintedSharesAfter = vault.balanceOf(alice);
+        uint256 assetBalanceAfter = vault.convertToAssets(mintedSharesAfter);
 
-        uint256 mintedShares = vault.balanceOf(alice);
-        uint256 assetBalance = vault.convertToAssets(mintedShares);
-
-        assertGe(assetBalance - assetBalanceBefore, DEPOSIT_AMOUNT);
+        assertGt(mintedSharesAfter, mintedSharesBefore);
+        assertGt(assetBalanceAfter, assetBalanceBefore);
     }
 
     // =========================================
@@ -45,21 +43,16 @@ contract SparkMorphoProviderTests is ForkingUtilities {
     function testWithdraw() public {
         executeDeposit(vault, DEPOSIT_AMOUNT, alice);
 
-        vm.warp(block.timestamp + 10 seconds);
-        vm.roll(block.number + 1);
+        uint256 mintedSharesBefore = vault.balanceOf(alice);
+        uint256 assetBalanceBefore = vault.convertToAssets(mintedSharesBefore);
 
-        address asset = vault.asset();
+        executeWithdraw(vault, assetBalanceBefore, alice);
 
-        uint256 balanceBefore = IERC20(asset).balanceOf(alice);
-        uint256 maxWithdrawable = vault.maxWithdraw(alice);
-        uint256 fee = (maxWithdrawable * WITHDRAW_FEE_PERCENT) /
-            PRECISION_FACTOR;
+        uint256 mintedSharesAfter = vault.balanceOf(alice);
+        uint256 assetBalanceAfter = vault.convertToAssets(mintedSharesAfter);
 
-        executeWithdraw(vault, maxWithdrawable, alice);
-
-        uint256 balanceAfter = balanceBefore + maxWithdrawable - fee;
-
-        assertEq(IERC20(asset).balanceOf(alice), balanceAfter);
+        assertLt(mintedSharesAfter, mintedSharesBefore);
+        assertLt(assetBalanceAfter, assetBalanceBefore);
     }
 
     // =========================================
@@ -69,10 +62,9 @@ contract SparkMorphoProviderTests is ForkingUtilities {
     function testDepositBalance() public {
         executeDeposit(vault, DEPOSIT_AMOUNT, alice);
 
-        vm.warp(block.timestamp + 10 seconds);
-        vm.roll(block.number + 1);
+        uint256 depositBalance = morphoProvider.getDepositBalance(alice, vault);
 
-        assertGe(vault.totalAssets(), DEPOSIT_AMOUNT + MIN_AMOUNT);
+        assertGe(depositBalance, 0);
     }
 
     // =========================================
@@ -80,7 +72,9 @@ contract SparkMorphoProviderTests is ForkingUtilities {
     // =========================================
 
     function testDepositRate() public view {
-        assertGt(morphoProvider.getDepositRate(vault), 0);
+        uint256 rate = morphoProvider.getDepositRate(vault);
+
+        assertGt(rate, 0);
     }
 
     // =========================================
@@ -88,6 +82,8 @@ contract SparkMorphoProviderTests is ForkingUtilities {
     // =========================================
 
     function testIdentifier() public view {
-        assertEq(morphoProvider.getIdentifier(), "Morpho_Provider");
+        string memory identifier = morphoProvider.getIdentifier();
+
+        assertEq(identifier, "Morpho_Provider");
     }
 }

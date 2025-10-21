@@ -28,6 +28,7 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
     error Vault__InvalidInput();
     error Vault__DepositLessThanMin();
     error Vault__SetupAlreadyCompleted();
+    error Vault__NotWhitelisted();
 
     uint256 internal constant PRECISION_FACTOR = 1e18;
     uint256 internal constant MAX_WITHDRAW_FEE_PERCENT = 0.05 * 1e18; // 5%
@@ -46,6 +47,9 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
     address public treasury;
 
     bool public setupCompleted;
+    
+    // Whitelist functionality using AccessManager roles
+    bool public whitelistEnabled;
 
     /**
      * @dev Reverts if called by any account other than the timelock contract.
@@ -353,6 +357,9 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
         }
         if (assets < minAmount) {
             revert Vault__DepositLessThanMin();
+        }
+        if (whitelistEnabled && !hasRole(DEPOSITOR_ROLE, receiver)) {
+            revert Vault__NotWhitelisted();
         }
     }
 
@@ -686,5 +693,53 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
      */
     function getProviders() public view returns (IProvider[] memory) {
         return _providers;
+    }
+
+    /**
+     * @notice Toggles the whitelist functionality on or off.
+     * @param enabled Whether to enable or disable the whitelist.
+     */
+    function toggleWhitelist(bool enabled) external onlyTimelock {
+        whitelistEnabled = enabled;
+        emit WhitelistToggled(enabled);
+    }
+
+    /**
+     * @notice Grants DEPOSITOR_ROLE to an address (adds to whitelist).
+     * @param account The address to add to the whitelist.
+     */
+    function addToWhitelist(address account) external onlyTimelock {
+        if (account == address(0)) {
+            revert Vault__AddressZero();
+        }
+        grantRole(DEPOSITOR_ROLE, account);
+    }
+
+    /**
+     * @notice Revokes DEPOSITOR_ROLE from an address (removes from whitelist).
+     * @param account The address to remove from the whitelist.
+     */
+    function removeFromWhitelist(address account) external onlyTimelock {
+        if (account == address(0)) {
+            revert Vault__AddressZero();
+        }
+        revokeRole(DEPOSITOR_ROLE, account);
+    }
+
+    /**
+     * @notice Checks if an address is whitelisted (has DEPOSITOR_ROLE).
+     * @param account The address to check.
+     * @return Whether the address is whitelisted.
+     */
+    function isWhitelisted(address account) external view returns (bool) {
+        return hasRole(DEPOSITOR_ROLE, account);
+    }
+
+    /**
+     * @notice Checks if whitelist is enabled.
+     * @return Whether whitelist is enabled.
+     */
+    function isWhitelistEnabled() external view returns (bool) {
+        return whitelistEnabled;
     }
 }

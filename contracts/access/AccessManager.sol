@@ -15,14 +15,13 @@ contract AccessManager is Context {
     error AccessManager__CallerIsNotAdmin();
     error AccessManager__CallerIsNotOperator();
     error AccessManager__CallerIsNotExecutor();
-    error AccessManager__CallerIsNotRootUpdater();
 
     mapping(bytes32 role => mapping(address account => bool)) private _roles;
 
     bytes32 public constant ADMIN_ROLE = 0x00;
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
     bytes32 public constant EXECUTOR_ROLE = keccak256("EXECUTOR_ROLE");
-    bytes32 public constant ROOT_UPDATER_ROLE = keccak256("ROOT_UPDATER_ROLE");
+    bytes32 public constant DEPOSITOR_ROLE = keccak256("DEPOSITOR_ROLE");
 
     /**
      * @dev Emitted when `account` is granted `role`.
@@ -71,17 +70,6 @@ contract AccessManager is Context {
     modifier onlyExecutor() {
         if (!hasRole(EXECUTOR_ROLE, _msgSender())) {
             revert AccessManager__CallerIsNotExecutor();
-        }
-        _;
-    }
-
-    /**
-     * @dev Modifier that checks that an account has a root updater role. Reverts
-     * with an {AccessManager__CallerIsNotRootUpdater} error.
-     */
-    modifier onlyRootUpdater() {
-        if (!hasRole(ROOT_UPDATER_ROLE, _msgSender())) {
-            revert AccessManager__CallerIsNotRootUpdater();
         }
         _;
     }

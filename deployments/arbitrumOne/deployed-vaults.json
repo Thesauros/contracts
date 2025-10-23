@@ -9,7 +9,7 @@
     "aaveV3Provider": "0xC7049A78C55368Ec039C785B37656AfEd36C710c",
     "compoundV3Provider": "0x1df21FcA039E23413134aA34FC79289673a47AA3",
     "dolomiteProvider": "0xc294ac7c1d5992c6b3bdbcbbda49fe0af1ac1760",
-    "morphoProvider": " "
+    "morphoProvider": "0x00651b3E70873AfC852d9068Da4d359C473aA6c3"
   },
   "vaults": {
     "usdc": {

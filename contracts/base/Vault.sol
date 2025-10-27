@@ -413,7 +413,16 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, Reentran
         uint256 _maxWithdraw = maxWithdraw(owner);
         if (assets > _maxWithdraw) {
             validatedAssets = _maxWithdraw;
-            validatedShares = validatedAssets.mulDiv(shares, assets);
+            // Use CEIL rounding to prevent validatedShares from rounding down to zero
+            validatedShares = _convertToShares(validatedAssets, Math.Rounding.Ceil);
+            
+            // Safety checks to prevent zero values
+            if (validatedShares == 0) {
+                revert Vault__InvalidInput();
+            }
+            if (validatedAssets == 0) {
+                revert Vault__InvalidInput();
+            }
         } else {
             validatedAssets = assets;
             validatedShares = shares;

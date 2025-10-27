@@ -6,6 +6,7 @@ import {IERC20Metadata, IERC20} from "@openzeppelin/contracts/token/ERC20/extens
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {IVault} from "../interfaces/IVault.sol";
 import {IProvider} from "../interfaces/IProvider.sol";
@@ -15,7 +16,7 @@ import {PausableActions} from "./PausableActions.sol";
 /**
  * @title Vault
  */
-abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
+abstract contract Vault is ERC20Permit, AccessManager, PausableActions, ReentrancyGuard, IVault {
     using Math for uint256;
     using Address for address;
     using SafeERC20 for IERC20Metadata;
@@ -375,7 +376,7 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
         address receiver,
         uint256 assets,
         uint256 shares
-    ) internal {
+    ) internal nonReentrant {
         _asset.safeTransferFrom(caller, address(this), assets);
         _delegateActionToProvider(assets, "deposit", activeProvider);
         _mint(receiver, shares);
@@ -437,7 +438,7 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
         address owner,
         uint256 assets,
         uint256 shares
-    ) internal {
+    ) internal nonReentrant {
         uint256 withdrawFee = assets.mulDiv(
             withdrawFeePercent,
             PRECISION_FACTOR

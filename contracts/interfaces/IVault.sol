@@ -61,10 +61,9 @@ interface IVault is IERC4626 {
      * @notice Emitted when a fee is charged.
      *
      * @param treasury The treasury address of the vault.
-     * @param assets The total amount from which the fee is charged.
      * @param fee The amount charged.
      */
-    event FeeCharged(address indexed treasury, uint256 assets, uint256 fee);
+    event FeeCharged(address indexed treasury, uint256 fee);
 
     /**
      * @notice Emitted when the vault is rebalanced.
@@ -125,14 +124,12 @@ interface IVault is IERC4626 {
      * @param from The provider currently holding the assets.
      * @param to The provider receiving the assets.
      * @param fee The fee amount charged for the rebalancing.
-     * @param activateToProvider A flag indicating whether to mark the receiving provider as active.
      */
     function rebalance(
         uint256 assets,
         IProvider from,
         IProvider to,
-        uint256 fee,
-        bool activateToProvider
+        uint256 fee
     ) external returns (bool);
 
     /**

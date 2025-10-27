@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
+import {Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ProviderManager} from "../../contracts/providers/ProviderManager.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {MockingUtilities} from "../utils/MockingUtilities.sol";
 
 contract ProviderManagerTests is MockingUtilities {
-    ProviderManager public lenderManager;
-
     event YieldTokenUpdated(
         string identifier,
         address indexed asset,
@@ -21,22 +19,31 @@ contract ProviderManagerTests is MockingUtilities {
         address market
     );
 
-    function setUp() public {
-        lenderManager = new ProviderManager(address(this));
+    // =========================================
+    // constructor
+    // =========================================
+
+    function testConstructor() public view {
+        assertEq(providerManager.owner(), address(this));
     }
 
     // =========================================
     // setYieldToken
     // =========================================
 
-    function testSetYieldTokenRevertsIfCallerIsNotAdmin(
+    function testSetYieldTokenRevertsIfCallerIsNotOwner(
         string memory identifier,
         address asset,
         address yieldToken
     ) public {
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, alice));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Ownable.OwnableUnauthorizedAccount.selector,
+                alice
+            )
+        );
         vm.prank(alice);
-        lenderManager.setYieldToken(identifier, asset, yieldToken);
+        providerManager.setYieldToken(identifier, asset, yieldToken);
     }
 
     function testSetYieldToken(
@@ -44,12 +51,12 @@ contract ProviderManagerTests is MockingUtilities {
         address asset,
         address yieldToken
     ) public {
-        lenderManager.setYieldToken(identifier, asset, yieldToken);
+        providerManager.setYieldToken(identifier, asset, yieldToken);
 
-        string[] memory lenderIdentifiers = lenderManager.getIdentifiers();
+        string[] memory providerIdentifiers = providerManager.getIdentifiers();
 
-        assertEq(lenderIdentifiers[0], identifier);
-        assertEq(lenderManager.getYieldToken(identifier, asset), yieldToken);
+        assertEq(providerIdentifiers[0], identifier);
+        assertEq(providerManager.getYieldToken(identifier, asset), yieldToken);
     }
 
     function testSetYieldTokenEmitsEvent(
@@ -59,22 +66,27 @@ contract ProviderManagerTests is MockingUtilities {
     ) public {
         vm.expectEmit();
         emit YieldTokenUpdated(identifier, asset, yieldToken);
-        lenderManager.setYieldToken(identifier, asset, yieldToken);
+        providerManager.setYieldToken(identifier, asset, yieldToken);
     }
 
     // =========================================
     // setMarket
     // =========================================
 
-    function testSetMarketRevertsIfCallerIsNotAdmin(
+    function testSetMarketRevertsIfCallerIsNotOwner(
         string memory identifier,
         address assetOne,
         address assetTwo,
         address market
     ) public {
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, alice));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Ownable.OwnableUnauthorizedAccount.selector,
+                alice
+            )
+        );
         vm.prank(alice);
-        lenderManager.setMarket(identifier, assetOne, assetTwo, market);
+        providerManager.setMarket(identifier, assetOne, assetTwo, market);
     }
 
     function testSetMarket(
@@ -83,13 +95,13 @@ contract ProviderManagerTests is MockingUtilities {
         address assetTwo,
         address market
     ) public {
-        lenderManager.setMarket(identifier, assetOne, assetTwo, market);
+        providerManager.setMarket(identifier, assetOne, assetTwo, market);
 
-        string[] memory lenderIdentifiers = lenderManager.getIdentifiers();
+        string[] memory providerIdentifiers = providerManager.getIdentifiers();
 
-        assertEq(lenderIdentifiers[0], identifier);
+        assertEq(providerIdentifiers[0], identifier);
         assertEq(
-            lenderManager.getMarket(identifier, assetOne, assetTwo),
+            providerManager.getMarket(identifier, assetOne, assetTwo),
             market
         );
     }
@@ -102,6 +114,6 @@ contract ProviderManagerTests is MockingUtilities {
     ) public {
         vm.expectEmit();
         emit MarketUpdated(identifier, assetOne, assetTwo, market);
-        lenderManager.setMarket(identifier, assetOne, assetTwo, market);
+        providerManager.setMarket(identifier, assetOne, assetTwo, market);
     }
 }

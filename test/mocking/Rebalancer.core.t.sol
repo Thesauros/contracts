@@ -9,8 +9,6 @@ import {Vault} from "../../contracts/base/Vault.sol";
 import {MockingUtilities} from "../utils/MockingUtilities.sol";
 
 contract RebalancerCoreTests is MockingUtilities {
-    IProvider public mockProviderC;
-
     event Deposit(
         address indexed sender,
         address indexed owner,
@@ -24,7 +22,7 @@ contract RebalancerCoreTests is MockingUtilities {
         uint256 assets,
         uint256 shares
     );
-    event FeeCharged(address indexed treasury, uint256 assets, uint256 fee);
+    event FeeCharged(address indexed treasury, uint256 fee);
     event TimelockUpdated(address indexed timelock);
     event ProvidersUpdated(IProvider[] providers);
     event ActiveProviderUpdated(IProvider activeProvider);
@@ -33,8 +31,6 @@ contract RebalancerCoreTests is MockingUtilities {
     event MinAmountUpdated(uint256 minAmount);
 
     function setUp() public {
-        mockProviderC = new MockProviderC();
-
         initializeVault(vault, MIN_AMOUNT, initializer);
     }
 
@@ -188,14 +184,59 @@ contract RebalancerCoreTests is MockingUtilities {
     function testWithdraw(uint128 assets) public {
         vm.assume(assets >= MIN_AMOUNT);
 
+        IProvider[] memory providers = new IProvider[](3);
+        providers[0] = mockProviderC;
+        providers[1] = mockProviderB;
+        providers[2] = mockProviderA; // remains the activeProvider
+
+        vault.setProviders(providers);
+
         executeDeposit(vault, assets, alice);
+        executeDeposit(vault, assets, bob);
+
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = assets;
+        amounts[1] = MIN_AMOUNT;
+
+        IProvider[] memory sources = new IProvider[](2);
+        sources[0] = mockProviderA;
+        sources[1] = mockProviderA;
+
+        IProvider[] memory destinations = new IProvider[](2);
+        destinations[0] = mockProviderB;
+        destinations[1] = mockProviderC;
+
+        vaultManager.rebalanceVault(
+            vault,
+            amounts,
+            sources,
+            destinations,
+            new uint256[](2)
+        );
+
+        assertEq(getBalanceAtProvider(vault, mockProviderC), MIN_AMOUNT);
+        assertEq(getBalanceAtProvider(vault, mockProviderB), assets);
+        assertEq(getBalanceAtProvider(vault, mockProviderA), assets);
+
         executeWithdraw(vault, assets, alice);
+
+        assertEq(getBalanceAtProvider(vault, mockProviderC), 0);
+        assertEq(getBalanceAtProvider(vault, mockProviderB), MIN_AMOUNT);
+        assertEq(getBalanceAtProvider(vault, mockProviderA), assets);
+
+        executeWithdraw(vault, assets, bob);
+
+        assertEq(getBalanceAtProvider(vault, mockProviderC), 0);
+        assertEq(getBalanceAtProvider(vault, mockProviderB), 0);
+        assertEq(getBalanceAtProvider(vault, mockProviderA), MIN_AMOUNT);
 
         uint256 fee = (assets * WITHDRAW_FEE_PERCENT) / PRECISION_FACTOR;
         uint256 assetBalance = assets - fee;
 
         assertEq(asset.balanceOf(alice), assetBalance);
+        assertEq(asset.balanceOf(bob), assetBalance);
         assertEq(vault.balanceOf(alice), 0);
+        assertEq(vault.balanceOf(bob), 0);
     }
 
     function testWithdrawEmitsEvent(uint128 assets) public {
@@ -209,7 +250,7 @@ contract RebalancerCoreTests is MockingUtilities {
         uint256 assetsToReceiver = assets - fee;
 
         vm.expectEmit();
-        emit FeeCharged(treasury, assets, fee);
+        emit FeeCharged(treasury, fee);
         emit Withdraw(alice, alice, alice, assetsToReceiver, shares);
         vm.prank(alice);
         vault.withdraw(assets, alice, alice);
@@ -218,11 +259,53 @@ contract RebalancerCoreTests is MockingUtilities {
     function testRedeem(uint128 shares) public {
         vm.assume(shares >= MIN_AMOUNT);
 
+        IProvider[] memory providers = new IProvider[](3);
+        providers[0] = mockProviderC;
+        providers[1] = mockProviderB;
+        providers[2] = mockProviderA; // remains the activeProvider
+
+        vault.setProviders(providers);
+
         executeMint(vault, shares, alice);
+        executeMint(vault, shares, bob);
 
         uint256 assets = vault.previewRedeem(shares);
 
+        uint256[] memory amounts = new uint256[](2);
+        amounts[0] = assets;
+        amounts[1] = MIN_AMOUNT;
+
+        IProvider[] memory sources = new IProvider[](2);
+        sources[0] = mockProviderA;
+        sources[1] = mockProviderA;
+
+        IProvider[] memory destinations = new IProvider[](2);
+        destinations[0] = mockProviderB;
+        destinations[1] = mockProviderC;
+
+        vaultManager.rebalanceVault(
+            vault,
+            amounts,
+            sources,
+            destinations,
+            new uint256[](2)
+        );
+
+        assertEq(getBalanceAtProvider(vault, mockProviderC), MIN_AMOUNT);
+        assertEq(getBalanceAtProvider(vault, mockProviderB), assets);
+        assertEq(getBalanceAtProvider(vault, mockProviderA), assets);
+
         executeRedeem(vault, shares, alice);
+
+        assertEq(getBalanceAtProvider(vault, mockProviderC), 0);
+        assertEq(getBalanceAtProvider(vault, mockProviderB), MIN_AMOUNT);
+        assertEq(getBalanceAtProvider(vault, mockProviderA), assets);
+
+        executeRedeem(vault, shares, bob);
+
+        assertEq(getBalanceAtProvider(vault, mockProviderC), 0);
+        assertEq(getBalanceAtProvider(vault, mockProviderB), 0);
+        assertEq(getBalanceAtProvider(vault, mockProviderA), MIN_AMOUNT);
 
         uint256 fee = (assets * WITHDRAW_FEE_PERCENT) / PRECISION_FACTOR;
         uint256 assetBalance = assets - fee;
@@ -242,7 +325,7 @@ contract RebalancerCoreTests is MockingUtilities {
         uint256 assetsToReceiver = assets - fee;
 
         vm.expectEmit();
-        emit FeeCharged(treasury, assets, fee);
+        emit FeeCharged(treasury, fee);
         emit Withdraw(alice, alice, alice, assetsToReceiver, shares);
         vm.prank(alice);
         vault.redeem(shares, alice, alice);

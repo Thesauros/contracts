@@ -445,14 +445,34 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
         uint256 assetsToReceiver = assets - withdrawFee;
 
         _burn(owner, shares);
-        _delegateActionToProvider(assets, "withdraw", activeProvider);
+
+        uint256 count = _providers.length;
+        for (uint256 i; i < count; i++) {
+            IProvider provider = _providers[i];
+            uint256 balanceAtProvider = provider.getDepositBalance(
+                address(this),
+                this
+            );
+
+            if (balanceAtProvider == 0) continue;
+
+            uint256 amount = (balanceAtProvider >= assets)
+                ? assets
+                : balanceAtProvider;
+
+            _delegateActionToProvider(amount, "withdraw", provider);
+
+            assets -= amount;
+
+            if (assets == 0) break;
+        }
 
         address _treasury = treasury;
 
         _asset.safeTransfer(_treasury, withdrawFee);
         _asset.safeTransfer(receiver, assetsToReceiver);
 
-        emit FeeCharged(_treasury, assets, withdrawFee);
+        emit FeeCharged(_treasury, withdrawFee);
         emit Withdraw(caller, receiver, owner, assetsToReceiver, shares);
     }
 

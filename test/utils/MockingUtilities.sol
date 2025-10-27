@@ -3,16 +3,16 @@ pragma solidity 0.8.23;
 
 import {IProvider} from "../../contracts/interfaces/IProvider.sol";
 import {MockERC20} from "../../contracts/mocks/MockERC20.sol";
-import {MockProviderA, MockProviderB} from "../../contracts/mocks/MockProvider.sol";
+import {MockProviderA, MockProviderB, MockProviderC} from "../../contracts/mocks/MockProvider.sol";
 import {IVault} from "../../contracts/interfaces/IVault.sol";
 import {Vault} from "../../contracts/base/Vault.sol";
 import {Rebalancer} from "../../contracts/Rebalancer.sol";
 import {VaultManager} from "../../contracts/VaultManager.sol";
 import {Timelock} from "../../contracts/Timelock.sol";
+import {ProviderManager} from "../../contracts/providers/ProviderManager.sol";
 import {Test} from "forge-std/Test.sol";
-import {StdCheats} from "forge-std/StdCheats.sol";
 
-contract MockingUtilities is StdCheats, Test {
+contract MockingUtilities is Test {
     address public alice = makeAddr("alice");
     address public bob = makeAddr("bob");
     address public initializer = makeAddr("initializer");
@@ -23,8 +23,10 @@ contract MockingUtilities is StdCheats, Test {
 
     Timelock public timelock;
 
+    ProviderManager public providerManager;
     IProvider public mockProviderA;
     IProvider public mockProviderB;
+    IProvider public mockProviderC;
 
     MockERC20 public asset;
 
@@ -51,11 +53,15 @@ contract MockingUtilities is StdCheats, Test {
         asset = new MockERC20("Test USDT", "tUSDT", ASSET_DECIMALS);
         vm.label(address(asset), "tUSDT");
 
+        providerManager = new ProviderManager(address(this));
+
         mockProviderA = new MockProviderA();
         mockProviderB = new MockProviderB();
+        mockProviderC = new MockProviderC();
 
         vm.label(address(mockProviderA), "MockProviderA");
         vm.label(address(mockProviderB), "MockProviderB");
+        vm.label(address(mockProviderC), "MockProviderC");
 
         IProvider[] memory providers = new IProvider[](2);
         providers[0] = mockProviderA;
@@ -72,6 +78,9 @@ contract MockingUtilities is StdCheats, Test {
             address(this), // Testing purposes
             treasury
         );
+
+        address[] memory tokens = new address[](1);
+        tokens[0] = address(vault);
 
         vaultManager = new VaultManager();
 
@@ -144,5 +153,12 @@ contract MockingUtilities is StdCheats, Test {
     ) internal {
         vm.prank(from);
         _vault.redeem(amount, from, from);
+    }
+
+    function getBalanceAtProvider(
+        IVault _vault,
+        IProvider provider
+    ) internal view returns (uint256) {
+        return provider.getDepositBalance(address(_vault), _vault);
     }
 }

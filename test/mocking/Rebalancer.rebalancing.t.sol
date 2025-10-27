@@ -9,7 +9,7 @@ import {MockingUtilities} from "../utils/MockingUtilities.sol";
 contract RebalancerRebalancingTests is MockingUtilities {
     InvalidProvider public invalidProvider;
 
-    event FeeCharged(address indexed treasury, uint256 assets, uint256 fee);
+    event FeeCharged(address indexed treasury, uint256 fee);
     event RebalanceExecuted(
         uint256 assetsFrom,
         uint256 assetsTo,
@@ -38,7 +38,7 @@ contract RebalancerRebalancingTests is MockingUtilities {
             AccessManager.AccessManager__CallerIsNotOperator.selector
         );
         vm.prank(alice);
-        vault.rebalance(assets, mockProviderA, mockProviderB, fee, true);
+        vault.rebalance(assets, mockProviderA, mockProviderB, fee);
     }
 
     function testRebalanceRevertsIfProviderIsInvalid() public {
@@ -46,10 +46,10 @@ contract RebalancerRebalancingTests is MockingUtilities {
         uint256 fee = (assets * REBALANCE_FEE_PERCENT) / PRECISION_FACTOR;
 
         vm.expectRevert(Rebalancer.Rebalancer__InvalidProvider.selector);
-        vault.rebalance(assets, invalidProvider, mockProviderB, fee, true);
+        vault.rebalance(assets, invalidProvider, mockProviderB, fee);
 
         vm.expectRevert(Rebalancer.Rebalancer__InvalidProvider.selector);
-        vault.rebalance(assets, mockProviderA, invalidProvider, fee, true);
+        vault.rebalance(assets, mockProviderA, invalidProvider, fee);
     }
 
     function testRebalanceRevertsIfFeeIsNotReasonable() public {
@@ -59,25 +59,18 @@ contract RebalancerRebalancingTests is MockingUtilities {
             1;
 
         vm.expectRevert(Rebalancer.Rebalancer__ExcessRebalanceFee.selector);
-        vault.rebalance(assets, mockProviderA, mockProviderB, excessFee, true);
+        vault.rebalance(assets, mockProviderA, mockProviderB, excessFee);
     }
 
     function testRebalance() public {
         uint256 assets = 2 * DEPOSIT_AMOUNT;
         uint256 fee = (assets * REBALANCE_FEE_PERCENT) / PRECISION_FACTOR;
 
-        vault.rebalance(assets, mockProviderA, mockProviderB, fee, true);
+        vault.rebalance(assets, mockProviderA, mockProviderB, fee);
 
-        assertEq(
-            mockProviderA.getDepositBalance(address(vault), vault),
-            MIN_AMOUNT
-        );
-        assertEq(
-            mockProviderB.getDepositBalance(address(vault), vault),
-            assets - fee
-        );
+        assertEq(getBalanceAtProvider(vault, mockProviderA), MIN_AMOUNT);
+        assertEq(getBalanceAtProvider(vault, mockProviderB), assets - fee);
         assertEq(asset.balanceOf(treasury), fee);
-        assertEq(address(vault.activeProvider()), address(mockProviderB));
     }
 
     function testRebalanceEmitsEvent() public {
@@ -86,13 +79,13 @@ contract RebalancerRebalancingTests is MockingUtilities {
 
         vm.expectEmit();
 
-        emit FeeCharged(treasury, assets, fee);
+        emit FeeCharged(treasury, fee);
         emit RebalanceExecuted(
             assets,
             assets - fee,
             address(mockProviderA),
             address(mockProviderB)
         );
-        vault.rebalance(assets, mockProviderA, mockProviderB, fee, true);
+        vault.rebalance(assets, mockProviderA, mockProviderB, fee);
     }
 }

@@ -1,24 +1,24 @@
 {
   "network": "arbitrumOne",
   "chainId": 42161,
-  "lastUpdated": "2025-10-09T19:15:00.000Z",
+  "lastUpdated": "2025-11-01T19:11:00.000Z",
   "baseContracts": {
-    "timelock": "0xDCa08813082952AAF61A4709A706c8834c37Fab2",
-    "vaultManager": "0x2A7B773e35f52308D6663a1967B9C647ce76bccd",
-    "providerManager": "0x5F9F7ae7a8Ea732220E19694fb07da3f296386c5",
-    "aaveV3Provider": "0xbeEdb89DC47cab2678eBB796cfc8131062F16E39",
-    "compoundV3Provider": "0xaBD932E0Fff6417a4Af16431d8D86a4e62d62fA3",
-    "dolomiteProvider": "0x3D036B97482CC6c42753dA51917B3302D5d0E9AE",
-    "morphoProvider": "0x00651b3E70873AfC852d9068Da4d359C473aA6c3"
+    "timelock": "0xd21F7f42979bDcaDd212F91058D8d23cAD92bEA7",
+    "vaultManager": "0x8Ff0d9ef10898E77565662dd6B57ec38a0CeAD2c",
+    "providerManager": "0xd4aC8Bcec0790ADDa563dB1B35c072B485fE2708",
+    "aaveV3Provider": "0x9A44d46d9b231859e2f3263028a093Dd8Fc973d8",
+    "compoundV3Provider": "0xAd12f3160e370069416701B4D9573720C0fe5cAb",
+    "dolomiteProvider": "0xF0F39fDa6FBfE2FCF7064370D0C9fE1B42897120",
+    "morphoProvider": "0x66c77F6dC97bf87828Bd830153b1878a4227EF69"
   },
   "vaults": {
     "usdc": {
-      "address": "0x57C10bd3fdB2849384dDe954f63d37DfAD9d7d70",
+      "address": "0xA69AC7E2216B0924Fd50f7a9fdDeB98ecC64d76D",
       "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
       "name": "USDC Vault"
     },
     "usdt": {
-      "address": "0xcd72118C0707D315fa13350a63596dCd9B294A30",
+      "address": "0x648b8780B4F05C4a3d91960ba216e014453521Df",
       "asset": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
       "name": "USDT Vault"
     }
@@ -34,3 +34,4 @@
     "deployer": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D"
   }
 }
+

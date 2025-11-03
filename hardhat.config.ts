@@ -26,7 +26,7 @@ const config: HardhatUserConfig = {
         network: "arbitrumOne",
         chainId: 42161,
         urls: {
-           apiURL: "https://api.etherscan.io/v2/api?chainid=42161",
+          apiURL: "https://api.etherscan.io/v2/api?chainid=42161",
           browserURL: "https://arbiscan.io"
         }
       },
@@ -34,7 +34,7 @@ const config: HardhatUserConfig = {
         network: "arbitrumSepolia",
         chainId: 421614,
         urls: {
-           apiURL: "https://api.etherscan.io/v2/api?chainid=421614",
+          apiURL: "https://api.etherscan.io/v2/api?chainid=421614",
           browserURL: "https://sepolia.arbiscan.io"
         }
       }

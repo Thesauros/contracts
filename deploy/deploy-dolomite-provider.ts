@@ -29,7 +29,10 @@ const deployDolomiteProvider: DeployFunction = async function (
 
   log(`DolomiteProvider deployed at ${dolomiteProvider.address}`);
 
-  // Skip verification as requested
+  // Verify contract on Arbitrum
+  if ((await ethers.provider.getNetwork()).chainId === ARBITRUM_CHAIN_ID) {
+    await verify(dolomiteProvider.address, []);
+  }
 
   log('----------------------------------------------------');
   log('Setting up DolomiteProvider in ProviderManager...');

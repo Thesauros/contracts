@@ -3,13 +3,11 @@ import { ethers } from 'hardhat';
 export const tokenAddresses = {
   USDT: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
   USDC: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
-  USDC_e: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
 };
 
 export const cometTokens = {
   cUSDT: '0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07',
   cUSDC: '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf',
-  cUSDC_e: '0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA',
 };
 
 export const cometPairs = [
@@ -20,10 +18,6 @@ export const cometPairs = [
   {
     asset: tokenAddresses.USDC,
     cToken: cometTokens.cUSDC,
-  },
-  {
-    asset: tokenAddresses.USDC_e,
-    cToken: cometTokens.cUSDC_e,
   },
 ];
 

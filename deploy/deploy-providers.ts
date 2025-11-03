@@ -38,12 +38,39 @@ const deployProviders: DeployFunction = async function (
   log('----------------------------------------------------');
   log('Setting up yield tokens...');
 
+  // Register CompoundV3Provider yield tokens
   for (const { asset, cToken } of cometPairs) {
     await providerManagerInstance.setYieldToken(
       'Compound_V3_Provider',
       asset,
       cToken
     );
+  }
+
+  // Register AaveV3Provider yield tokens
+  log('Setting up AaveV3Provider yield tokens...');
+  const AAVE_POOL_ADDRESSES_PROVIDER = '0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb';
+  const aavePoolAddressesProvider = await ethers.getContractAt(
+    'IPoolAddressesProvider',
+    AAVE_POOL_ADDRESSES_PROVIDER
+  );
+  const aavePoolAddress = await aavePoolAddressesProvider.getPool();
+  const aavePool = await ethers.getContractAt('IPool', aavePoolAddress);
+
+  // Register USDC and USDT for AaveV3Provider
+  const aaveAssets = [
+    { name: 'USDC', address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831' },
+    { name: 'USDT', address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9' },
+  ];
+
+  for (const asset of aaveAssets) {
+    const reserveData = await aavePool.getReserveData(asset.address);
+    await providerManagerInstance.setYieldToken(
+      'Aave_V3_Provider',
+      asset.address,
+      reserveData.aTokenAddress
+    );
+    log(`Registered ${asset.name} (${asset.address}) → aToken: ${reserveData.aTokenAddress}`);
   }
 
   log('----------------------------------------------------');

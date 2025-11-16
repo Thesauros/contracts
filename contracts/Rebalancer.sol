@@ -99,7 +99,8 @@ contract Rebalancer is Vault {
         uint256 assets,
         IProvider from,
         IProvider to,
-        uint256 fee
+        uint256 fee,
+        bool activateToProvider
     ) external onlyOperator returns (bool) {
         if (
             !_validateProvider(address(from)) || !_validateProvider(address(to))
@@ -116,7 +117,11 @@ contract Rebalancer is Vault {
             address _treasury = treasury;
 
             _asset.safeTransfer(_treasury, fee);
-            emit FeeCharged(_treasury, fee);
+            emit FeeCharged(_treasury, assets, fee);
+        }
+
+        if (activateToProvider) {
+            _setActiveProvider(to);
         }
 
         emit RebalanceExecuted(

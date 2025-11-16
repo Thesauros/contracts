@@ -45,57 +45,35 @@ contract VaultManager is AccessManager {
     /**
      * @dev Errors
      */
-    error VaultManager__InvalidCount();
-    error VaultManager__ArrayMismatch();
     error VaultManager__InvalidAssetAmount();
 
     /**
      * @notice Performs rebalancing of the vault by moving funds across providers.
      * @param vault The vault undergoing rebalancing.
-     * @param amounts An array of asset amounts to be rebalanced.
-     * @param sources An array of providers holding the assets.
-     * @param destinations An array of providers receiving the assets.
-     * @param fees An array of fee amounts charged for each rebalancing.
+     * @param assets The amount of assets to be rebalanced.
+     * @param from The provider currently holding the assets.
+     * @param to The provider receiving assets.
+     * @param fee The fee amount charged for the rebalancing.
+     * @param activateToProvider A flag indicating whether to mark the receiving provider as active.
      */
     function rebalanceVault(
         IVault vault,
-        uint256[] memory amounts,
-        IProvider[] memory sources,
-        IProvider[] memory destinations,
-        uint256[] memory fees
+        uint256 assets,
+        IProvider from,
+        IProvider to,
+        uint256 fee,
+        bool activateToProvider
     ) external onlyExecutor returns (bool success) {
-        uint256 count = amounts.length;
-        if (count == 0) {
-            revert VaultManager__InvalidCount();
+        uint256 assetsAtFrom = from.getDepositBalance(address(vault), vault);
+
+        if (assets == type(uint256).max) {
+            assets = assetsAtFrom;
         }
-        if (
-            count != sources.length ||
-            count != destinations.length ||
-            count != fees.length
-        ) {
-            revert VaultManager__ArrayMismatch();
+        if (assets == 0 || assets > assetsAtFrom) {
+            revert VaultManager__InvalidAssetAmount();
         }
 
-        for (uint256 i; i < count; i++) {
-            uint256 assets = amounts[i];
-            IProvider from = sources[i];
-            IProvider to = destinations[i];
-            uint256 fee = fees[i];
-
-            uint256 assetsAtFrom = from.getDepositBalance(
-                address(vault),
-                vault
-            );
-
-            if (assets == type(uint256).max) {
-                assets = assetsAtFrom;
-            }
-            if (assets == 0 || assets > assetsAtFrom) {
-                revert VaultManager__InvalidAssetAmount();
-            }
-
-            vault.rebalance(assets, from, to, fee);
-        }
+        vault.rebalance(assets, from, to, fee, activateToProvider);
 
         success = true;
     }

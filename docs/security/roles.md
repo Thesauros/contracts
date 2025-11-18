@@ -15,8 +15,6 @@ Administrators have full control over system settings and can perform critical o
 - Manage providers
 - Manage fees
 - Manage treasury
-- Pause RewardsDistributor
-- Withdraw tokens from RewardsDistributor
 
 #### Methods available to Admin:
 ```solidity
@@ -27,11 +25,6 @@ function setActiveProvider(IProvider _activeProvider) external onlyAdmin
 function setTreasury(address _treasury) external onlyAdmin
 function setWithdrawFeePercent(uint256 _withdrawFeePercent) external onlyAdmin
 function setMinAmount(uint256 _minAmount) external onlyAdmin
-
-// RewardsDistributor
-function pause() external onlyAdmin
-function unpause() external onlyAdmin
-function withdraw(address token) external onlyAdmin
 
 // ProviderManager
 function addProvider(IProvider provider) external onlyAdmin
@@ -91,20 +84,6 @@ function rebalanceVault(
 ) external onlyExecutor returns (bool success)
 ```
 
-### RootUpdater (Root Updater)
-**Specialized role for rewards**
-
-RootUpdater can update the Merkle tree root in RewardsDistributor.
-
-#### Access Rights:
-- Update Merkle tree root for reward distribution
-
-#### Methods available to RootUpdater:
-```solidity
-// RewardsDistributor
-function updateRoot(bytes32 _root) external onlyRootUpdater
-```
-
 ### Timelock (Timelock)
 **Governance level access**
 
@@ -133,7 +112,6 @@ function cancel(address target, uint256 value, string memory signature, bytes me
 Admin (Highest)
 ├── Operator
 ├── Executor
-├── RootUpdater
 └── Timelock
     └── Owner (Timelock owner)
 ```

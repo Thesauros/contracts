@@ -1,5 +1,7 @@
+const fallbackArbitrumRpc = `https://arb-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_PROJECT_ID}`;
+
 export const networkUrls = {
-  arbitrumOne: `https://arb-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_PROJECT_ID}`,
+  arbitrumOne: process.env.ARBITRUM_RPC_URL || fallbackArbitrumRpc,
   arbitrumSepolia: `https://arbitrum-sepolia.blockpi.network/v1/rpc/public`,
 };
 

@@ -29,15 +29,22 @@ const deployUsdcVault: DeployFunction = async function (
   log('----------------------------------------------------');
   log('Deploying USDC Rebalancer...');
 
-  const [vaultManager, timelock, compoundV3Provider, aaveV3Provider] =
+  const [vaultManager, timelock, compoundV3Provider, aaveV3Provider, dolomiteProvider, morphoProvider] =
     await Promise.all([
       deployments.get('VaultManager'),
       deployments.get('Timelock'),
       deployments.get('CompoundV3Provider'),
       deployments.get('AaveV3Provider'),
+      deployments.get('DolomiteProvider'),
+      deployments.get('MorphoProvider'),
     ]);
 
-  const providers = [compoundV3Provider.address, aaveV3Provider.address];
+  const providers = [
+    aaveV3Provider.address,
+    compoundV3Provider.address,
+    dolomiteProvider.address,
+    morphoProvider.address
+  ];
 
   const args = [
     usdcAddress,
@@ -75,4 +82,4 @@ const deployUsdcVault: DeployFunction = async function (
 
 export default deployUsdcVault;
 deployUsdcVault.tags = ['all', 'usdc-vault'];
-// deployUsdcVault.dependencies = ['vault-manager', 'providers', 'timelock'];
+deployUsdcVault.dependencies = ['vault-manager', 'providers', 'timelock', 'dolomite-provider', 'morpho-provider'];

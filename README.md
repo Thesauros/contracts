@@ -73,7 +73,6 @@ docs/
 │   ├── vault.md                # Vault contract
 │   ├── rebalancer.md           # Rebalancer contract
 │   ├── timelock.md             # Timelock contract
-│   ├── rewards-distributor.md  # RewardsDistributor
 │   └── vault-manager.md        # VaultManager
 ├── security/                    # Security
 │   └── roles.md                # Roles and access rights
@@ -99,11 +98,6 @@ docs/
 - **Description**: Contract for secure governance with delay
 - **Documentation**: [docs/contracts/timelock.md](docs/contracts/timelock.md)
 
-### RewardsDistributor
-- **File**: `contracts/RewardsDistributor.sol`
-- **Description**: Rewards distributor with Merkle proof
-- **Documentation**: [docs/contracts/rewards-distributor.md](docs/contracts/rewards-distributor.md)
-
 ### VaultManager
 - **File**: `contracts/VaultManager.sol`
 - **Description**: Manager for managing multiple vaults
@@ -115,7 +109,6 @@ docs/
 - **Admin**: Full control over settings
 - **Operator**: Execute rebalancing
 - **Executor**: Management through VaultManager
-- **RootUpdater**: Update Merkle root in RewardsDistributor
 - **Timelock**: Critical operations with delay
 
 Detailed information: [docs/security/roles.md](docs/security/roles.md)
@@ -125,7 +118,6 @@ Detailed information: [docs/security/roles.md](docs/security/roles.md)
 - **Role-based access model** with minimal privileges
 - **Fee limitations** (maximum 5% for withdrawals, 20% for rebalancing)
 - **Inflation attack protection** through `setupVault()`
-- **Merkle proof** for efficient reward distribution
 
 ##  Development
 

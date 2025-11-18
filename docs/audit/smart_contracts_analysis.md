@@ -19,9 +19,6 @@ REBALANCE Protocol Architecture
 │   ├── AccessManager.sol (Role-based permissions)
 │   ├── Timelock.sol (Upgrade delays)
 │   └── PausableActions.sol (Emergency controls)
-└── Rewards System
-    ├── RewardsDistributor.sol (Merkle-based rewards)
-    └── IRewardsDistributor.sol (Interface)
 ```
 
 ---

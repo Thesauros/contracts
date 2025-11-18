@@ -226,13 +226,6 @@ npx hardhat run deploy/deploy-usdc-vault.ts --network mainnet
 npx hardhat run deploy/deploy-weth-vault.ts --network mainnet
 ```
 
-### 3. Deploy Rewards System
-
-```bash
-# Deploy Rewards Distributor
-npx hardhat run deploy/deploy-rewards-distributor.ts --network mainnet
-```
-
 ## Testing
 
 ### 1. Unit Tests

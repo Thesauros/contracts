@@ -61,10 +61,6 @@ export const morphoVaults = [
     vaultAddress: '0x5c0C306Aaa9F877de636f4d5822cA9F2E81563BA',
   },
   {
-    strategy: 'MEV Capital',
-    vaultAddress: '0xa60643c90A542A95026C0F1dbdB0615fF42019Cf',
-  },
-  {
     strategy: 'Hyperithm',
     vaultAddress: '0x4B6F1C9E5d470b97181786b26da0d0945A7cf027',
   },

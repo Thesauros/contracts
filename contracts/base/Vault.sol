@@ -700,31 +700,9 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, Reentran
      * @notice Toggles the whitelist functionality on or off.
      * @param enabled Whether to enable or disable the whitelist.
      */
-    function toggleWhitelist(bool enabled) external onlyTimelock {
+    function toggleWhitelist(bool enabled) external onlyAdmin {
         whitelistEnabled = enabled;
         emit WhitelistToggled(enabled);
-    }
-
-    /**
-     * @notice Grants DEPOSITOR_ROLE to an address (adds to whitelist).
-     * @param account The address to add to the whitelist.
-     */
-    function addToWhitelist(address account) external onlyTimelock {
-        if (account == address(0)) {
-            revert Vault__AddressZero();
-        }
-        grantRole(DEPOSITOR_ROLE, account);
-    }
-
-    /**
-     * @notice Revokes DEPOSITOR_ROLE from an address (removes from whitelist).
-     * @param account The address to remove from the whitelist.
-     */
-    function removeFromWhitelist(address account) external onlyTimelock {
-        if (account == address(0)) {
-            revert Vault__AddressZero();
-        }
-        revokeRole(DEPOSITOR_ROLE, account);
     }
 
     /**
@@ -734,13 +712,5 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, Reentran
      */
     function isWhitelisted(address account) external view returns (bool) {
         return hasRole(DEPOSITOR_ROLE, account);
-    }
-
-    /**
-     * @notice Checks if whitelist is enabled.
-     * @return Whether whitelist is enabled.
-     */
-    function isWhitelistEnabled() external view returns (bool) {
-        return whitelistEnabled;
     }
 }

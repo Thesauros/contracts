@@ -445,7 +445,7 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
         _asset.safeTransfer(_treasury, withdrawFee);
         _asset.safeTransfer(receiver, assetsToReceiver);
 
-        emit FeeCharged(_treasury, assets, withdrawFee);
+        emit FeeCharged(_treasury, withdrawFee);
         emit Withdraw(caller, receiver, owner, assetsToReceiver, shares);
     }
 

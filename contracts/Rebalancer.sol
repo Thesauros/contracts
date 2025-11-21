@@ -14,21 +14,21 @@ import {Vault} from "./base/Vault.sol";
  * @dev This contract extends the base Vault functionality with automated rebalancing
  *      capabilities, allowing operators to move funds between providers efficiently
  *      while maintaining proper fee structures and security controls.
- * 
+ *
  * @custom:rebalancing-features The contract provides:
  * - Automated provider-to-provider transfers
  * - Configurable rebalancing fees (max 20%)
  * - Active provider management
  * - Fee collection to treasury
  * - Comprehensive event logging
- * 
+ *
  * @custom:security-measures Security features include:
  * - Operator-only rebalancing execution
  * - Provider validation before operations
  * - Fee limits to prevent excessive charges
  * - Proper asset accounting and transfers
  * - Event emission for transparency
- * 
+ *
  * @custom:rebalancing-process The rebalancing workflow:
  * 1. Validate source and destination providers
  * 2. Check fee limits (max 20% of rebalanced amount)
@@ -37,7 +37,7 @@ import {Vault} from "./base/Vault.sol";
  * 5. Transfer fee to treasury
  * 6. Optionally activate destination provider
  * 7. Emit rebalancing events
- * 
+ *
  * @custom:usage Example:
  * ```solidity
  * // Rebalance 1000 USDC from Aave to Morpho with 1% fee
@@ -117,7 +117,7 @@ contract Rebalancer is Vault {
             address _treasury = treasury;
 
             _asset.safeTransfer(_treasury, fee);
-            emit FeeCharged(_treasury, assets, fee);
+            emit FeeCharged(_treasury, fee);
         }
 
         if (activateToProvider) {
@@ -137,7 +137,7 @@ contract Rebalancer is Vault {
      * @notice Validates that the rebalancing fee is within acceptable limits
      * @param fee The fee amount to validate
      * @param amount The total amount being rebalanced
-     * 
+     *
      * @dev The fee cannot exceed MAX_REBALANCE_FEE_PERCENT (20%) of the rebalanced amount
      * @dev This prevents excessive fees that could harm users
      * @dev Reverts with Rebalancer__ExcessRebalanceFee if fee is too high

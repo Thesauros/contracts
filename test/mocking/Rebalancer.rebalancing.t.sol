@@ -9,7 +9,7 @@ import {MockingUtilities} from "../utils/MockingUtilities.sol";
 contract RebalancerRebalancingTests is MockingUtilities {
     InvalidProvider public invalidProvider;
 
-    event FeeCharged(address indexed treasury, uint256 assets, uint256 fee);
+    event FeeCharged(address indexed treasury, uint256 fee);
     event RebalanceExecuted(
         uint256 assetsFrom,
         uint256 assetsTo,
@@ -86,7 +86,7 @@ contract RebalancerRebalancingTests is MockingUtilities {
 
         vm.expectEmit();
 
-        emit FeeCharged(treasury, assets, fee);
+        emit FeeCharged(treasury, fee);
         emit RebalanceExecuted(
             assets,
             assets - fee,

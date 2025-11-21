@@ -10,9 +10,8 @@ import {Rebalancer} from "../../contracts/Rebalancer.sol";
 import {VaultManager} from "../../contracts/VaultManager.sol";
 import {Timelock} from "../../contracts/Timelock.sol";
 import {Test} from "forge-std/Test.sol";
-import {StdCheats} from "forge-std/StdCheats.sol";
 
-contract MockingUtilities is StdCheats, Test {
+contract MockingUtilities is Test {
     address public alice = makeAddr("alice");
     address public bob = makeAddr("bob");
     address public initializer = makeAddr("initializer");

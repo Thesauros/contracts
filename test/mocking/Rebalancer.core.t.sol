@@ -24,7 +24,7 @@ contract RebalancerCoreTests is MockingUtilities {
         uint256 assets,
         uint256 shares
     );
-    event FeeCharged(address indexed treasury, uint256 assets, uint256 fee);
+    event FeeCharged(address indexed treasury, uint256 fee);
     event TimelockUpdated(address indexed timelock);
     event ProvidersUpdated(IProvider[] providers);
     event ActiveProviderUpdated(IProvider activeProvider);
@@ -209,7 +209,7 @@ contract RebalancerCoreTests is MockingUtilities {
         uint256 assetsToReceiver = assets - fee;
 
         vm.expectEmit();
-        emit FeeCharged(treasury, assets, fee);
+        emit FeeCharged(treasury, fee);
         emit Withdraw(alice, alice, alice, assetsToReceiver, shares);
         vm.prank(alice);
         vault.withdraw(assets, alice, alice);
@@ -242,7 +242,7 @@ contract RebalancerCoreTests is MockingUtilities {
         uint256 assetsToReceiver = assets - fee;
 
         vm.expectEmit();
-        emit FeeCharged(treasury, assets, fee);
+        emit FeeCharged(treasury, fee);
         emit Withdraw(alice, alice, alice, assetsToReceiver, shares);
         vm.prank(alice);
         vault.redeem(shares, alice, alice);

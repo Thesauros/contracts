@@ -61,10 +61,9 @@ interface IVault is IERC4626 {
      * @notice Emitted when a fee is charged.
      *
      * @param treasury The treasury address of the vault.
-     * @param assets The total amount from which the fee is charged.
      * @param fee The amount charged.
      */
-    event FeeCharged(address indexed treasury, uint256 assets, uint256 fee);
+    event FeeCharged(address indexed treasury, uint256 fee);
 
     /**
      * @notice Emitted when the vault is rebalanced.
@@ -80,21 +79,6 @@ interface IVault is IERC4626 {
         address indexed from,
         address indexed to
     );
-
-    /**
-     * @notice Emitted when rewards are transferred.
-     *
-     * @param to The address to which rewards are transferred.
-     * @param amount The amount of rewards transferred.
-     */
-    event RewardsTransferred(address indexed to, uint256 amount);
-
-    /**
-     * @notice Emitted when the rewards distributor contract is changed.
-     *
-     * @param rewardsDistributor The new rewards distributor contract address.
-     */
-    event DistributorUpdated(address indexed rewardsDistributor);
 
     /**
      * @notice Sets up the vault with a specified amount of assets to prevent inflation attacks.

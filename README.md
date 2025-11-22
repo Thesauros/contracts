@@ -73,7 +73,6 @@ docs/
 │   ├── vault.md                # Vault contract
 │   ├── rebalancer.md           # Rebalancer contract
 │   ├── timelock.md             # Timelock contract
-│   ├── rewards-distributor.md  # RewardsDistributor
 │   └── vault-manager.md        # VaultManager
 ├── security/                    # Security
 │   └── roles.md                # Roles and access rights
@@ -99,11 +98,6 @@ docs/
 - **Description**: Contract for secure governance with delay
 - **Documentation**: [docs/contracts/timelock.md](docs/contracts/timelock.md)
 
-### RewardsDistributor
-- **File**: `contracts/RewardsDistributor.sol`
-- **Description**: Rewards distributor with Merkle proof
-- **Documentation**: [docs/contracts/rewards-distributor.md](docs/contracts/rewards-distributor.md)
-
 ### VaultManager
 - **File**: `contracts/VaultManager.sol`
 - **Description**: Manager for managing multiple vaults
@@ -115,7 +109,6 @@ docs/
 - **Admin**: Full control over settings
 - **Operator**: Execute rebalancing
 - **Executor**: Management through VaultManager
-- **RootUpdater**: Update Merkle root in RewardsDistributor
 - **Timelock**: Critical operations with delay
 
 Detailed information: [docs/security/roles.md](docs/security/roles.md)
@@ -125,14 +118,13 @@ Detailed information: [docs/security/roles.md](docs/security/roles.md)
 - **Role-based access model** with minimal privileges
 - **Fee limitations** (maximum 5% for withdrawals, 20% for rebalancing)
 - **Inflation attack protection** through `setupVault()`
-- **Merkle proof** for efficient reward distribution
 
 ##  Development
 
 ### Installation and Setup
 ```bash
 # Clone repository
-git clone https://github.com/your-org/rebalance-finance.git
+git clone
 cd rebalance-finance
 
 # Install dependencies
@@ -174,11 +166,6 @@ npx hardhat run deploy/deploy-usdc-vault.ts --network localhost
 npx hardhat run deploy/deploy-timelock.ts --network goerli
 ```
 
-##  Supported Providers
-
-- **Aave V3**: Deposits and loans
-- **Compound V3**: Deposits
-
 ##  Usage Examples
 
 ### Rebalancing Funds
@@ -206,23 +193,11 @@ vaultManager.rebalanceVault(
 );
 ```
 
-### Claiming Rewards
-```solidity
-// Claim rewards through Merkle proof
-rewardsDistributor.claim(
-    userAddress,      // user address
-    rewardToken,      // reward token address
-    100e6,           // reward amount
-    merkleProof      // Merkle proof
-);
-```
-
 ##  Monitoring and Analytics
 
 ### Events to Track
 - `RebalanceExecuted`: Rebalancing execution
 - `FeeCharged`: Fee collection
-- `RewardsClaimed`: Reward claiming
 - `ActiveProviderUpdated`: Active provider change
 
 ### Metrics to Monitor
@@ -274,8 +249,3 @@ IProvider activeProvider = vault.activeProvider();
 1. Update `docs/architecture.md`
 2. Add new diagrams if necessary
 3. Update related documentation sections
-
----
-
-**Thesauros Team**  
-*Created with  for the DeFi community* 

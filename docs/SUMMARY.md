@@ -14,7 +14,6 @@
 
 ### Management
 * [Timelock](contracts/timelock.md)
-* [RewardsDistributor](contracts/rewards-distributor.md)
 * [ProviderManager](contracts/provider-manager.md)
 
 ### Base Contracts
@@ -25,7 +24,6 @@
 
 * [IVault](interfaces/ivault.md)
 * [IProvider](interfaces/iprovider.md)
-* [IRewardsDistributor](interfaces/irewards-distributor.md)
 
 ## Providers
 

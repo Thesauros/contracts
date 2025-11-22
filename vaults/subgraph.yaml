@@ -23,8 +23,6 @@ dataSources:
         - MinAmountUpdated
         - FeeCharged
         - RebalanceExecuted
-        - RewardsTransferred
-        - DistributorUpdated
       abis:
         - name: Vault
           file: ./abis/Vault.json
@@ -47,8 +45,4 @@ dataSources:
           handler: handleFeeCharged
         - event: RebalanceExecuted(uint256,uint256,indexed address,indexed address)
           handler: handleRebalanceExecuted
-        - event: RewardsTransferred(indexed address,uint256)
-          handler: handleRewardsTransferred
-        - event: DistributorUpdated(indexed address)
-          handler: handleDistributorUpdated
       file: ./src/vault.ts

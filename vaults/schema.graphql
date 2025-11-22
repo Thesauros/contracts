@@ -127,19 +127,3 @@ type RebalanceExecuted @entity(immutable: true) {
   transactionHash: Bytes!
 }
 
-type RewardsTransferred @entity(immutable: true) {
-  id: ID!
-  to: Bytes!
-  amount: BigInt!
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type DistributorUpdated @entity(immutable: true) {
-  id: ID!
-  rewardsDistributor: Bytes!
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}

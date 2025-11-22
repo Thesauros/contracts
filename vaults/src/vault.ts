@@ -9,8 +9,6 @@ import {
   MinAmountUpdated,
   FeeCharged,
   RebalanceExecuted,
-  RewardsTransferred,
-  DistributorUpdated,
 } from "../generated/Vault/Vault"
 import { 
   Vault, 
@@ -26,8 +24,6 @@ import {
   MinAmountUpdated as MinAmountUpdatedEntity,
   FeeCharged as FeeChargedEntity,
   RebalanceExecuted as RebalanceExecutedEntity,
-  RewardsTransferred as RewardsTransferredEntity,
-  DistributorUpdated as DistributorUpdatedEntity
 } from "../generated/schema"
 
 export function handleSetupCompleted(event: SetupCompleted): void {
@@ -234,27 +230,3 @@ export function handleRebalanceExecuted(event: RebalanceExecuted): void {
   rebalanceExecuted.save()
 }
 
-export function handleRewardsTransferred(event: RewardsTransferred): void {
-  // Create RewardsTransferred event entity
-  let rewardsTransferred = new RewardsTransferredEntity(
-    event.transaction.hash.toHexString() + "-" + event.logIndex.toString()
-  )
-  rewardsTransferred.to = event.params.to
-  rewardsTransferred.amount = event.params.amount
-  rewardsTransferred.blockNumber = event.block.number
-  rewardsTransferred.blockTimestamp = event.block.timestamp
-  rewardsTransferred.transactionHash = event.transaction.hash
-  rewardsTransferred.save()
-}
-
-export function handleDistributorUpdated(event: DistributorUpdated): void {
-  // Create DistributorUpdated event entity
-  let distributorUpdated = new DistributorUpdatedEntity(
-    event.transaction.hash.toHexString() + "-" + event.logIndex.toString()
-  )
-  distributorUpdated.rewardsDistributor = event.params.rewardsDistributor
-  distributorUpdated.blockNumber = event.block.number
-  distributorUpdated.blockTimestamp = event.block.timestamp
-  distributorUpdated.transactionHash = event.transaction.hash
-  distributorUpdated.save()
-}

@@ -22,9 +22,6 @@ graph TB
     Rebalancer[   Rebalancer]
     RebalancerWithRewards[🎁 RebalancerWithRewards]
     
-    %% Rewards System
-    RewardsDistributor[  RewardsDistributor]
-    
     %% Provider Management
     ProviderManager[  ProviderManager]
     
@@ -42,7 +39,6 @@ graph TB
     
     %% User Interactions
     User -->|deposit/withdraw| Vault
-    User -->|claim rewards| RewardsDistributor
     User -->|rebalance| Rebalancer
     User -->|rebalance with rewards| RebalancerWithRewards
     
@@ -57,7 +53,6 @@ graph TB
     AccessManager -->|role management| Rebalancer
     AccessManager -->|role management| RebalancerWithRewards
     AccessManager -->|role management| VaultManager
-    AccessManager -->|role management| RewardsDistributor
     AccessManager -->|role management| ProviderManager
     
     %% Vault Manager Interactions
@@ -81,7 +76,6 @@ graph TB
     
     %% RebalancerWithRewards Interactions
     RebalancerWithRewards -->|inherit from| Rebalancer
-    RebalancerWithRewards -->|distribute rewards| RewardsDistributor
     
     %% Provider Manager
     ProviderManager -->|manage| AaveV3Provider
@@ -90,10 +84,6 @@ graph TB
     %% Provider to Protocol Interactions
     AaveV3Provider -->|interact| AaveV3
     CompoundV3Provider -->|interact| CompoundV3
-    
-    %% Rewards System
-    RewardsDistributor -->|hold| ERC20Token
-    RewardsDistributor -->|emergency withdrawal| Treasury
     
     %% Styling
     classDef userLayer fill:#e1f5fe
@@ -105,7 +95,7 @@ graph TB
     
     class User,DAO userLayer
     class VaultManager,Timelock,AccessManager coreLayer
-    class Vault,Rebalancer,RebalancerWithRewards,RewardsDistributor vaultLayer
+    class Vault,Rebalancer,RebalancerWithRewards vaultLayer
     class ProviderManager,AaveV3Provider,CompoundV3Provider providerLayer
     class AaveV3,CompoundV3 externalLayer
     class Treasury,ERC20Token treasuryLayer
@@ -172,20 +162,6 @@ sequenceDiagram
     ProviderManager->>Vault: confirm update
 ```
 
-### 4. Rewards Distribution Flow
-
-```mermaid
-sequenceDiagram
-    participant RebalancerWithRewards
-    participant RewardsDistributor
-    participant User
-    participant ExternalProtocol
-    
-    ExternalProtocol->>RebalancerWithRewards: reward tokens
-    RebalancerWithRewards->>RewardsDistributor: transfer rewards
-    User->>RewardsDistributor: claim(proof)
-    RewardsDistributor->>User: transfer rewards
-```
 
 ## Contract Dependencies
 
@@ -205,8 +181,6 @@ graph TD
     RebalancerWithRewards --> Rebalancer
     
     VaultManager --> AccessManager
-    RewardsDistributor --> PausableActions
-    RewardsDistributor --> AccessManager
     
     ProviderManager --> AccessManager
 ```
@@ -217,7 +191,6 @@ graph TD
 graph LR
     IProvider[IProvider Interface]
     IVault[IVault Interface]
-    IRewardsDistributor[IRewardsDistributor Interface]
     
     AaveV3Provider --> IProvider
     CompoundV3Provider --> IProvider
@@ -225,21 +198,18 @@ graph LR
     Vault --> IVault
     Rebalancer --> IVault
     RebalancerWithRewards --> IVault
-    
-    RewardsDistributor --> IRewardsDistributor
 ```
 
 ## Access Control Matrix
 
-| Contract | Admin | Operator | Executor | RootUpdater | Timelock |
-|----------|-------|----------|----------|-------------|----------|
-| Vault |   |   |   |   |   |
-| Rebalancer |   |   |   |   |   |
-| RebalancerWithRewards |   |   |   |   |   |
-| VaultManager |   |   |   |   |   |
-| RewardsDistributor |   |   |   |   |   |
-| ProviderManager |   |   |   |   |   |
-| Timelock |   |   |   |   |   |
+| Contract | Admin | Operator | Executor | Timelock |
+|----------|-------|----------|----------|----------|
+| Vault |   |   |   |   |
+| Rebalancer |   |   |   |   |
+| RebalancerWithRewards |   |   |   |   |
+| VaultManager |   |   |   |   |
+| ProviderManager |   |   |   |   |
+| Timelock |   |   |   |   |
 
 ## Data Flow Patterns
 
@@ -253,12 +223,7 @@ User → Vault → Provider → External Protocol
 Vault/Rebalancer → Treasury
 ```
 
-### 3. Reward Flow
-```
-External Protocol → RebalancerWithRewards → RewardsDistributor → User
-```
-
-### 4. Governance Flow
+### 3. Governance Flow
 ```
 DAO → Timelock → Target Contract
 ```

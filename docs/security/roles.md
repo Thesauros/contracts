@@ -15,8 +15,6 @@ Administrators have full control over system settings and can perform critical o
 - Manage providers
 - Manage fees
 - Manage treasury
-- Pause RewardsDistributor
-- Withdraw tokens from RewardsDistributor
 
 #### Methods available to Admin:
 ```solidity
@@ -28,10 +26,6 @@ function setTreasury(address _treasury) external onlyAdmin
 function setWithdrawFeePercent(uint256 _withdrawFeePercent) external onlyAdmin
 function setMinAmount(uint256 _minAmount) external onlyAdmin
 
-// RewardsDistributor
-function pause() external onlyAdmin
-function unpause() external onlyAdmin
-function withdraw(address token) external onlyAdmin
 
 // ProviderManager
 function addProvider(IProvider provider) external onlyAdmin
@@ -91,20 +85,6 @@ function rebalanceVault(
 ) external onlyExecutor returns (bool success)
 ```
 
-### RootUpdater (Root Updater)
-**Specialized role for rewards**
-
-RootUpdater can update the Merkle tree root in RewardsDistributor.
-
-#### Access Rights:
-- Update Merkle tree root for reward distribution
-
-#### Methods available to RootUpdater:
-```solidity
-// RewardsDistributor
-function updateRoot(bytes32 _root) external onlyRootUpdater
-```
-
 ### Timelock (Timelock)
 **Governance level access**
 
@@ -133,7 +113,6 @@ function cancel(address target, uint256 value, string memory signature, bytes me
 Admin (Highest)
 ├── Operator
 ├── Executor
-├── RootUpdater
 └── Timelock
     └── Owner (Timelock owner)
 ```
@@ -167,7 +146,6 @@ contract AccessManager {
 bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 bytes32 public constant EXECUTOR_ROLE = keccak256("EXECUTOR_ROLE");
-bytes32 public constant ROOT_UPDATER_ROLE = keccak256("ROOT_UPDATER_ROLE");
 ```
 
 ## Security Considerations
@@ -179,7 +157,6 @@ Each role has the minimum necessary permissions to perform its functions:
 - **Admin**: Full system control
 - **Operator**: Rebalancing operations only
 - **Executor**: Vault management operations
-- **RootUpdater**: Reward distribution only
 - **Timelock**: Critical operations with delay
 
 ### Multi-Signature Support
@@ -221,7 +198,6 @@ AccessManager accessManager = new AccessManager();
 accessManager.grantRole(ADMIN_ROLE, adminAddress);
 accessManager.grantRole(OPERATOR_ROLE, operatorAddress);
 accessManager.grantRole(EXECUTOR_ROLE, executorAddress);
-accessManager.grantRole(ROOT_UPDATER_ROLE, rootUpdaterAddress);
 ```
 
 ### Role Updates
@@ -246,8 +222,6 @@ vault.pause(Actions.Deposit);
 vault.pause(Actions.Withdraw);
 vault.pause(Actions.Rebalance);
 
-// Pause rewards distribution
-rewardsDistributor.pause();
 ```
 
 ### Emergency Withdrawal
@@ -255,8 +229,6 @@ rewardsDistributor.pause();
 Admins can withdraw funds in emergency:
 
 ```solidity
-// Withdraw all tokens from rewards distributor
-rewardsDistributor.withdraw(tokenAddress);
 
 // Emergency rebalancing to safe provider
 vaultManager.rebalanceVault(

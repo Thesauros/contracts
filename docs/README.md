@@ -33,7 +33,6 @@ Thesauros is a decentralized system that automatically redistributes funds betwe
 - [RebalancerWithRewards](contracts/rebalancer-with-rewards.md) - extended version with rewards support
 - [VaultManager](contracts/vault-manager.md) - manager for managing multiple vaults
 - [Timelock](contracts/timelock.md) - contract for secure governance with delay
-- [RewardsDistributor](contracts/rewards-distributor.md) - rewards distributor with Merkle proof
 
 ## Security
 

@@ -20,7 +20,6 @@ graph TB
     %% Vault Contracts
     Vault[  Vault]
     Rebalancer[   Rebalancer]
-    RebalancerWithRewards[🎁 RebalancerWithRewards]
     
     %% Provider Management
     ProviderManager[  ProviderManager]
@@ -40,7 +39,6 @@ graph TB
     %% User Interactions
     User -->|deposit/withdraw| Vault
     User -->|rebalance| Rebalancer
-    User -->|rebalance with rewards| RebalancerWithRewards
     
     %% Governance Interactions
     DAO -->|governance| Timelock
@@ -51,14 +49,12 @@ graph TB
     %% Access Control
     AccessManager -->|role management| Vault
     AccessManager -->|role management| Rebalancer
-    AccessManager -->|role management| RebalancerWithRewards
     AccessManager -->|role management| VaultManager
     AccessManager -->|role management| ProviderManager
     
     %% Vault Manager Interactions
     VaultManager -->|manage| Vault
     VaultManager -->|manage| Rebalancer
-    VaultManager -->|manage| RebalancerWithRewards
     
     %% Vault Interactions
     Vault -->|use| ProviderManager
@@ -73,9 +69,6 @@ graph TB
     Rebalancer -->|interact| AaveV3Provider
     Rebalancer -->|interact| CompoundV3Provider
     Rebalancer -->|send fees| Treasury
-    
-    %% RebalancerWithRewards Interactions
-    RebalancerWithRewards -->|inherit from| Rebalancer
     
     %% Provider Manager
     ProviderManager -->|manage| AaveV3Provider
@@ -95,7 +88,7 @@ graph TB
     
     class User,DAO userLayer
     class VaultManager,Timelock,AccessManager coreLayer
-    class Vault,Rebalancer,RebalancerWithRewards vaultLayer
+    class Vault,Rebalancer vaultLayer
     class ProviderManager,AaveV3Provider,CompoundV3Provider providerLayer
     class AaveV3,CompoundV3 externalLayer
     class Treasury,ERC20Token treasuryLayer
@@ -178,7 +171,6 @@ graph TD
     Vault --> AccessManager
     
     Rebalancer --> Vault
-    RebalancerWithRewards --> Rebalancer
     
     VaultManager --> AccessManager
     
@@ -197,7 +189,6 @@ graph LR
     
     Vault --> IVault
     Rebalancer --> IVault
-    RebalancerWithRewards --> IVault
 ```
 
 ## Access Control Matrix
@@ -206,7 +197,6 @@ graph LR
 |----------|-------|----------|----------|----------|
 | Vault |   |   |   |   |
 | Rebalancer |   |   |   |   |
-| RebalancerWithRewards |   |   |   |   |
 | VaultManager |   |   |   |   |
 | ProviderManager |   |   |   |   |
 | Timelock |   |   |   |   |

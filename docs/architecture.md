@@ -40,13 +40,7 @@ function rebalance(
 ) external onlyOperator returns (bool)
 ```
 
-### 3. RebalancerWithRewards
-
-**File:** `contracts/RebalancerWithRewards.sol`
-
-Extended version of Rebalancer with additional functionality for reward distribution.
-
-### 4. VaultManager
+### 3. VaultManager
 
 **File:** `contracts/VaultManager.sol`
 

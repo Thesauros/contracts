@@ -9,7 +9,6 @@
 ### Core Contracts
 * [Vault](contracts/vault.md)
 * [Rebalancer](contracts/rebalancer.md)
-* [RebalancerWithRewards](contracts/rebalancer-with-rewards.md)
 * [VaultManager](contracts/vault-manager.md)
 
 ### Management

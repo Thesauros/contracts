@@ -52,15 +52,6 @@ function rebalance(
     uint256 fee,
     bool activateToProvider
 ) external onlyOperator returns (bool)
-
-// RebalancerWithRewards
-function rebalance(
-    uint256 assets,
-    IProvider from,
-    IProvider to,
-    uint256 fee,
-    bool activateToProvider
-) external onlyOperator returns (bool)
 ```
 
 ### Executor (Executor)

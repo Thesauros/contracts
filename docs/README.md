@@ -30,7 +30,6 @@ Thesauros is a decentralized system that automatically redistributes funds betwe
 
 - [Vault](contracts/vault.md) - base vault contract with ERC4626 support
 - [Rebalancer](contracts/rebalancer.md) - contract for rebalancing between providers
-- [RebalancerWithRewards](contracts/rebalancer-with-rewards.md) - extended version with rewards support
 - [VaultManager](contracts/vault-manager.md) - manager for managing multiple vaults
 - [Timelock](contracts/timelock.md) - contract for secure governance with delay
 

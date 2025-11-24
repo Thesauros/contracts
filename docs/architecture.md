@@ -40,13 +40,7 @@ function rebalance(
 ) external onlyOperator returns (bool)
 ```
 
-### 3. RebalancerWithRewards
-
-**File:** `contracts/RebalancerWithRewards.sol`
-
-Extended version of Rebalancer with additional functionality for reward distribution.
-
-### 4. VaultManager
+### 3. VaultManager
 
 **File:** `contracts/VaultManager.sol`
 
@@ -77,22 +71,7 @@ graph LR
     C --> E[Cancel]
 ```
 
-### 6. RewardsDistributor
-
-**File:** `contracts/RewardsDistributor.sol`
-
-Efficiently distributes rewards using Merkle proof:
-
-```solidity
-function claim(
-    address account,
-    address reward,
-    uint256 claimable,
-    bytes32[] calldata proof
-) external whenNotPaused
-```
-
-### 7. ProviderManager
+### 6. ProviderManager
 
 **File:** `contracts/ProviderManager.sol`
 
@@ -123,7 +102,6 @@ Manages roles and access rights:
 - **Admin** - full control over settings
 - **Operator** - execute rebalancing
 - **Executor** - execute transactions through VaultManager
-- **RootUpdater** - update Merkle root in RewardsDistributor
 
 ### PausableActions
 **File:** `contracts/base/PausableActions.sol`

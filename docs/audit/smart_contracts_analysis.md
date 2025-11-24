@@ -8,7 +8,6 @@ REBALANCE Protocol Architecture
 ├── Core Infrastructure
 │   ├── Vault.sol (Base ERC-4626 vault)
 │   ├── Rebalancer.sol (Extends Vault)
-│   ├── RebalancerWithRewards.sol (Extends Vault)
 │   └── VaultManager.sol (Orchestration)
 ├── Provider System
 │   ├── IProvider.sol (Interface)
@@ -19,9 +18,6 @@ REBALANCE Protocol Architecture
 │   ├── AccessManager.sol (Role-based permissions)
 │   ├── Timelock.sol (Upgrade delays)
 │   └── PausableActions.sol (Emergency controls)
-└── Rewards System
-    ├── RewardsDistributor.sol (Merkle-based rewards)
-    └── IRewardsDistributor.sol (Interface)
 ```
 
 ---

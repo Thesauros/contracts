@@ -9,12 +9,10 @@
 ### Core Contracts
 * [Vault](contracts/vault.md)
 * [Rebalancer](contracts/rebalancer.md)
-* [RebalancerWithRewards](contracts/rebalancer-with-rewards.md)
 * [VaultManager](contracts/vault-manager.md)
 
 ### Management
 * [Timelock](contracts/timelock.md)
-* [RewardsDistributor](contracts/rewards-distributor.md)
 * [ProviderManager](contracts/provider-manager.md)
 
 ### Base Contracts
@@ -25,7 +23,6 @@
 
 * [IVault](interfaces/ivault.md)
 * [IProvider](interfaces/iprovider.md)
-* [IRewardsDistributor](interfaces/irewards-distributor.md)
 
 ## Providers
 

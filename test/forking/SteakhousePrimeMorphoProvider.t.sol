@@ -3,38 +3,22 @@ pragma solidity 0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IProvider} from "../../contracts/interfaces/IProvider.sol";
-import {CompoundV3Provider} from "../../contracts/providers/CompoundV3Provider.sol";
+import {MorphoProvider} from "../../contracts/providers/MorphoProvider.sol";
 import {ForkingUtilities} from "../utils/ForkingUtilities.sol";
 
-contract CompoundV3ProviderTests is ForkingUtilities {
-    CompoundV3Provider public compoundV3Provider;
+contract SteakhousePrimeMorphoProviderTests is ForkingUtilities {
+    MorphoProvider public morphoProvider;
 
     function setUp() public {
-        compoundV3Provider = new CompoundV3Provider(address(providerManager));
+        morphoProvider = new MorphoProvider(
+            MORPHO_STEAKHOUSE_PRIME_VAULT_ADDRESS
+        );
 
         IProvider[] memory providers = new IProvider[](1);
-        providers[0] = compoundV3Provider;
+        providers[0] = morphoProvider;
 
         deployVault(address(usdc), providers);
         initializeVault(vault, MIN_AMOUNT, initializer);
-    }
-
-    // =========================================
-    // constructor
-    // =========================================
-
-    function testConstructorRevertsIfProviderManagerIsInvalid() public {
-        vm.expectRevert(
-            CompoundV3Provider.CompoundV3Provider__AddressZero.selector
-        );
-        new CompoundV3Provider(address(0));
-    }
-
-    function testConstructor() public view {
-        assertEq(
-            address(compoundV3Provider.getProviderManager()),
-            address(providerManager)
-        );
     }
 
     // =========================================
@@ -98,7 +82,7 @@ contract CompoundV3ProviderTests is ForkingUtilities {
     // =========================================
 
     function testDepositRate() public view {
-        assertGt(compoundV3Provider.getDepositRate(vault), 0);
+        assertGt(morphoProvider.getDepositRate(vault), 0);
     }
 
     // =========================================
@@ -106,6 +90,6 @@ contract CompoundV3ProviderTests is ForkingUtilities {
     // =========================================
 
     function testIdentifier() public view {
-        assertEq(compoundV3Provider.getIdentifier(), "Compound_V3_Provider");
+        assertEq(morphoProvider.getIdentifier(), "Morpho_Provider");
     }
 }

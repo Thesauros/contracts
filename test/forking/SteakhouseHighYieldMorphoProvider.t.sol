@@ -6,12 +6,12 @@ import {IProvider} from "../../contracts/interfaces/IProvider.sol";
 import {MorphoProvider} from "../../contracts/providers/MorphoProvider.sol";
 import {ForkingUtilities} from "../utils/ForkingUtilities.sol";
 
-contract GauntletPrimeMorphoProviderTests is ForkingUtilities {
+contract SteakhouseHighYieldMorphoProviderTests is ForkingUtilities {
     MorphoProvider public morphoProvider;
 
     function setUp() public {
         morphoProvider = new MorphoProvider(
-            MORPHO_GAUNTLET_PRIME_VAULT_ADDRESS
+            MORPHO_STEAKHOUSE_HIGH_YIELD_VAULT_ADDRESS
         );
 
         IProvider[] memory providers = new IProvider[](1);

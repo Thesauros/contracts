@@ -21,25 +21,27 @@ export const morphoVaults = [
     vaultAddress: '0x12AFDeFb2237a5963e7BAb3e2D46ad0eee70406e',
   },
   {
-    strategy: 'Steakhouse High Yield',
+    strategy: 'SteakhouseHighYield',
     vaultAddress: '0xBEEFA7B88064FeEF0cEe02AAeBBd95D30df3878F',
   },
   {
-    strategy: 'Steakhouse Prime',
+    strategy: 'SteakhousePrime',
     vaultAddress: '0xBEEFE94c8aD530842bfE7d8B397938fFc1cb83b2',
   },
   {
-    strategy: 'Gauntlet Core',
+    strategy: 'GauntletCore',
     vaultAddress: '0xc0c5689e6f4D256E861F65465b691aeEcC0dEb12',
   },
 ];
 
 export const BASE_CHAIN_ID = 8453n;
 
-export const TREASURY_ADDRESS = '0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D';
+export const TREASURY_ADDRESS = process.env.TREASURY_ADDRESS;
+export const WITHDRAW_FEE_PERCENT = BigInt(
+  process.env.WITHDRAW_FEE_PERCENT || '0'
+);
+export const TIMELOCK_DELAY = Number(process.env.TIMELOCK_DELAY || '1800');
 
 export const ADMIN_ROLE = ethers.ZeroHash;
 export const OPERATOR_ROLE = ethers.id('OPERATOR_ROLE');
 export const EXECUTOR_ROLE = ethers.id('EXECUTOR_ROLE');
-
-export const WITHDRAW_FEE_PERCENT = ethers.parseEther('0.001'); // 0.1%

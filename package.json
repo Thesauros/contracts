@@ -9,7 +9,7 @@
     "dotenv": "^16.4.4",
     "hardhat": "^2.26.3",
     "hardhat-contract-sizer": "^2.10.0",
-    "hardhat-deploy": "^0.11.45",
+    "hardhat-deploy": "^1.0.4",
     "hardhat-deploy-ethers": "^0.4.1"
   },
   "dependencies": {

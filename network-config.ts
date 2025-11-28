@@ -4,10 +4,17 @@ export const networkConfig = {
   localhost: {
     chainId: 31337,
   },
+  hardhat: {
+    forking: {
+      url: BASE_URL,
+    },
+  },
   base: {
     url: BASE_URL,
-    accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    accounts: process.env.DEPLOYER_PRIVATE_KEY
+      ? [process.env.DEPLOYER_PRIVATE_KEY]
+      : [],
     chainId: 8453,
-    gasPrice: 4000000,
+    gasPrice: 3000000, // 0.003 Gwei
   },
 };

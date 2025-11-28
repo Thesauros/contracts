@@ -3,11 +3,14 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
 import {
-  ARBITRUM_CHAIN_ID,
+  BASE_CHAIN_ID,
   TREASURY_ADDRESS,
   WITHDRAW_FEE_PERCENT,
+  TIMELOCK_DELAY,
   OPERATOR_ROLE,
   tokenAddresses,
+  cometPairs,
+  morphoVaults,
 } from '../utils/constants';
 import { verify } from '../utils/verify';
 
@@ -19,6 +22,9 @@ const deployUsdcVault: DeployFunction = async function (
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
+  const chainId = (await ethers.provider.getNetwork()).chainId;
+  const waitConfirmations = chainId === BASE_CHAIN_ID ? 2 : 0;
+
   const name = 'Thesauros USDC Vault';
   const symbol = 'tUSDC';
 
@@ -26,18 +32,140 @@ const deployUsdcVault: DeployFunction = async function (
 
   const initialDeposit = ethers.parseUnits('1', 6); // Be sure that you have the balance available in the deployer account
 
+  const providers: string[] = [];
+
+  /*//////////////////////////////////////////////////////////////
+                            DEPLOY PROVIDERS
+  //////////////////////////////////////////////////////////////*/
+
+  log('----------------------------------------------------');
+  log('Deploying ProviderManager...');
+
+  const providerManager = await deploy('ProviderManager', {
+    from: deployer,
+    args: [deployer],
+    log: true,
+    waitConfirmations: waitConfirmations,
+  });
+
+  log('----------------------------------------------------');
+  log(`ProviderManager at ${providerManager.address}`);
+
+  const providerManagerInstance = await ethers.getContractAt(
+    'ProviderManager',
+    providerManager.address
+  );
+
+  log('----------------------------------------------------');
+  log('Setting up yield tokens...');
+
+  for (const { asset, cToken } of cometPairs) {
+    await providerManagerInstance
+      .setYieldToken('Compound_V3_Provider', asset, cToken)
+      .then((tx) => tx.wait());
+  }
+
+  if (chainId === BASE_CHAIN_ID) {
+    await verify(providerManager.address, [deployer]);
+  }
+
+  log('----------------------------------------------------');
+  log('Deploying AaveV3 and CompoundV3 providers...');
+
+  const providersToDeploy = ['CompoundV3Provider', 'AaveV3Provider'];
+
+  for (const providerName of providersToDeploy) {
+    const args =
+      providerName === 'CompoundV3Provider' ? [providerManager.address] : [];
+
+    const provider = await deploy(providerName, {
+      from: deployer,
+      args: args,
+      log: true,
+      waitConfirmations: waitConfirmations,
+    });
+
+    log('----------------------------------------------------');
+    log(`${providerName} at ${provider.address}`);
+
+    providers.push(provider.address);
+
+    if (chainId === BASE_CHAIN_ID) {
+      await verify(provider.address, args);
+    }
+  }
+
+  log('----------------------------------------------------');
+  log('Deploying Morpho providers...');
+
+  for (const { strategy, vaultAddress } of morphoVaults) {
+    const deploymentName = `${strategy}MorphoProvider`;
+    const provider = await deploy(deploymentName, {
+      contract: 'MorphoProvider',
+      from: deployer,
+      args: [vaultAddress],
+      log: true,
+      waitConfirmations: waitConfirmations,
+    });
+
+    log('----------------------------------------------------');
+    log(`MorphoProvider for ${strategy} strategy at ${provider.address}`);
+
+    providers.push(provider.address);
+
+    if (chainId === BASE_CHAIN_ID) {
+      await verify(provider.address, [vaultAddress]);
+    }
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                            DEPLOY TIMELOCK
+  //////////////////////////////////////////////////////////////*/
+
+  log('----------------------------------------------------');
+  log('Deploying Timelock...');
+
+  const timelock = await deploy('Timelock', {
+    from: deployer,
+    args: [deployer, TIMELOCK_DELAY],
+    log: true,
+    waitConfirmations: waitConfirmations,
+  });
+
+  log('----------------------------------------------------');
+  log(`Timelock at ${timelock.address}`);
+
+  if (chainId === BASE_CHAIN_ID) {
+    await verify(timelock.address, [deployer, TIMELOCK_DELAY]);
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                          DEPLOY VAULT MANAGER
+  //////////////////////////////////////////////////////////////*/
+
+  log('----------------------------------------------------');
+  log('Deploying VaultManager...');
+
+  const vaultManager = await deploy('VaultManager', {
+    from: deployer,
+    args: [],
+    log: true,
+    waitConfirmations: waitConfirmations,
+  });
+
+  log('----------------------------------------------------');
+  log(`VaultManager at ${vaultManager.address}`);
+
+  if (chainId === BASE_CHAIN_ID) {
+    await verify(vaultManager.address, []);
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                         DEPLOY USDC REBALANCER
+  //////////////////////////////////////////////////////////////*/
+
   log('----------------------------------------------------');
   log('Deploying USDC Rebalancer...');
-
-  const [vaultManager, timelock, compoundV3Provider, aaveV3Provider] =
-    await Promise.all([
-      deployments.get('VaultManager'),
-      deployments.get('Timelock'),
-      deployments.get('CompoundV3Provider'),
-      deployments.get('AaveV3Provider'),
-    ]);
-
-  const providers = [compoundV3Provider.address, aaveV3Provider.address];
 
   const args = [
     usdcAddress,
@@ -49,30 +177,37 @@ const deployUsdcVault: DeployFunction = async function (
     TREASURY_ADDRESS,
   ];
 
+  // For other tokens, use the same unique-name pattern (like morpho) so hardhat-deploy auto-saves each deployment separately.
   const usdcRebalancer = await deploy('Rebalancer', {
     from: deployer,
     args: args,
     log: true,
+    waitConfirmations: waitConfirmations,
   });
 
-  log(`USDC Rebalancer at ${usdcRebalancer.address}`);
   log('----------------------------------------------------');
+  log(`USDC Rebalancer at ${usdcRebalancer.address}`);
 
   const usdcInstance = await ethers.getContractAt('IERC20', usdcAddress);
-  await usdcInstance.approve(usdcRebalancer.address, initialDeposit);
+  await usdcInstance
+    .approve(usdcRebalancer.address, initialDeposit)
+    .then((tx) => tx.wait());
 
   const usdcRebalancerInstance = await ethers.getContractAt(
     'Rebalancer',
     usdcRebalancer.address
   );
-  await usdcRebalancerInstance.grantRole(OPERATOR_ROLE, vaultManager.address);
-  await usdcRebalancerInstance.setupVault(initialDeposit);
+  await usdcRebalancerInstance
+    .grantRole(OPERATOR_ROLE, vaultManager.address)
+    .then((tx) => tx.wait());
+  await usdcRebalancerInstance
+    .setupVault(initialDeposit)
+    .then((tx) => tx.wait());
 
-  if ((await ethers.provider.getNetwork()).chainId === ARBITRUM_CHAIN_ID) {
+  if (chainId === BASE_CHAIN_ID) {
     await verify(usdcRebalancer.address, args);
   }
 };
 
 export default deployUsdcVault;
 deployUsdcVault.tags = ['all', 'usdc-vault'];
-// deployUsdcVault.dependencies = ['vault-manager', 'providers', 'timelock'];

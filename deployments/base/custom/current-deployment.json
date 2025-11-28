@@ -1,0 +1,30 @@
+{
+  "network": "base",
+  "chainId": 8453,
+  "lastUpdated": "2025-11-27T19:42:00.000Z",
+  "baseContracts": {
+    "timelock": "0x9B9a07B79557e109D454913314E5ef41E1C679b2",
+    "vaultManager": "0x839E57080C18195D8D343a02c2f623b5916f7383",
+    "providerManager": "0xfFD8B1A9B97787c169154a485925512C79CA53E7",
+    "aaveV3Provider": "0x034a62f9617E8A1770f7c7EbA04e2DAb2Fda7f12",
+    "compoundV3Provider": "0xFFAc48125fa4Bd8BC03CDCA725459563aAe77406",
+    "re7MorphoProvider": "0x642E31bE2fF6d3EBa38dC16760f3a146092d89e3",
+    "steakhouseHighYieldMorphoProvider": "0x0EF8ceD75e5877c69ac8619145219b67D76193a1",
+    "steakhousePrimeMorphoProvider": "0x4516F8324bfAcC71e5099FabFC51E97e4905c062",
+    "gauntletCoreMorphoProvider": "0x34c164e7021e38921aE20a723234d2b1B52289E9"
+  },
+  "vaults": {
+    "usdc": {
+      "address": "0x6C7013b3596623d146781c90b4Ee182331Af6148",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "name": "Thesauros USDC Vault"
+    }
+  },
+  "tokens": {
+    "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+  },
+  "treasury": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
+  "deploymentInfo": {
+    "deployer": "0x4d5f2bFf45a7d0D213A4a09DD4bacCEaCe200d0b"
+  }
+}

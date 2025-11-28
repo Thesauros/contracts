@@ -9,7 +9,7 @@
     "aaveV3Provider": "0xbeEdb89DC47cab2678eBB796cfc8131062F16E39",
     "compoundV3Provider": "0xaBD932E0Fff6417a4Af16431d8D86a4e62d62fA3",
     "dolomiteProvider": "0x3D036B97482CC6c42753dA51917B3302D5d0E9AE",
-    "morphoProvider": "0x00651b3E70873AfC852d9068Da4d359C473aA6c3"
+    "steakhouseHighYieldMorphoProvider": "0x00651b3E70873AfC852d9068Da4d359C473aA6c3"
   },
   "vaults": {
     "usdc": {
@@ -24,10 +24,8 @@
     }
   },
   "tokens": {
-    "weth": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
     "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
-    "usdt": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
-    "usdcE": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"
+    "usdt": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"
   },
   "treasury": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
   "deploymentInfo": {

@@ -27,20 +27,23 @@ contract ForkingUtilities is Test {
     IERC20 public usdc;
     IERC20 public usdt;
 
-    address public constant USDT_ADDRESS =
-        0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9;
-    address public constant COMET_USDT_ADDRESS =
-        0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07;
     address public constant USDC_ADDRESS =
         0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
+    address public constant USDT_ADDRESS =
+        0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9;
+
     address public constant COMET_USDC_ADDRESS =
         0xb125E6687d4313864e53df431d5425969c15Eb2F;
-    address public constant MORPHO_STEAKHOUSE_VAULT_ADDRESS =
+    address public constant COMET_USDT_ADDRESS =
+        0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07;
+    address public constant MORPHO_STEAKHOUSE_HIGH_YIELD_VAULT_ADDRESS =
         0x5c0C306Aaa9F877de636f4d5822cA9F2E81563BA;
-    address public constant MORPHO_GAUNTLET_PRIME_VAULT_ADDRESS =
-        0x7c574174DA4b2be3f705c6244B4BfA0815a8B3Ed;
     address public constant MORPHO_GAUNTLET_CORE_VAULT_ADDRESS =
         0x7e97fa6893871A2751B5fE961978DCCb2c201E65;
+    address public constant MORPHO_YEARN_DEGEN_VAULT_ADDRESS =
+        0x36b69949d60d06ECcC14DE0Ae63f4E00cc2cd8B9;
+    address public constant MORPHO_HYPERITHM_VAULT_ADDRESS =
+        0x4B6F1C9E5d470b97181786b26da0d0945A7cf027;
 
     uint256 public constant PRECISION_FACTOR = 1 ether;
     uint256 public constant WITHDRAW_FEE_PERCENT = 0.001 ether; // 0.1%

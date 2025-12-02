@@ -26,6 +26,18 @@ export const morphoVaults = [
     strategy: 'SteakhouseHighYield',
     vaultAddress: '0x5c0C306Aaa9F877de636f4d5822cA9F2E81563BA',
   },
+  {
+    strategy: 'YearnDegen',
+    vaultAddress: '0x36b69949d60d06ECcC14DE0Ae63f4E00cc2cd8B9',
+  },
+  {
+    strategy: 'GauntletCore',
+    vaultAddress: '0x7e97fa6893871A2751B5fE961978DCCb2c201E65',
+  },
+  {
+    strategy: 'Hyperithm',
+    vaultAddress: '0x4B6F1C9E5d470b97181786b26da0d0945A7cf027',
+  },
 ];
 
 export const ARBITRUM_CHAIN_ID = 42161n;

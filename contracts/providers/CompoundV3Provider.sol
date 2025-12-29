@@ -50,13 +50,13 @@ contract CompoundV3Provider is IProvider {
      */
     error CompoundV3Provider__AddressZero();
 
-    IProviderManager private immutable _providerManager;
+    IProviderManager private immutable _PROVIDER_MANAGER;
 
     constructor(address providerManager_) {
         if (providerManager_ == address(0)) {
             revert CompoundV3Provider__AddressZero();
         }
-        _providerManager = IProviderManager(providerManager_);
+        _PROVIDER_MANAGER = IProviderManager(providerManager_);
     }
 
     /**
@@ -89,7 +89,7 @@ contract CompoundV3Provider is IProvider {
      */
     function _getComet(IVault vault) internal view returns (CometInterface) {
         // From Compound docs: Earn interest by supplying the base asset.
-        address comet = _providerManager.getYieldToken(
+        address comet = _PROVIDER_MANAGER.getYieldToken(
             getIdentifier(),
             vault.asset()
         );
@@ -127,14 +127,14 @@ contract CompoundV3Provider is IProvider {
         address,
         address
     ) external view returns (address source) {
-        source = _providerManager.getYieldToken(getIdentifier(), asset);
+        source = _PROVIDER_MANAGER.getYieldToken(getIdentifier(), asset);
     }
 
     /**
      * @notice Returns the ProviderManager contract applicable to this provider.
      */
     function getProviderManager() public view returns (IProviderManager) {
-        return _providerManager;
+        return _PROVIDER_MANAGER;
     }
 
     /**

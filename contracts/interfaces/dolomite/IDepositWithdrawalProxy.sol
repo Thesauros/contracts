@@ -30,6 +30,7 @@ interface IDepositWithdrawalProxy {
      *
      * @param _toAccountIndex The index into which `msg.sender` will be depositing
      */
+    // forgefmt: disable-next-line
     function depositETH(uint256 _toAccountIndex) external payable;
 
     /**
@@ -47,6 +48,7 @@ interface IDepositWithdrawalProxy {
      * Same as `depositWeiIntoDefaultAccount` but converts the `msg.sender`'s sent ETH into WETH before depositing into
      * `DolomiteMargin`.
      */
+    // forgefmt: disable-next-line
     function depositETHIntoDefaultAccount() external payable;
 
     /**
@@ -73,6 +75,7 @@ interface IDepositWithdrawalProxy {
      * @param _balanceCheckFlag Use `BalanceCheckFlag.Both` or `BalanceCheckFlag.From` to check that `_fromAccountIndex`
      *                          balance is non-negative after the withdrawal settles.
      */
+    // forgefmt: disable-next-line
     function withdrawETH(
         uint256 _fromAccountIndex,
         uint256 _amountWei,
@@ -103,6 +106,7 @@ interface IDepositWithdrawalProxy {
      * @param _balanceCheckFlag Use `BalanceCheckFlag.Both` or `BalanceCheckFlag.From` to check that `_fromAccountIndex`
      *                          balance is non-negative after the withdrawal settles.
      */
+    // forgefmt: disable-next-line
     function withdrawETHFromDefaultAccount(
         uint256 _amountWei,
         BalanceCheckFlag _balanceCheckFlag

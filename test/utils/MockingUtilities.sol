@@ -5,7 +5,6 @@ import {IProvider} from "../../contracts/interfaces/IProvider.sol";
 import {MockERC20} from "../../contracts/mocks/MockERC20.sol";
 import {MockProviderA, MockProviderB} from "../../contracts/mocks/MockProvider.sol";
 import {IVault} from "../../contracts/interfaces/IVault.sol";
-import {Vault} from "../../contracts/base/Vault.sol";
 import {Rebalancer} from "../../contracts/Rebalancer.sol";
 import {VaultManager} from "../../contracts/VaultManager.sol";
 import {Timelock} from "../../contracts/Timelock.sol";

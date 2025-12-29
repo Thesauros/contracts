@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
-import "@openzeppelin/contracts/utils/Context.sol";
+import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 
 /**
  * @title AccessManager
@@ -45,10 +45,14 @@ contract AccessManager is Context {
      * with an {AccessManager__CallerIsNotAdmin} error.
      */
     modifier onlyAdmin() {
+        _onlyAdmin();
+        _;
+    }
+
+    function _onlyAdmin() internal view {
         if (!hasRole(ADMIN_ROLE, _msgSender())) {
             revert AccessManager__CallerIsNotAdmin();
         }
-        _;
     }
 
     /**
@@ -56,10 +60,14 @@ contract AccessManager is Context {
      * with an {AccessManager__CallerIsNotOperator} error.
      */
     modifier onlyOperator() {
+        _onlyOperator();
+        _;
+    }
+
+    function _onlyOperator() internal view {
         if (!hasRole(OPERATOR_ROLE, _msgSender())) {
             revert AccessManager__CallerIsNotOperator();
         }
-        _;
     }
 
     /**
@@ -67,10 +75,14 @@ contract AccessManager is Context {
      * with an {AccessManager__CallerIsNotExecutor} error.
      */
     modifier onlyExecutor() {
+        _onlyExecutor();
+        _;
+    }
+
+    function _onlyExecutor() internal view {
         if (!hasRole(EXECUTOR_ROLE, _msgSender())) {
             revert AccessManager__CallerIsNotExecutor();
         }
-        _;
     }
 
     /**

@@ -4,13 +4,9 @@ pragma solidity 0.8.23;
 import {IERC20Metadata, IERC20} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IProvider} from "../../contracts/interfaces/IProvider.sol";
 import {IVault} from "../../contracts/interfaces/IVault.sol";
-import {Vault} from "../../contracts/base/Vault.sol";
 import {Rebalancer} from "../../contracts/Rebalancer.sol";
 import {Timelock} from "../../contracts/Timelock.sol";
-import {VaultManager} from "../../contracts/VaultManager.sol";
 import {ProviderManager} from "../../contracts/providers/ProviderManager.sol";
-import {CompoundV3Provider} from "../../contracts/providers/CompoundV3Provider.sol";
-import {AaveV3Provider} from "../../contracts/providers/AaveV3Provider.sol";
 import {Test} from "forge-std/Test.sol";
 
 contract ForkingUtilities is Test {
@@ -53,8 +49,8 @@ contract ForkingUtilities is Test {
     uint256 public constant TIMELOCK_DELAY = 30 minutes;
 
     constructor() {
-        string memory ARBITRUM_RPC_URL = vm.envString("ARBITRUM_RPC_URL");
-        vm.createSelectFork(ARBITRUM_RPC_URL);
+        string memory arbitrumRpcUrl = vm.envString("ARBITRUM_RPC_URL");
+        vm.createSelectFork(arbitrumRpcUrl);
 
         usdt = IERC20(USDT_ADDRESS);
         vm.label(address(usdt), "USDT");

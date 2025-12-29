@@ -45,12 +45,14 @@ interface IPoolAddressesProvider {
      * @notice Returns the address of the ACL manager.
      * @return The address of the ACLManager
      */
+    // forgefmt: disable-next-line
     function getACLManager() external view returns (address);
 
     /**
      * @notice Returns the address of the ACL admin.
      * @return The address of the ACL admin
      */
+    // forgefmt: disable-next-line
     function getACLAdmin() external view returns (address);
 
     /**

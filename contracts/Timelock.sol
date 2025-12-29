@@ -115,10 +115,14 @@ contract Timelock is Ownable2Step {
      * @dev Reverts if called by any account other than the contract itself.
      */
     modifier onlySelf() {
+        _onlySelf();
+        _;
+    }
+
+    function _onlySelf() internal view {
         if (msg.sender != address(this)) {
             revert Timelock__Unauthorized();
         }
-        _;
     }
 
     /**

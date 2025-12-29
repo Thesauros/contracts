@@ -2,7 +2,6 @@
 pragma solidity 0.8.23;
 
 import {AccessManager} from "../../contracts/access/AccessManager.sol";
-import {Vault} from "../../contracts/base/Vault.sol";
 import {MockingUtilities} from "../utils/MockingUtilities.sol";
 
 contract AccessManagerTests is MockingUtilities {

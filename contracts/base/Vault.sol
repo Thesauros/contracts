@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {ERC20Permit, ERC20} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
-import {IERC20Metadata, IERC20} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
@@ -33,8 +33,8 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
     uint256 internal constant MAX_WITHDRAW_FEE_PERCENT = 0.05 * 1e18; // 5%
     uint256 internal constant MAX_REBALANCE_FEE_PERCENT = 0.2 * 1e18; // 20%
 
-    IERC20Metadata internal immutable _asset;
-    uint8 private immutable _underlyingDecimals;
+    IERC20Metadata internal immutable _ASSET;
+    uint8 private immutable _UNDERLYING_DECIMALS;
 
     IProvider[] internal _providers;
     IProvider public activeProvider;
@@ -51,10 +51,14 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
      * @dev Reverts if called by any account other than the timelock contract.
      */
     modifier onlyTimelock() {
+        _onlyTimelock();
+        _;
+    }
+
+    function _onlyTimelock() internal view {
         if (msg.sender != timelock) {
             revert Vault__Unauthorized();
         }
-        _;
     }
 
     /**
@@ -80,8 +84,8 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
             revert Vault__AddressZero();
         }
 
-        _asset = IERC20Metadata(asset_);
-        _underlyingDecimals = IERC20Metadata(asset_).decimals();
+        _ASSET = IERC20Metadata(asset_);
+        _UNDERLYING_DECIMALS = IERC20Metadata(asset_).decimals();
 
         _setTimelock(timelock_);
         _setProviders(providers_);
@@ -107,14 +111,14 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
         override(IERC20Metadata, ERC20)
         returns (uint8)
     {
-        return _underlyingDecimals;
+        return _UNDERLYING_DECIMALS;
     }
 
     /**
      * @inheritdoc IERC4626
      */
     function asset() public view override returns (address) {
-        return address(_asset);
+        return address(_ASSET);
     }
 
     /**
@@ -369,7 +373,7 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
         uint256 assets,
         uint256 shares
     ) internal {
-        _asset.safeTransferFrom(caller, address(this), assets);
+        _ASSET.safeTransferFrom(caller, address(this), assets);
         _delegateActionToProvider(assets, "deposit", activeProvider);
         _mint(receiver, shares);
 
@@ -442,8 +446,8 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
 
         address _treasury = treasury;
 
-        _asset.safeTransfer(_treasury, withdrawFee);
-        _asset.safeTransfer(receiver, assetsToReceiver);
+        _ASSET.safeTransfer(_treasury, withdrawFee);
+        _ASSET.safeTransfer(receiver, assetsToReceiver);
 
         emit FeeCharged(_treasury, withdrawFee);
         emit Withdraw(caller, receiver, owner, assetsToReceiver, shares);
@@ -562,7 +566,7 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
             if (address(providers[i]) == address(0)) {
                 revert Vault__AddressZero();
             }
-            _asset.forceApprove(
+            _ASSET.forceApprove(
                 providers[i].getSource(asset(), address(this), address(0)),
                 type(uint256).max
             );

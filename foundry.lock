@@ -1,0 +1,8 @@
+{
+  "lib/forge-std": {
+    "rev": "26048ab55c64519ce21e032fdb49df1d5a2a7eb4"
+  },
+  "lib/morpho-blue": {
+    "rev": "9686ec502c8583a76d30f31acd7f70a38aa30818"
+  }
+}

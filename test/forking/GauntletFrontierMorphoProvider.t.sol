@@ -6,11 +6,11 @@ import {IProvider} from "../../contracts/interfaces/IProvider.sol";
 import {MorphoProvider} from "../../contracts/providers/MorphoProvider.sol";
 import {ForkingUtilities} from "../utils/ForkingUtilities.sol";
 
-contract YearnDegenMorphoProviderTests is ForkingUtilities {
+contract GauntletFrontierMorphoProviderTests is ForkingUtilities {
     MorphoProvider public morphoProvider;
 
     function setUp() public {
-        morphoProvider = new MorphoProvider(MORPHO_YEARN_DEGEN_VAULT_ADDRESS);
+        morphoProvider = new MorphoProvider(MORPHO_GAUNTLET_FRONTIER_VAULT_ADDRESS);
 
         IProvider[] memory providers = new IProvider[](1);
         providers[0] = morphoProvider;

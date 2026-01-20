@@ -28,22 +28,29 @@ contract ForkingUtilities is Test {
     IERC20 public usdt;
 
     address public constant USDC_ADDRESS =
-        0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
+        0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address public constant USDT_ADDRESS =
-        0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9;
+        0xdAC17F958D2ee523a2206206994597C13D831ec7;
 
     address public constant COMET_USDC_ADDRESS =
-        0xb125E6687d4313864e53df431d5425969c15Eb2F;
+        0xc3d688B66703497DAA19211EEdff47f25384cdc3;
     address public constant COMET_USDT_ADDRESS =
-        0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07;
-    address public constant MORPHO_STEAKHOUSE_HIGH_YIELD_VAULT_ADDRESS =
-        0x5c0C306Aaa9F877de636f4d5822cA9F2E81563BA;
+        0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840;
+
+    address public constant MORPHO_STEAKHOUSE_VAULT_ADDRESS =
+        0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB;
     address public constant MORPHO_GAUNTLET_CORE_VAULT_ADDRESS =
-        0x7e97fa6893871A2751B5fE961978DCCb2c201E65;
-    address public constant MORPHO_YEARN_DEGEN_VAULT_ADDRESS =
-        0x36b69949d60d06ECcC14DE0Ae63f4E00cc2cd8B9;
-    address public constant MORPHO_HYPERITHM_VAULT_ADDRESS =
-        0x4B6F1C9E5d470b97181786b26da0d0945A7cf027;
+        0x8eB67A509616cd6A7c1B3c8C21D48FF57df3d458;
+    address public constant MORPHO_GAUNTLET_PRIME_VAULT_ADDRESS =
+        0xdd0f28e19C1780eb6396170735D45153D261490d;
+    address public constant MORPHO_GAUNTLET_RWA_VAULT_ADDRESS =
+        0xA8875aaeBc4f830524e35d57F9772FfAcbdD6C45;
+    address public constant MORPHO_GAUNTLET_FRONTIER_VAULT_ADDRESS =
+        0xc582F04d8a82795aa2Ff9c8bb4c1c889fe7b754e;
+    address public constant MORPHO_OEV_BOOSTED_VAULT_ADDRESS =
+        0x68Aea7b82Df6CcdF76235D46445Ed83f85F845A3;
+    address public constant MORPHO_CLEARSTAR_HIGH_YIELD_VAULT_ADDRESS =
+        0x9B5E92fd227876b4C07a8c02367E2CB23c639DfA;
 
     uint256 public constant PRECISION_FACTOR = 1 ether;
     uint256 public constant WITHDRAW_FEE_PERCENT = 0.001 ether; // 0.1%
@@ -53,8 +60,8 @@ contract ForkingUtilities is Test {
     uint256 public constant TIMELOCK_DELAY = 30 minutes;
 
     constructor() {
-        string memory ARBITRUM_RPC_URL = vm.envString("ARBITRUM_RPC_URL");
-        vm.createSelectFork(ARBITRUM_RPC_URL);
+        string memory ETHEREUM_RPC_URL = vm.envString("ETHEREUM_RPC_URL");
+        vm.createSelectFork(ETHEREUM_RPC_URL);
 
         usdt = IERC20(USDT_ADDRESS);
         vm.label(address(usdt), "USDT");
@@ -65,8 +72,8 @@ contract ForkingUtilities is Test {
         providerManager = new ProviderManager(address(this));
         providerManager.setYieldToken(
             "Compound_V3_Provider",
-            USDT_ADDRESS,
-            COMET_USDT_ADDRESS
+            USDC_ADDRESS,
+            COMET_USDC_ADDRESS
         );
 
         timelock = new Timelock(address(this), TIMELOCK_DELAY);

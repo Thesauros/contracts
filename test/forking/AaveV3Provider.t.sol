@@ -15,7 +15,7 @@ contract AaveV3ProviderTests is ForkingUtilities {
         IProvider[] memory providers = new IProvider[](1);
         providers[0] = aaveV3Provider;
 
-        deployVault(address(usdt), providers);
+        deployVault(address(usdc), providers);
         initializeVault(vault, MIN_AMOUNT, initializer);
     }
 

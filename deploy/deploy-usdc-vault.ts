@@ -3,7 +3,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 
 import {
-  ARBITRUM_CHAIN_ID,
+  ETHEREUM_CHAIN_ID,
   TREASURY_ADDRESS,
   WITHDRAW_FEE_PERCENT,
   TIMELOCK_DELAY,
@@ -15,7 +15,7 @@ import {
 import { verify } from '../utils/verify';
 
 const deployUsdcVault: DeployFunction = async function (
-  hre: HardhatRuntimeEnvironment
+  hre: HardhatRuntimeEnvironment,
 ) {
   // @ts-ignore
   const { getNamedAccounts, deployments } = hre;
@@ -23,7 +23,7 @@ const deployUsdcVault: DeployFunction = async function (
   const { deployer } = await getNamedAccounts();
 
   const chainId = (await ethers.provider.getNetwork()).chainId;
-  const waitConfirmations = chainId === ARBITRUM_CHAIN_ID ? 2 : 0;
+  const waitConfirmations = chainId === ETHEREUM_CHAIN_ID ? 2 : 0;
 
   const name = 'Thesauros USDC Vault';
   const symbol = 'tUSDC';
@@ -53,7 +53,7 @@ const deployUsdcVault: DeployFunction = async function (
 
   const providerManagerInstance = await ethers.getContractAt(
     'ProviderManager',
-    providerManager.address
+    providerManager.address,
   );
 
   log('----------------------------------------------------');
@@ -65,18 +65,14 @@ const deployUsdcVault: DeployFunction = async function (
       .then((tx) => tx.wait());
   }
 
-  if (chainId === ARBITRUM_CHAIN_ID) {
+  if (chainId === ETHEREUM_CHAIN_ID) {
     await verify(providerManager.address, [deployer]);
   }
 
   log('----------------------------------------------------');
-  log('Deploying AaveV3, CompoundV3 and Dolomite providers...');
+  log('Deploying AaveV3, CompoundV3 providers...');
 
-  const providersToDeploy = [
-    'CompoundV3Provider',
-    'AaveV3Provider',
-    'DolomiteProvider',
-  ];
+  const providersToDeploy = ['CompoundV3Provider', 'AaveV3Provider'];
 
   for (const providerName of providersToDeploy) {
     const args =
@@ -94,7 +90,7 @@ const deployUsdcVault: DeployFunction = async function (
 
     providers.push(provider.address);
 
-    if (chainId === ARBITRUM_CHAIN_ID) {
+    if (chainId === ETHEREUM_CHAIN_ID) {
       await verify(provider.address, args);
     }
   }
@@ -117,7 +113,7 @@ const deployUsdcVault: DeployFunction = async function (
 
     providers.push(provider.address);
 
-    if (chainId === ARBITRUM_CHAIN_ID) {
+    if (chainId === ETHEREUM_CHAIN_ID) {
       await verify(provider.address, [vaultAddress]);
     }
   }
@@ -139,7 +135,7 @@ const deployUsdcVault: DeployFunction = async function (
   log('----------------------------------------------------');
   log(`Timelock at ${timelock.address}`);
 
-  if (chainId === ARBITRUM_CHAIN_ID) {
+  if (chainId === ETHEREUM_CHAIN_ID) {
     await verify(timelock.address, [deployer, TIMELOCK_DELAY]);
   }
 
@@ -160,7 +156,7 @@ const deployUsdcVault: DeployFunction = async function (
   log('----------------------------------------------------');
   log(`VaultManager at ${vaultManager.address}`);
 
-  if (chainId === ARBITRUM_CHAIN_ID) {
+  if (chainId === ETHEREUM_CHAIN_ID) {
     await verify(vaultManager.address, []);
   }
 
@@ -181,8 +177,8 @@ const deployUsdcVault: DeployFunction = async function (
     TREASURY_ADDRESS,
   ];
 
-  // For other tokens, use the same unique-name pattern (like morpho) so hardhat-deploy auto-saves each deployment separately.
-  const usdcRebalancer = await deploy('Rebalancer', {
+  const usdcRebalancer = await deploy('USDCRebalancer', {
+    contract: 'Rebalancer',
     from: deployer,
     args: args,
     log: true,
@@ -199,7 +195,7 @@ const deployUsdcVault: DeployFunction = async function (
 
   const usdcRebalancerInstance = await ethers.getContractAt(
     'Rebalancer',
-    usdcRebalancer.address
+    usdcRebalancer.address,
   );
   await usdcRebalancerInstance
     .grantRole(OPERATOR_ROLE, vaultManager.address)
@@ -208,7 +204,7 @@ const deployUsdcVault: DeployFunction = async function (
     .setupVault(initialDeposit)
     .then((tx) => tx.wait());
 
-  if (chainId === ARBITRUM_CHAIN_ID) {
+  if (chainId === ETHEREUM_CHAIN_ID) {
     await verify(usdcRebalancer.address, args);
   }
 };

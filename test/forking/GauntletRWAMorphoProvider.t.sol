@@ -3,17 +3,17 @@ pragma solidity 0.8.23;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IProvider} from "../../contracts/interfaces/IProvider.sol";
-import {RevertProvider} from "../../contracts/providers/RevertProvider.sol";
+import {MorphoProvider} from "../../contracts/providers/MorphoProvider.sol";
 import {ForkingUtilities} from "../utils/ForkingUtilities.sol";
 
-contract RevertProviderTests is ForkingUtilities {
-    RevertProvider public revertProvider;
+contract GauntletRWAMorphoProviderTests is ForkingUtilities {
+    MorphoProvider public morphoProvider;
 
     function setUp() public {
-        revertProvider = new RevertProvider();
+        morphoProvider = new MorphoProvider(MORPHO_GAUNTLET_RWA_VAULT_ADDRESS);
 
         IProvider[] memory providers = new IProvider[](1);
-        providers[0] = revertProvider;
+        providers[0] = morphoProvider;
 
         deployVault(address(usdc), providers);
         initializeVault(vault, MIN_AMOUNT, initializer);
@@ -45,8 +45,8 @@ contract RevertProviderTests is ForkingUtilities {
     function testWithdraw() public {
         executeDeposit(vault, DEPOSIT_AMOUNT, alice);
 
-        vm.warp(block.timestamp + 1000 seconds);
-        vm.roll(block.number + 3);
+        vm.warp(block.timestamp + 10 seconds);
+        vm.roll(block.number + 1);
 
         address asset = vault.asset();
 
@@ -80,7 +80,7 @@ contract RevertProviderTests is ForkingUtilities {
     // =========================================
 
     function testDepositRate() public view {
-        assertGt(revertProvider.getDepositRate(vault), 0);
+        assertGt(morphoProvider.getDepositRate(vault), 0);
     }
 
     // =========================================
@@ -88,6 +88,6 @@ contract RevertProviderTests is ForkingUtilities {
     // =========================================
 
     function testIdentifier() public view {
-        assertEq(revertProvider.getIdentifier(), "Revert_Provider");
+        assertEq(morphoProvider.getIdentifier(), "Morpho_Provider");
     }
 }

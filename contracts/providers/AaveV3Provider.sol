@@ -84,7 +84,7 @@ contract AaveV3Provider is IProvider {
         returns (IPoolAddressesProvider)
     {
         return
-            IPoolAddressesProvider(0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb);
+            IPoolAddressesProvider(0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e);
     }
 
     /**

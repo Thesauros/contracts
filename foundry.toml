@@ -6,4 +6,4 @@ test = 'test'
 cache_path = 'cache_forge'
 
 [rpc_endpoints]
-arbitrum = "${ARBITRUM_RPC_URL}"
+ethereum = "${ETHEREUM_RPC_URL}"

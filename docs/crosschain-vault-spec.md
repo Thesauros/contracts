@@ -19,6 +19,16 @@
 - Remote contracts не должны иметь права самостоятельно менять user balances или share price.
 - Любой cross-chain transport должен быть заменяемым модулем, а не вшитой бизнес-логикой Vault.
 
+### 2.1 Transport stack для v1
+
+Для первой реализации transport stack фиксируется явно:
+
+- `LayerZero V2` как messaging layer;
+- `Stargate V2` как settlement asset transfer layer.
+
+Это обязательное решение для `v1`.
+Абстракция transport-слоя сохраняется только для того, чтобы в будущем можно было заменить transport без миграции `CrossChainVault`.
+
 ## 3. Проблемы текущей архитектуры, которые нужно устранить
 
 ### 3.1 Проблемы `contracts`
@@ -584,6 +594,23 @@ struct BridgeCommand {
 - `Stargate` как asset transfer plane для settlement asset;
 - bridge abstraction поверх них, чтобы later можно было заменить transport без переписывания `CrossChainVault`.
 
+Для новой реализации это уточняется до актуальных версий:
+
+- `LayerZero V2`, а не legacy V1-style flow;
+- `Stargate V2`, а не legacy Stargate integration pattern.
+
+### 11.1.1 Что это означает технически
+
+Нужно использовать:
+
+- `LayerZero Endpoint V2`;
+- `OApp`-паттерн для messaging между home chain и remote chains;
+- `EID (uint32)` как канонический идентификатор destination/source chain;
+- explicit peer wiring и config management для pathways;
+- `Stargate V2` same-asset transfer path для settlement asset.
+
+Текущие legacy `uint16` LayerZero-style ids из старой реализации не должны использоваться в новой архитектуре как канонический chain identifier.
+
 ## 11.2 Разделение ролей LayerZero и Stargate
 
 В ТЗ нужно явно развести две задачи:
@@ -613,6 +640,21 @@ struct BridgeCommand {
 - управление позицией и перемещение капитала должны быть логически связаны одним `operationId`;
 - но на уровне архитектуры это два разных потока: message и funds.
 
+### 11.2.1 LayerZero V2 profile для проекта
+
+Для MVP принимается следующий профиль:
+
+- `RemoteStrategyAgent` реализуется как `OApp receiver/sender`;
+- trusted peers выставляются явно через owner/governance-controlled config;
+- unordered delivery используется по умолчанию;
+- ordered delivery включается только там, где оно необходимо для корректности operation lifecycle;
+- каждый command и ack должен быть идемпотентен по `opId`.
+
+Ordered delivery допускается только для:
+
+- pathway, где одна стратегия получает конкурентные stateful команды;
+- flows `emergencyExit` и `forcedRecall`, если они должны линейно вытеснять обычные команды.
+
 ## 11.3 Рекомендуемый паттерн для v1
 
 Для первой версии рекомендуется следующий flow:
@@ -638,6 +680,52 @@ struct BridgeCommand {
 3. Remote agent отправляет settlement asset обратно через Stargate.
 4. Home chain получает asset и settlement confirmation.
 5. `StrategyAllocator` закрывает операцию и обновляет debt state.
+
+### 11.3.1 Payload format для LayerZero V2
+
+Все команды и acknowledgements в MVP должны использовать versioned payload:
+
+```solidity
+enum CommandType {
+    Allocate,
+    Recall,
+    Harvest,
+    EmergencyExit,
+    Ack,
+    Report
+}
+
+struct CommandPayloadV1 {
+    uint8 version;
+    bytes32 opId;
+    uint32 strategyId;
+    CommandType commandType;
+    uint256 assets;
+    uint64 commandTimestamp;
+    bytes params;
+}
+```
+
+Требования:
+
+- `version` обязателен;
+- `opId` обязателен;
+- `strategyId` обязателен;
+- `params` содержит adapter-specific execution data;
+- payload decoding ошибки не должны приводить к silent settlement.
+
+### 11.3.2 Executor options policy
+
+Для `LayerZero V2` сообщений должны использоваться enforced options.
+
+В MVP нужно явно задавать:
+
+- gas budget на `lzReceive`;
+- compose gas, если используется compose pattern;
+- refund address policy;
+- native value policy на destination только при явной необходимости.
+
+Пользовательские произвольные executor options в Vault logic запрещены.
 
 ## 11.4 Почему LayerZero не должен быть зашит прямо в Vault
 
@@ -670,6 +758,37 @@ struct BridgeCommand {
 - обеспечивать replay protection;
 - эмитить events для `messageSent`, `messageReceived`, `assetBridged`, `assetReceived`;
 - поддерживать `retry / recover / force resume` operational flows, если transport их требует.
+
+Дополнительно `LayerZeroBridgeAdapter` должен:
+
+- работать с `uint32 eid`;
+- хранить `strategyId -> remote peer -> eid`;
+- отделять `message send`, `asset send`, `message receive`, `asset settlement`;
+- уметь делать transport fee quote;
+- не позволять менять pathway security config вне governance flow.
+
+### 11.5.1 `StargateV2AssetRouter`
+
+Логику asset movement лучше вынести в отдельный модуль даже при общем bridge adapter.
+
+`StargateV2AssetRouter` должен:
+
+- готовить `SendParam`/эквивалент V2 transfer params;
+- поддерживать fee quoting;
+- валидировать same-asset route;
+- использовать только approved settlement assets;
+- возвращать receipt, связанный с `opId`.
+
+### 11.5.2 Taxi-only policy для MVP
+
+В MVP разрешается только `taxi` mode.
+
+`Bus` mode запрещен в первой версии, потому что batching и delayed execution усложняют:
+
+- withdraw settlement;
+- transit accounting;
+- timeout policy;
+- incident recovery.
 
 ## 11.6 Settlement asset policy для LayerZero/Stargate
 
@@ -705,6 +824,28 @@ struct BridgeCommand {
 - cancellation/recovery policy;
 - governance recovery path;
 - явные события для off-chain monitoring.
+
+### 11.8 Migration constraints относительно текущего `crosschain_index`
+
+Текущая реализация использует legacy assumptions:
+
+- `uint16` ids;
+- custom `sgBridge` abstraction;
+- router-centric architecture;
+- relayer-driven accounting.
+
+Для перехода на `LayerZero V2 / Stargate V2` нужно считать incompatible и подлежащими замене:
+
+- `ThesaurosRouter`;
+- transport section в `BaseAppStorage`;
+- текущий `transferDeposits / approveWithdraw` accounting flow;
+- legacy payload formats, построенные вокруг router-centric model.
+
+Допускается переиспользовать только:
+
+- protocol-specific execution code как reference;
+- deployment knowledge;
+- chain configuration tables после перевода на `EID`.
 
 ## 12. Требования к remote adapters
 

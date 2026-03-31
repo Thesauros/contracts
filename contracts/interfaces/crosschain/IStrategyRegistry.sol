@@ -1,0 +1,38 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.23;
+
+import {CrossChainTypes} from "../../libraries/CrossChainTypes.sol";
+
+interface IStrategyRegistry {
+    event StrategyConfigured(
+        uint32 indexed strategyId,
+        uint32 indexed chainId,
+        address indexed agent,
+        address asset
+    );
+    event StrategyStateUpdated(
+        uint32 indexed strategyId,
+        CrossChainTypes.StrategyHealth health,
+        uint256 currentDebt,
+        uint256 lastReportedValue
+    );
+
+    function upsertStrategy(
+        CrossChainTypes.StrategyConfig calldata config
+    ) external;
+
+    function setStrategyState(
+        uint32 strategyId,
+        CrossChainTypes.StrategyState calldata state
+    ) external;
+
+    function getStrategyConfig(
+        uint32 strategyId
+    ) external view returns (CrossChainTypes.StrategyConfig memory);
+
+    function getStrategyState(
+        uint32 strategyId
+    ) external view returns (CrossChainTypes.StrategyState memory);
+
+    function strategyExists(uint32 strategyId) external view returns (bool);
+}

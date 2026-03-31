@@ -19,4 +19,16 @@ interface IWithdrawalQueue {
     function getWithdrawalRequest(
         uint256 requestId
     ) external view returns (CrossChainTypes.WithdrawalRequest memory);
+
+    function queueWithdrawal(
+        address owner,
+        address receiver,
+        uint256 shares,
+        uint256 assetsPreview
+    ) external returns (uint256 requestId);
+
+    function setWithdrawalStatus(
+        uint256 requestId,
+        CrossChainTypes.WithdrawalStatus status
+    ) external;
 }

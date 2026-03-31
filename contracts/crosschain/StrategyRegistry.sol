@@ -15,6 +15,7 @@ contract StrategyRegistry is CrossChainAccessControl, IStrategyRegistry {
     mapping(uint32 strategyId => CrossChainTypes.StrategyConfig) private _configs;
     mapping(uint32 strategyId => CrossChainTypes.StrategyState) private _states;
     mapping(uint32 strategyId => bool) private _exists;
+    uint32[] private _strategyIds;
 
     constructor(address admin) CrossChainAccessControl(admin) {}
 
@@ -35,7 +36,10 @@ contract StrategyRegistry is CrossChainAccessControl, IStrategyRegistry {
 
         if (!_exists[config.strategyId]) {
             _exists[config.strategyId] = true;
-            _states[config.strategyId].health = CrossChainTypes.StrategyHealth.Active;
+            _strategyIds.push(config.strategyId);
+            _states[config.strategyId].health = CrossChainTypes
+                .StrategyHealth
+                .Active;
         }
 
         emit StrategyConfigured(
@@ -49,7 +53,13 @@ contract StrategyRegistry is CrossChainAccessControl, IStrategyRegistry {
     function setStrategyState(
         uint32 strategyId,
         CrossChainTypes.StrategyState calldata state
-    ) external onlyRole(GOVERNANCE_ROLE) {
+    ) external {
+        if (
+            !hasRole(GOVERNANCE_ROLE, msg.sender) &&
+            !hasRole(VAULT_ROLE, msg.sender)
+        ) {
+            revert AccessControlUnauthorizedAccount(msg.sender, VAULT_ROLE);
+        }
         if (!_exists[strategyId]) {
             revert StrategyRegistry__UnknownStrategy();
         }
@@ -87,5 +97,13 @@ contract StrategyRegistry is CrossChainAccessControl, IStrategyRegistry {
 
     function strategyExists(uint32 strategyId) external view returns (bool) {
         return _exists[strategyId];
+    }
+
+    function strategyCount() external view returns (uint256) {
+        return _strategyIds.length;
+    }
+
+    function strategyIdAt(uint256 index) external view returns (uint32) {
+        return _strategyIds[index];
     }
 }

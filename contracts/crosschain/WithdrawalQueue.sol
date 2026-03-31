@@ -19,7 +19,14 @@ contract WithdrawalQueue is CrossChainAccessControl, IWithdrawalQueue {
         address receiver,
         uint256 shares,
         uint256 assetsPreview
-    ) external onlyRole(KEEPER_ROLE) returns (uint256 requestId) {
+    ) external returns (uint256 requestId) {
+        if (
+            !hasRole(KEEPER_ROLE, msg.sender) &&
+            !hasRole(VAULT_ROLE, msg.sender)
+        ) {
+            revert AccessControlUnauthorizedAccount(msg.sender, VAULT_ROLE);
+        }
+
         requestId = nextRequestId++;
 
         _requests[requestId] = CrossChainTypes.WithdrawalRequest({
@@ -44,7 +51,14 @@ contract WithdrawalQueue is CrossChainAccessControl, IWithdrawalQueue {
     function setWithdrawalStatus(
         uint256 requestId,
         CrossChainTypes.WithdrawalStatus status
-    ) external onlyRole(KEEPER_ROLE) {
+    ) external {
+        if (
+            !hasRole(KEEPER_ROLE, msg.sender) &&
+            !hasRole(VAULT_ROLE, msg.sender)
+        ) {
+            revert AccessControlUnauthorizedAccount(msg.sender, VAULT_ROLE);
+        }
+
         if (_requests[requestId].requestId == 0) {
             revert WithdrawalQueue__UnknownRequest();
         }

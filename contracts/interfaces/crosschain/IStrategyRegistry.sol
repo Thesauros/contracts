@@ -35,4 +35,8 @@ interface IStrategyRegistry {
     ) external view returns (CrossChainTypes.StrategyState memory);
 
     function strategyExists(uint32 strategyId) external view returns (bool);
+
+    function strategyCount() external view returns (uint256);
+
+    function strategyIdAt(uint256 index) external view returns (uint32);
 }

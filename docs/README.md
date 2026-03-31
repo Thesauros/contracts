@@ -24,7 +24,8 @@ Thesauros is a decentralized system that automatically redistributes funds betwe
 
 1. [Installation](development/installation.md)
 2. [System Architecture](architecture.md)
-3. [Contract Deployment](development/deployment.md)
+3. [Cross-Chain Vault Spec](crosschain-vault-spec.md)
+4. [Contract Deployment](development/deployment.md)
 
 ## Contract Documentation
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.23;
+pragma solidity 0.8.34;
 
 import {AccessManager} from "../../contracts/access/AccessManager.sol";
 import {PausableActions} from "../../contracts/base/PausableActions.sol";

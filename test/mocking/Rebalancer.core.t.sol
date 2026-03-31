@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.23;
+pragma solidity 0.8.34;
 
 import {IProvider} from "../../contracts/interfaces/IProvider.sol";
 import {MockProviderC} from "../../contracts/mocks/MockProvider.sol";

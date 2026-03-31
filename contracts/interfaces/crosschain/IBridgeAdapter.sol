@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.23;
+pragma solidity 0.8.34;
 
 interface IBridgeAdapter {
     event MessageSent(bytes32 indexed opId, uint32 indexed dstEid);

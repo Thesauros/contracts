@@ -9,7 +9,7 @@ Guide for installing and setting up the Thesauros project for development.
 - **Node.js** version 16 or higher
 - **npm** or **yarn** for dependency management
 - **Git** for repository management
-- **Solidity** compiler version 0.8.23
+- **Solidity** compiler version 0.8.34
 
 ### Recommended Tools
 
@@ -99,7 +99,7 @@ import "dotenv/config";
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.23",
+    version: "0.8.34",
     settings: {
       optimizer: {
         enabled: true,
@@ -143,7 +143,7 @@ If using Foundry, configure `foundry.toml`:
 src = "contracts"
 out = "out"
 libs = ["lib"]
-solc_version = "0.8.23"
+solc_version = "0.8.34"
 optimizer = true
 optimizer_runs = 200
 
@@ -454,7 +454,7 @@ main()
 
 ```typescript
 solidity: {
-  version: "0.8.23",
+  version: "0.8.34",
   settings: {
     optimizer: {
       enabled: true,

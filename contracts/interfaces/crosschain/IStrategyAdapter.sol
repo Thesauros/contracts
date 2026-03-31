@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.23;
+pragma solidity 0.8.34;
 
 interface IStrategyAdapter {
     function deployCapital(uint256 assets, bytes calldata params) external;

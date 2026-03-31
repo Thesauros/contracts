@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.23;
+pragma solidity 0.8.34;
 
 import {CrossChainAccessControl} from "../access/CrossChainAccessControl.sol";
 import {IBridgeAdapter} from "../interfaces/crosschain/IBridgeAdapter.sol";

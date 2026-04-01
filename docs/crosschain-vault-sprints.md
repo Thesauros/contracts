@@ -1,206 +1,509 @@
-# Cross-Chain Vault: План реализации спринтами
+# Cross-Chain Vault: Development Plan
 
-## 1. Формат плана
+Current as of **2026-04-01**.
 
-План рассчитан на `8 спринтов` по `2 недели`.
+This plan is based on the target hybrid architecture:
 
-Допущения:
+- chain-specific user entry;
+- global accounting and NAV;
+- routing / booster / buffer layer;
+- hybrid transfer and settlement;
+- modular remote execution;
+- delayed redemption with liquidity buffers.
+
+## 1. Plan Objective
+
+Build not just a bridge-enabled vault, but **a unified cross-chain yield product** where:
+
+- the user enters through their local entry point;
+- the system decides the execution path internally;
+- NAV is calculated centrally and remains explainable;
+- withdrawals use instant-or-delayed semantics;
+- the execution layer is modular and replaceable.
+
+## 2. What Is Already Done
+
+The previous iteration remains the foundation:
+
+- `CrossChainVault`
+- `StrategyRegistry`
+- `StrategyAllocator`
+- `ReportSettler`
+- `WithdrawalQueue`
+- `CrossChainAccessControl`
+- `CrossChainTypes`
+- basic unit and mock tests for accounting / reports / queued withdrawal
+
+How this is interpreted now:
+
+- it is **not a complete product**;
+- it is **foundation for the accounting and control plane**;
+- it is **not a bridge-first implementation**, but a reusable base for the correct architecture.
+
+## 3. Main Planning Shift
+
+The old implicit order was closer to:
+
+1. accounting core
+2. bridge messaging
+3. asset transport
+4. remote strategy integration
+
+The correct order is now:
+
+1. architecture and semantics
+2. ledger and NAV
+3. redemption and liquidity buffers
+4. entry layer
+5. routing and operation lifecycle
+6. transfer and settlement
+7. remote execution
+8. rebalancing policy and risk limits
+9. hardening and production readiness
+
+This means:
+
+- first define **what the product promises**;
+- then define **how it calculates and pays out**;
+- only then finish transport and execution details.
+
+## 4. Delivery Format
+
+The plan assumes `9 sprints` of `2 weeks` each.
+
+Assumptions:
 
 - 2 smart contract engineers;
-- 1 protocol reviewer;
-- 1 backend engineer на relayer/monitoring;
-- 1 QA/SDET частично с 4-го спринта.
+- 1 backend engineer;
+- 1 architect / protocol reviewer;
+- 1 QA/SDET part-time from the integration stage onward;
+- optional DevOps support starting at testnet rollout.
 
-## 2. Этапы
+## 5. Workstreams
 
-- `S1-S2`: architecture freeze и accounting core
-- `S3-S4`: operations engine, queue, governance
-- `S5-S6`: LayerZero V2 / Stargate V2 integration
-- `S7`: strategy adapters и fork tests
-- `S8`: hardening, audit prep, RC
+Work proceeds in four parallel streams:
 
-## 3. Sprint 1
+### Stream A. Product and Semantics
 
-### Цель
+- architecture docs;
+- ADRs;
+- user-facing semantics;
+- redemption promises;
+- risk boundaries.
 
-Зафиксировать архитектуру и контракты верхнего уровня.
+### Stream B. On-Chain Control Plane
 
-### Scope
+- vault entry logic;
+- accounting state;
+- registry;
+- allocator;
+- withdrawal queue;
+- bridge adapters;
+- remote agents.
 
-- утвердить home chain;
-- утвердить settlement asset;
-- утвердить remote chains MVP;
-- утвердить strategy MVP;
-- зафиксировать `LayerZero V2 + Stargate V2`;
-- описать interfaces и storage layouts;
-- зафиксировать `Operation`, `CommandPayloadV1`, `StrategyReport`.
+### Stream C. Backend and Ledger
 
-### DoD
+- ledger schema;
+- NAV calculation;
+- reconciliation;
+- redemption orchestration;
+- operations state tracking.
 
-- architecture ADR подписан;
-- нет открытых вопросов по transport stack;
-- storage schemas утверждены.
+### Stream D. Risk, QA, and Release
 
-## 4. Sprint 2
+- invariants;
+- replay and incident scenarios;
+- testnet rehearsal;
+- audit preparation;
+- release controls.
 
-### Цель
+## 6. Milestones
 
-Собрать accounting core без реального bridge.
+### Milestone A. Semantics Locked
 
-### Scope
+Done when:
 
-- `CrossChainVault`;
-- `StrategyRegistry`;
-- `ReportSettler`;
-- `totalAssets()` c transit state;
-- deposit/mint/redeem/withdraw baseline.
+- architecture package is approved;
+- source of truth is fixed;
+- withdrawal semantics are agreed;
+- glossary is stable.
 
-### DoD
+### Milestone B. Accounting Core Locked
 
-- ERC4626 accounting детерминирован;
-- shares только на home chain;
-- transit accounting не double-count.
+Done when:
 
-## 5. Sprint 3
+- NAV buckets are fixed;
+- report staleness policy is fixed;
+- bridge in-flight accounting is fixed;
+- backend ledger schema is approved.
 
-### Цель
+### Milestone C. Redemption Model Locked
 
-Добавить operation lifecycle и async withdraw.
+Done when:
 
-### Scope
+- instant vs delayed semantics are fixed;
+- funding order is fixed;
+- buffer policy is fixed;
+- degraded mode is fixed.
 
-- `StrategyAllocator`;
-- `WithdrawalQueue`;
-- operation state machine;
-- queued withdraw;
-- recall requests на mocks.
+### Milestone D. Routing and Transfer MVP
 
-### DoD
+Done when:
 
-- queued withdraw работает end-to-end на mock settlement;
-- operations идемпотентны;
-- нет гонок в share locking.
+- operation lifecycle works;
+- bridge settlement is integrated;
+- transfer state is reflected in accounting;
+- failure states are visible and recoverable.
 
-## 6. Sprint 4
+### Milestone E. Execution MVP
 
-### Цель
+Done when:
 
-Довести governance, pause, emergency и observability baseline.
+- at least 2 strategies complete the full lifecycle;
+- remote execution does not mutate user shares;
+- strategy reporting feeds NAV correctly.
 
-### Scope
+### Milestone F. Release Candidate
 
-- roles and permissions;
-- guardian pause;
-- emergency exit hooks;
-- event catalog;
-- backend event schema;
-- incident runbook drafts.
+Done when:
 
-### DoD
+- end-to-end flows pass;
+- hardening is complete;
+- audit package is ready;
+- testnet rehearsal is passed.
 
-- все critical functions имеют утвержденный access profile;
-- emergency flows покрыты тестами;
-- monitoring schema готова.
+## 7. Sprint Plan
 
-## 7. Sprint 5
+## Sprint 1. Architecture Freeze
 
-### Цель
+### Status
 
-Интегрировать `LayerZero V2` messaging.
+`Completed on 2026-04-01`
 
-### Scope
+### Goal
 
-- `LayerZeroBridgeAdapter`;
-- `RemoteStrategyAgent` как `OApp`;
-- peer wiring;
-- EID-based config;
-- message send/receive path;
-- ack flow без asset transfer.
-
-### DoD
-
-- команды доходят по test pathways;
-- replay protection работает;
-- governance-controlled config реализован.
-
-## 8. Sprint 6
-
-### Цель
-
-Интегрировать `Stargate V2` asset transport.
+Lock product semantics and eliminate conflict between the old and new architectures.
 
 ### Scope
 
-- `StargateV2AssetRouter`;
-- `taxi` mode only;
-- allocate path с asset movement;
-- recall path с asset return;
-- timeout/recovery hooks.
+- approve `ADR-001`, `ADR-002`, `ADR-003`;
+- align terminology:
+  - `EntryVault`
+  - `LiquidityBuffer`
+  - `Booster / Routing layer`
+  - `Transfer and Settlement layer`
+  - `Execution layer`
+  - `Delayed redemption`;
+- define MVP chains;
+- define MVP strategies;
+- define target redemption promise;
+- define on-chain vs off-chain ownership boundaries.
 
-### DoD
+### Deliverables
 
-- `allocate -> remote receive -> ack` работает;
-- `recall -> home receive -> settle` работает;
-- transit accounting сходится после settlement.
+- signed architecture package;
+- architecture glossary;
+- MVP scope memo.
 
-## 9. Sprint 7
+### Exit Criteria
 
-### Цель
+- no open contradictions remain around source of truth;
+- the product is explicitly not promising strict instant withdrawal;
+- `contracts/crosschain` is explicitly recorded as foundation, not final shape.
 
-Подключить стратегии MVP.
+### Closeout Record
+
+- [Sprint 1 Closeout](crosschain-vault-sprint-1-closeout.md)
+
+## Sprint 2. Ledger and NAV Foundation
+
+### Goal
+
+Make the accounting model suitable for the real hybrid product.
 
 ### Scope
 
-- `AaveAdapter`;
-- `PerpAdapter`;
-- `GMXAdapter` только если входит в MVP;
-- unified `totalValue/freeLiquidity`;
-- fork tests;
-- strategy risk limits.
+- revise `CrossChainVault` for entry/accounting semantics;
+- revise `StrategyRegistry` and `ReportSettler`;
+- fix NAV buckets:
+  - home idle
+  - local buffers
+  - settled strategy value
+  - pending bridge in
+  - pending bridge out
+  - unrealized loss buffer
+  - funded withdrawal obligations;
+- define stale report policy;
+- define backend ledger event schema;
+- define reconciliation boundaries.
 
-### DoD
+### Deliverables
 
-- минимум 2 стратегии проходят full lifecycle;
-- fork tests стабильны;
-- emergency unwind описан и проверен.
+- updated accounting interfaces;
+- ledger event catalogue;
+- NAV bucket model.
 
-## 10. Sprint 8
+### Exit Criteria
 
-### Цель
+- `totalAssets()` does not double-count transit state;
+- stale strategy state has explicit policy;
+- backend ledger can reconstruct product NAV from approved inputs.
 
-Hardening, audit prep и release candidate.
+## Sprint 3. Redemption and Buffer Semantics
+
+### Goal
+
+Make withdrawal behavior a first-class product component.
+
+### Scope
+
+- revise `WithdrawalQueue`;
+- define `instant vs delayed` rules;
+- define funding order;
+- define minimum residual liquidity rules;
+- define normal vs degraded mode;
+- define `fund` and `claim` hooks;
+- define requirements for the redemption orchestrator.
+
+### Deliverables
+
+- redemption flow spec;
+- buffer policy v1;
+- queue lifecycle matrix.
+
+### Exit Criteria
+
+- withdrawal semantics match `ADR-003`;
+- queue covers required statuses;
+- target SLA is defined for normal and degraded mode;
+- MVP buffer policy is approved.
+
+## Sprint 4. Entry Layer Refactor
+
+### Goal
+
+Bring the on-chain entry layer to the correct product shape.
+
+### Scope
+
+- decide whether `CrossChainVault` stays the final entry vault or becomes the accounting core behind an `EntryVault` wrapper;
+- separate entry semantics from routing and execution concerns;
+- define the `entry -> local buffer -> routing` relation;
+- fix share semantics:
+  - one product
+  - one user balance
+  - user-facing balance not tied to current chain location of capital;
+- define event model for UI/backend.
+
+### Deliverables
+
+- entry boundary decision;
+- product-facing contract interface;
+- updated event model.
+
+### Exit Criteria
+
+- deposit path does not depend on remote execution availability;
+- entry layer semantics match the architecture docs.
+
+## Sprint 5. Routing and Operation Lifecycle
+
+### Goal
+
+Bring the routing layer to a controlled operational model.
+
+### Scope
+
+- revise `StrategyAllocator`;
+- define operation lifecycle for:
+  - allocate
+  - recall
+  - harvest
+  - emergency exit;
+- define correlation ids for contracts and backend;
+- define idempotency rules;
+- define timeout / retry / fail states;
+- add hooks for booster / routing semantics;
+- run mock allocation and recall scenarios.
+
+### Deliverables
+
+- operation lifecycle spec;
+- allocator state machine updates;
+- backend correlation model.
+
+### Exit Criteria
+
+- allocator does not touch user shares;
+- recall flow is tied to redemption model;
+- lifecycle is observable and idempotent.
+
+## Sprint 6. Transfer and Settlement MVP
+
+### Goal
+
+Integrate transport without breaking product semantics.
+
+### Scope
+
+- implement `LayerZeroBridgeAdapter` path;
+- configure peers;
+- implement send / receive / ack flow;
+- emit settlement events;
+- update pending bridge accounting;
+- define timeout and recovery baseline.
+
+### Deliverables
+
+- bridge adapter MVP;
+- settlement integration path;
+- bridge incident baseline.
+
+### Exit Criteria
+
+- bridge lifecycle is integrated into the operation model;
+- `pendingBridgeIn / pendingBridgeOut` match NAV assumptions;
+- transport failures become recoverable states.
+
+## Sprint 7. Remote Execution MVP
+
+### Goal
+
+Build the execution layer as a modular layer, not the product core.
+
+### Scope
+
+- implement `RemoteStrategyAgent`;
+- implement first strategy adapter MVP;
+- implement second strategy adapter MVP;
+- define unified strategy reporting:
+  - totalValue
+  - freeLiquidity
+  - debt
+  - report freshness;
+- add remote risk checks;
+- run fork tests for at least 2 strategies.
+
+### Deliverables
+
+- 2 remote execution paths;
+- unified reporting behavior;
+- fork-based validation.
+
+### Exit Criteria
+
+- at least 2 strategies pass the full lifecycle;
+- remote execution does not mutate user shares;
+- reports feed NAV and redemption correctly.
+
+## Sprint 8. Rebalancing Policy and Risk Limits
+
+### Goal
+
+Make routing economically correct and operationally safe.
+
+### Scope
+
+- write `ADR-004 Rebalancing Policy and Risk Limits`;
+- define net benefit calculation;
+- add gas + bridge + slippage + liquidity-aware routing;
+- define chain caps;
+- define strategy caps;
+- define low-buffer behavior;
+- define stale-report behavior during rebalance;
+- define emergency routing restrictions.
+
+### Deliverables
+
+- rebalance policy ADR;
+- risk limits matrix;
+- routing decision formula v1.
+
+### Exit Criteria
+
+- move decisions are based on net benefit, not raw APR;
+- risk guardrails are integrated into operations and backend flows.
+
+## Sprint 9. Hardening and Release Candidate
+
+### Goal
+
+Prepare the system for audit handoff and production-style testnet rehearsal.
 
 ### Scope
 
 - invariants;
 - fuzzing;
-- gas review;
-- storage layout review;
+- storage review;
+- role review;
 - threat model;
-- deployment runbook;
-- RC testnet rehearsal.
+- buffer stress scenarios;
+- bridge incident scenarios;
+- redemption fairness scenarios;
+- testnet rehearsal;
+- audit handoff package.
 
-### DoD
+### Deliverables
 
-- internal critical findings закрыты;
-- testnet dress rehearsal пройден;
-- audit handoff package готов.
+- RC checklist;
+- incident test suite;
+- audit package.
 
-## 11. Критический путь
+### Exit Criteria
 
-1. architecture freeze
-2. accounting core
-3. operation lifecycle
-4. LayerZero V2 messaging
-5. Stargate V2 taxi-only asset transport
-6. one remote strategy in production quality
-7. hardening and audit prep
+- critical invariants are covered;
+- delayed redemption and bridge incidents are rehearsed;
+- end-to-end testnet flow passes;
+- audit package is ready.
 
-## 12. Что не включать в MVP
+## 8. Dependencies
 
-- Stargate V2 `bus` mode;
-- permissionless strategies;
-- multi-asset vault;
-- remote user deposits;
-- more than 2-3 strategy types;
-- cross-chain share token.
+### Hard Dependencies
+
+- Sprint 2 depends on Sprint 1
+- Sprint 3 depends on Sprint 2
+- Sprint 4 depends on Sprint 2 and Sprint 3
+- Sprint 5 depends on Sprint 4
+- Sprint 6 depends on Sprint 5
+- Sprint 7 depends on Sprint 6
+- Sprint 8 depends on Sprint 6 and Sprint 7
+- Sprint 9 depends on all previous phases
+
+### Parallelizable Work
+
+- backend ledger schema can start during Sprint 2;
+- redemption orchestrator design can start during Sprint 3;
+- strategy research can run in parallel with Sprint 5;
+- QA scenario design can begin before full bridge integration.
+
+## 9. Critical Path
+
+1. semantics freeze
+2. ledger / NAV
+3. redemption and buffers
+4. entry boundary
+5. routing lifecycle
+6. transfer and settlement
+7. remote execution
+8. risk limits
+9. hardening
+
+## 10. What Is Not in MVP
+
+- fully trustless real-time cross-chain valuation;
+- permissionless strategy onboarding;
+- multi-asset product;
+- cross-chain user shares;
+- more than 2-3 production strategy types;
+- full autonomy without operational controls;
+- an “always instant withdrawal” promise.
+
+## 11. Immediate Next Actions
+
+Before the next implementation iteration starts:
+
+1. approve this plan as the delivery baseline;
+2. write `ADR-004 Rebalancing Policy and Risk Limits`;
+3. make the `CrossChainVault vs EntryVault wrapper` decision;
+4. freeze backend ledger event schema;
+5. freeze redemption orchestrator responsibilities.

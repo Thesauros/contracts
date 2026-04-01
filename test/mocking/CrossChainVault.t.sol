@@ -110,7 +110,10 @@ contract CrossChainVaultTests is Test {
         CrossChainTypes.WithdrawalRequest memory request = queue
             .getWithdrawalRequest(requestId);
 
-        assertEq(request.status, CrossChainTypes.WithdrawalStatus.Pending);
+        assertEq(
+            uint8(request.status),
+            uint8(CrossChainTypes.WithdrawalStatus.Pending)
+        );
         assertEq(vault.balanceOf(alice), 0);
         assertEq(vault.balanceOf(address(vault)), request.shares);
         assertGt(assetsPreview, DEPOSIT_AMOUNT);
@@ -129,7 +132,10 @@ contract CrossChainVaultTests is Test {
         request = queue.getWithdrawalRequest(requestId);
 
         assertEq(claimedAssets, assetsPreview);
-        assertEq(request.status, CrossChainTypes.WithdrawalStatus.Claimed);
+        assertEq(
+            uint8(request.status),
+            uint8(CrossChainTypes.WithdrawalStatus.Claimed)
+        );
         assertEq(asset.balanceOf(alice), 1_000_000e6 - DEPOSIT_AMOUNT + claimedAssets);
         assertEq(vault.homeIdle(), DEPOSIT_AMOUNT + REMOTE_VALUE - claimedAssets);
     }

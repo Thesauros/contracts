@@ -1,1088 +1,637 @@
-# Cross-Chain Vault: ТЗ на реализацию
+# Cross-Chain Vault: Implementation Specification
 
-## 1. Цель
+## Note
 
-Реализовать `single-home-chain vault` для одного базового актива, в котором:
+This document predates the current hybrid architecture package.
+If it conflicts with:
 
-- единственный Vault и единственный ledger пользовательских shares существуют только в одной сети;
-- ликвидность Vault может перемещаться в другие сети;
-- позиции и стратегии могут открываться, управляться и закрываться в любой поддерживаемой сети;
-- пользовательский accounting, mint/burn shares, NAV и withdraw settlement определяются только на home chain;
-- remote-контракты не ведут пользовательский учет и не являются источником истины по shares.
+- `Hybrid Cross-Chain Vault Architecture`
+- `ADR-002 Ledger and NAV Model`
+- `ADR-003 Redemption SLA and Liquidity Buffers`
+- `Cross-Chain Vault Development Plan`
 
-## 2. Контекст и ограничения
+then the newer ADRs and the development plan take precedence.
 
-- Базовый актив на первом этапе: один stable asset на Vault.
-- Vault должен оставаться ERC4626-совместимым на home chain.
-- Cross-chain execution допускается быть асинхронным.
-- Withdraw не обязан быть мгновенным, если ликвидность находится в remote strategy.
-- Remote contracts не должны иметь права самостоятельно менять user balances или share price.
-- Любой cross-chain transport должен быть заменяемым модулем, а не вшитой бизнес-логикой Vault.
+In particular, wording about a `single-home-chain vault` should be interpreted as an early accounting anchor / implementation profile, not as the final product architecture.
 
-### 2.1 Transport stack для v1
+## 1. Goal
 
-Для первой реализации transport stack фиксируется явно:
+Implement a `single-accounting-anchor vault` for one base asset where:
 
-- `LayerZero V2` как messaging layer;
-- `Stargate V2` как settlement asset transfer layer.
+- the canonical user shares ledger exists only on the accounting side;
+- vault liquidity may move across supported chains;
+- positions and strategies may be opened, managed, and closed on remote chains;
+- user accounting, mint/burn of shares, NAV, and withdrawal settlement remain tied to the accounting side;
+- remote contracts never become the source of truth for user balances.
 
-Это обязательное решение для `v1`.
-Абстракция transport-слоя сохраняется только для того, чтобы в будущем можно было заменить transport без миграции `CrossChainVault`.
+## 2. Context and Constraints
 
-## 3. Проблемы текущей архитектуры, которые нужно устранить
+- First version supports a single settlement asset.
+- The accounting-side vault must remain ERC4626-compatible.
+- Cross-chain execution is asynchronous.
+- Withdrawals do not have to be instant if liquidity is remote.
+- Remote contracts must not mutate user balances or share price directly.
+- Cross-chain transport must remain a replaceable module rather than core vault business logic.
 
-### 3.1 Проблемы `contracts`
+### 2.1 Transport Stack for v1
 
-Текущий `Vault` в [`Vault.sol`](contracts/base/Vault.sol) хорошо решает:
+For the first implementation, the transport stack is fixed as:
+
+- `LayerZero V2` for messaging
+- `Stargate V2` for settlement asset transfer
+
+The transport abstraction is preserved so the transport implementation can be replaced later without migrating the accounting core.
+
+## 3. Problems to Solve
+
+### 3.1 Problems in the Current `contracts` Layer
+
+The current single-chain vault stack solves:
 
 - ERC4626 accounting;
 - on-chain shares;
-- fee/governance;
+- fee/governance logic;
 - single-chain rebalance.
 
-Но не решает:
+But it does not solve:
 
-- асинхронную доставку капитала между сетями;
-- учет `assets in transit`;
-- удаленный execution и delayed settlement;
-- stale NAV для remote strategies.
+- asynchronous capital movement between chains;
+- accounting of `assets in transit`;
+- remote execution and delayed settlement;
+- stale NAV for remote strategies.
 
-### 3.2 Проблемы `crosschain_index`
+### 3.2 Problems in Legacy Router-Based Designs
 
-Текущий `ThesaurosRouter` в [`crosschain_index/contracts/ThesaurosRouter.sol`](../../crosschain_index/contracts/ThesaurosRouter.sol):
+Legacy router-based designs tend to:
 
-- использует relayer-supplied TVL для расчета shares;
-- использует relayer-supplied price для withdraw;
-- смешивает user ledger, bridge orchestration и liquidity routing;
-- делает relayer критическим trust-anchor для accounting;
-- не является ERC4626 core.
+- use relayer-supplied TVL to calculate shares;
+- use relayer-supplied price for withdrawals;
+- mix user ledger, bridge orchestration, and liquidity routing;
+- make relayers a critical trust anchor for accounting;
+- break ERC4626 accounting discipline.
 
-Это запрещено переносить в целевую систему как есть.
+These assumptions must not be carried forward into the target system as-is.
 
-## 4. Целевая архитектура
+## 4. Target System Structure
 
-Система делится на два независимых слоя:
+The system is divided into two high-level planes:
 
-1. `Accounting Plane` на home chain.
-2. `Execution Plane` на remote chains.
+1. `Accounting Plane`
+2. `Execution Plane`
 
 ### 4.1 Accounting Plane
 
-Состоит из:
+Consists of:
 
-- `CrossChainVault` - ERC4626 Vault и единственный источник истины по shares;
-- `StrategyAllocator` - управление долгом Vault перед стратегиями;
-- `StrategyRegistry` - реестр стратегий, сетей, лимитов и статусов;
-- `WithdrawalQueue` - очередь асинхронных withdraw;
-- `ReportSettler` - прием и фиксация отчетов remote strategies;
-- `BridgeAdapter` - интерфейс отправки/получения капитала и сообщений.
+- `CrossChainVault` as accounting core / share source of truth
+- `StrategyAllocator`
+- `StrategyRegistry`
+- `WithdrawalQueue`
+- `ReportSettler`
+- `BridgeAdapter`
 
 ### 4.2 Execution Plane
 
-Состоит из:
+Consists of:
 
-- `RemoteStrategyAgent` - remote execution account для конкретной стратегии;
-- `StrategyAdapter` - протокол-специфичный адаптер;
-- `RemoteRiskModule` - набор локальных risk checks;
-- `RemoteEscrow` при необходимости, если bridge требует отдельного receiver.
+- `RemoteStrategyAgent`
+- `StrategyAdapter`
+- optional `RemoteEscrow`
+- optional remote risk modules
 
-### 4.3 Архитектурный принцип
+### 4.3 Architectural Principle
 
-- `CrossChainVault` знает только aggregate state стратегий.
-- `RemoteStrategyAgent` знает только локальный execution state.
-- Пользователь никогда не взаимодействует с remote-контрактами.
-- Remote execution не mint/burn shares.
-- Любое изменение user accounting происходит только в `CrossChainVault`.
+- `CrossChainVault` knows only aggregate strategy state.
+- `RemoteStrategyAgent` knows only local execution state.
+- Users never interact with remote contracts directly.
+- Remote execution never mints or burns shares.
+- Any user accounting change happens only in the accounting-side vault.
 
-## 5. Состав контрактов
+## 5. Contract Set
 
-## 5.1 `CrossChainVault`
+### 5.1 `CrossChainVault`
 
-Назначение:
+Responsibilities:
 
-- принимать deposit;
-- mint/redeem shares;
-- считать `totalAssets()`;
-- держать idle liquidity на home chain;
-- инициировать allocate/recall через allocator;
-- исполнять instant withdraw либо ставить request в очередь.
+- accept deposits;
+- mint / redeem shares;
+- calculate `totalAssets()`;
+- hold idle liquidity on the accounting side;
+- initiate allocate / recall through the allocator;
+- execute instant withdrawals or enqueue delayed requests.
 
-Обязательные свойства:
+Required properties:
 
-- наследование от ERC4626;
-- pausable actions;
+- ERC4626 inheritance;
+- pause controls;
 - fee model;
-- timelock/governance;
-- поддержка `assetsInTransit`;
-- поддержка stale-report protection.
-
-`CrossChainVault` не должен:
-
-- напрямую управлять remote-протоколами;
-- напрямую читать remote state;
-- зависеть от relayer для расчета shares.
-
-## 5.2 `StrategyRegistry`
-
-Назначение:
-
-- регистрировать стратегии;
-- хранить соответствие `strategyId -> metadata`;
-- хранить лимиты и статусы;
-- хранить bridge routing.
-
-### Структура `StrategyConfig`
-
-```solidity
-struct StrategyConfig {
-    uint32 strategyId;
-    uint32 chainId;
-    address agent;
-    address asset;
-    uint96 debtLimit;
-    uint96 maxSlippageBps;
-    uint48 maxReportDelay;
-    bool depositsEnabled;
-    bool withdrawalsEnabled;
-    bool emergencyExitOnly;
-    StrategyKind kind;
-}
-```
-
-### Структура `StrategyState`
-
-```solidity
-struct StrategyState {
-    uint256 currentDebt;
-    uint256 lastReportedValue;
-    uint256 pendingBridgeIn;
-    uint256 pendingBridgeOut;
-    uint256 freeLiquidity;
-    uint256 unrealizedLossBuffer;
-    uint64 lastReportTimestamp;
-    uint64 lastAckTimestamp;
-    StrategyHealth health;
-}
-```
-
-## 5.3 `StrategyAllocator`
-
-Назначение:
-
-- allocate funds из home vault в remote strategy;
-- recall funds обратно;
-- вести state machine операций;
-- сверять confirmations bridge / agent reports.
-
-### Обязательная логика
-
-- allocator не mint/burn shares;
-- allocator не должен менять user balances;
-- allocator должен обновлять `pendingBridgeOut`, `pendingBridgeIn`, `currentDebt`;
-- allocator обязан работать через `operationId`.
-
-### Структура операции
-
-```solidity
-struct Operation {
-    bytes32 opId;
-    uint32 strategyId;
-    OperationType opType;
-    uint256 assets;
-    uint256 minAssetsOut;
-    uint64 createdAt;
-    uint64 deadline;
-    OperationStatus status;
-}
-```
-
-`OperationType`:
-
-- `Allocate`
-- `Recall`
-- `Harvest`
-- `EmergencyExit`
-
-`OperationStatus`:
-
-- `Created`
-- `Sent`
-- `Received`
-- `Executed`
-- `Settled`
-- `Cancelled`
-- `Failed`
-
-## 5.4 `WithdrawalQueue`
-
-Назначение:
-
-- хранить withdraw requests, которые нельзя исполнить мгновенно;
-- резервировать доступную ликвидность;
-- выдавать completed requests после возврата средств на home chain.
-
-### Структура withdraw request
-
-```solidity
-struct WithdrawalRequest {
-    uint256 requestId;
-    address owner;
-    address receiver;
-    uint256 shares;
-    uint256 assetsPreview;
-    uint64 createdAt;
-    WithdrawalStatus status;
-}
-```
+- timelock / governance support;
+- support for assets in transit;
+- stale report protection.
 
-`WithdrawalStatus`:
+Must not:
+
+- directly manage remote protocols;
+- directly read remote state;
+- depend on a relayer for share calculation.
 
-- `Pending`
-- `Funded`
-- `Claimed`
-- `Cancelled`
-
-## 5.5 `ReportSettler`
-
-Назначение:
-
-- принимать отчеты от remote strategies;
-- валидировать freshness;
-- обновлять `StrategyState`;
-- участвовать в расчете `totalAssets()`.
-
-### Структура отчета
+### 5.2 `StrategyRegistry`
 
-```solidity
-struct StrategyReport {
-    uint32 strategyId;
-    uint32 chainId;
-    uint256 totalValue;
-    uint256 freeLiquidity;
-    uint256 totalDebt;
-    int256 pnl;
-    uint64 reportTimestamp;
-    bytes32 positionsHash;
-}
-```
+Responsibilities:
 
-### Требования к отчету
+- register strategies;
+- map `strategyId -> metadata`;
+- store limits and statuses;
+- store chain and routing configuration.
 
-- нельзя принимать отчет старше `maxReportDelay`;
-- нельзя принимать отчет с неверным `strategyId/chainId`;
-- должен существовать signer/attestation policy;
-- отчет должен быть идемпотентным по `(strategyId, reportTimestamp, positionsHash)`.
+Required config fields:
 
-## 5.6 `BridgeAdapter`
+- `strategyId`
+- `chainId`
+- `agent`
+- `asset`
+- `debtLimit`
+- `maxSlippageBps`
+- `maxReportDelay`
+- `depositsEnabled`
+- `withdrawalsEnabled`
+- `emergencyExitOnly`
+- `kind`
 
-Назначение:
+Required state fields:
 
-- унифицировать кросс-чейн transport;
-- отправлять asset + payload;
-- принимать acks;
-- изолировать bridge-вендора от core logic.
+- `currentDebt`
+- `lastReportedValue`
+- `pendingBridgeIn`
+- `pendingBridgeOut`
+- `freeLiquidity`
+- `unrealizedLossBuffer`
+- `lastReportTimestamp`
+- `lastAckTimestamp`
+- `health`
 
-### Интерфейс
+### 5.3 `StrategyAllocator`
 
-```solidity
-interface IBridgeAdapter {
-    function sendAssetAndMessage(
-        uint32 dstChainId,
-        address asset,
-        uint256 amount,
-        bytes calldata payload
-    ) external payable returns (bytes32 opId);
-}
-```
+Responsibilities:
 
-На первом этапе допускается один bridge provider.
-Архитектурно замена bridge не должна ломать `CrossChainVault`.
+- allocate funds from vault to remote strategy;
+- recall funds back;
+- track operation lifecycle;
+- reconcile bridge and report confirmations.
 
-## 5.7 `RemoteStrategyAgent`
+Rules:
 
-Назначение:
+- allocator never mints/burns shares;
+- allocator must not modify user balances;
+- allocator must update `pendingBridgeOut`, `pendingBridgeIn`, and debt state;
+- allocator must work through explicit `operationId`.
 
-- получать капитал из bridge;
-- исполнять команды allocator;
-- хранить локальный idle balance;
-- дергать `StrategyAdapter`;
-- формировать отчеты и acks;
-- возвращать ликвидность домой.
+### 5.4 `WithdrawalQueue`
 
-### Обязательные методы
+Responsibilities:
 
-- `receiveBridgeAsset(bytes payload)`
-- `executeAllocate(bytes command)`
-- `executeRecall(bytes command)`
-- `harvest(bytes command)`
-- `emergencyExit(bytes command)`
-- `sweepToHome(uint256 amount, bytes command)`
-- `report()`
+- store withdrawal requests that cannot be executed instantly;
+- reserve withdrawal intent and state;
+- allow funded requests to be claimed after liquidity returns home.
 
-### Требования
+Required request fields:
 
-- только authorized messenger / relayer / governance;
-- replay protection;
-- command nonce;
-- emergency pause;
-- локальные лимиты по slippage и leverage.
+- `requestId`
+- `owner`
+- `receiver`
+- `shares`
+- `assetsPreview`
+- `createdAt`
+- `status`
 
-## 5.8 `StrategyAdapter`
+### 5.5 `ReportSettler`
 
-Назначение:
+Responsibilities:
 
-- протокол-специфичная логика для Aave / Perp / GMX;
-- единый интерфейс для `RemoteStrategyAgent`.
+- accept reports from remote strategies;
+- validate freshness;
+- update strategy state;
+- feed `totalAssets()` through settled reporting.
 
-### Базовый интерфейс адаптера
+Required report fields:
 
-```solidity
-interface IStrategyAdapter {
-    function deployCapital(uint256 assets, bytes calldata params) external;
-    function freeCapital(uint256 assets, bytes calldata params) external returns (uint256);
-    function harvest(bytes calldata params) external returns (int256 pnl, uint256 assetsOut);
-    function totalValue() external view returns (uint256);
-    function freeLiquidity() external view returns (uint256);
-    function emergencyExit(bytes calldata params) external returns (uint256 assetsOut);
-}
-```
+- `strategyId`
+- `chainId`
+- `totalValue`
+- `freeLiquidity`
+- `totalDebt`
+- `pnl`
+- `reportTimestamp`
+- `positionsHash`
 
-Текущие building blocks из `crosschain_index` должны быть переработаны в эту роль.
+Report requirements:
 
-## 6. Модель учета активов
+- reject reports older than `maxReportDelay`;
+- reject reports with invalid `strategyId / chainId`;
+- use a signer / attestation policy;
+- keep report application idempotent.
 
-## 6.1 Источник истины
+### 5.6 `BridgeAdapter`
 
-Единственный источник истины по пользователям:
+Responsibilities:
 
-- `balanceOf(user)`
-- `totalSupply()`
-- `convertToAssets()`
-- `convertToShares()`
+- abstract cross-chain transport;
+- send asset and payload;
+- accept acks / settlement updates;
+- isolate the bridge vendor from accounting logic.
 
-находится только в `CrossChainVault`.
+For v1:
 
-## 6.2 Формула `totalAssets()`
+- one bridge provider is acceptable;
+- transport replacement must not require vault migration.
 
-`totalAssets()` должно включать:
+### 5.7 `RemoteStrategyAgent`
 
-- idle asset на home chain;
-- подтвержденный `lastReportedValue` всех стратегий;
-- `pendingBridgeIn`, если asset уже покинул remote strategy и подтвержден в пути;
-- `pendingBridgeOut`, если asset уже списан из idle, но еще не зачислен remote strategy;
-- минус зафиксированные fees и realized losses.
+Responsibilities:
 
-Формально:
+- receive bridged capital;
+- execute allocator commands;
+- hold local idle balance if needed;
+- call the local strategy adapter;
+- produce reports and acknowledgements;
+- return liquidity home.
 
-```text
-totalAssets =
-    homeIdle
-    + sum(strategy.lastReportedValue)
-    + sum(strategy.pendingBridgeOut)
-    + sum(strategy.pendingBridgeIn)
-    - realizedLosses
-    - accruedFees
-```
+Required properties:
 
-Примечание:
+- only authorized messenger / bridge / governance flows;
+- idempotent command handling;
+- local slippage and execution limits.
 
-- `pendingBridgeOut` и `pendingBridgeIn` должны участвовать в учете ровно один раз;
-- double counting запрещен;
-- переход состояния операции обязан сохранять инвариант сохранения капитала.
+### 5.8 `StrategyAdapter`
 
-## 6.3 Debt model
+Responsibilities:
 
-Для каждой стратегии:
+- protocol-specific execution logic for strategies such as Aave, Morpho, Compound, and later others;
+- a unified adapter interface for the remote agent.
 
-- `currentDebt` = сколько капитала Vault аллоцировал стратегии;
-- `lastReportedValue` = сколько стратегия реально стоит по последнему accepted report;
-- `PnL = lastReportedValue - currentDebt`, если смотреть в разрезе стратегии.
+Current provider implementations in the repo should be treated as references for this layer.
 
-Именно debt model должен заменить текущую relayer-driven share model из `ThesaurosRouter`.
+## 6. Asset Accounting Model
 
-## 7. Пользовательские сценарии
+### 6.1 Source of Truth
 
-## 7.1 Deposit
+The single source of truth for user balances remains:
 
-1. Пользователь вызывает `deposit(assets, receiver)` в `CrossChainVault`.
-2. Vault рассчитывает shares по последнему подтвержденному `totalAssets`.
-3. Пользователь получает shares сразу.
-4. Средства остаются в `homeIdle`.
-5. Allocator позже отправляет часть idle в remote strategies.
+- the accounting-side vault shares ledger
 
-Требование:
+Users are never accounted for in remote contracts.
 
-- deposit не должен ждать bridge;
-- deposit не должен зависеть от remote tx finality.
+### 6.2 `totalAssets()` Requirements
 
-## 7.2 Instant withdraw
+`totalAssets()` should include:
 
-1. Пользователь вызывает `withdraw` или `redeem`.
-2. Если `homeIdle >= requiredAssets`, Vault исполняет withdraw сразу.
-3. Shares burn происходят на home chain.
+- idle asset on the accounting side;
+- accepted `lastReportedValue` from strategies;
+- `pendingBridgeIn` when value is confirmed in transit home;
+- `pendingBridgeOut` when value has left idle but not yet settled at destination;
+- minus known fees and realized losses.
 
-## 7.3 Queued withdraw
+The main rule:
 
-1. Если `homeIdle < requiredAssets`, request уходит в `WithdrawalQueue`.
-2. Vault блокирует соответствующие shares.
-3. Allocator инициирует recall из одной или нескольких стратегий.
-4. После прихода средств на home chain request получает статус `Funded`.
-5. Пользователь или keeper завершает claim.
+- `pendingBridgeOut` and `pendingBridgeIn` must be counted exactly once;
+- double counting is forbidden;
+- operation state transitions must preserve conservation of capital.
 
-## 7.4 Allocate в remote strategy
+### 6.3 Debt Model
 
-1. Governance/allocator выбирает стратегию.
-2. Проверяются caps, slippage, health, report freshness.
-3. Idle asset резервируется.
-4. Создается `Operation`.
-5. Bridge отправляет asset + command.
-6. Agent подтверждает receipt.
-7. Agent deploys capital в protocol adapter.
-8. После ack/deploy operation переводится в `Settled`.
+For each strategy:
 
-## 7.5 Recall из remote strategy
+- `currentDebt` = capital allocated to the strategy
+- `lastReportedValue` = actual value according to latest accepted report
+- strategy-level `PnL = lastReportedValue - currentDebt`
 
-1. Allocator инициирует recall.
-2. Agent закрывает/уменьшает позицию или извлекает idle liquidity.
-3. Agent bridge-ит asset обратно домой.
-4. Home chain получает funds и помечает operation как `Settled`.
-5. Средства становятся `homeIdle`.
+This debt model replaces legacy relayer-driven share accounting approaches.
 
-## 7.6 Emergency exit
+## 7. User Flows
 
-1. Governance/guardian ставит стратегию в `emergencyExitOnly`.
-2. Новые allocate запрещены.
-3. Agent закрывает допустимые позиции.
-4. Все доступные средства отправляются домой.
-5. Strategy переводится в `Paused` или `Deprecated`.
+### 7.1 Deposit
 
-## 8. Требования к ролям
+1. User calls `deposit(assets, receiver)` in the accounting-side vault.
+2. Vault calculates shares from accepted `totalAssets`.
+3. User receives shares immediately.
+4. Funds remain in local idle liquidity initially.
+5. Allocator later sends part of idle liquidity into remote strategies.
 
-Нужны роли:
+Requirements:
 
-- `DEFAULT_ADMIN_ROLE`
+- deposit must not wait for bridge completion;
+- deposit must not depend on remote finality.
+
+### 7.2 Instant Withdrawal
+
+1. User calls `withdraw` or `redeem`.
+2. If local idle liquidity is enough, withdrawal executes immediately.
+3. Share burn occurs only on the accounting side.
+
+### 7.3 Queued Withdrawal
+
+1. If local idle liquidity is not enough, request enters `WithdrawalQueue`.
+2. Shares are reserved / locked according to vault logic.
+3. Allocator initiates recall from one or more strategies.
+4. Once capital returns home, request becomes `Funded`.
+5. User or keeper completes claim.
+
+### 7.4 Allocate to Remote Strategy
+
+1. Governance / allocator chooses the strategy.
+2. Caps, slippage, health, and report freshness are checked.
+3. Idle asset is reserved.
+4. `Operation` is created.
+5. Bridge sends asset plus command.
+6. Agent confirms receipt.
+7. Agent deploys capital through strategy adapter.
+8. After ack / deploy, operation becomes `Settled`.
+
+### 7.5 Recall from Remote Strategy
+
+1. Allocator initiates recall.
+2. Agent unwinds part of the position or extracts idle liquidity.
+3. Agent bridges asset back home.
+4. Home side receives funds and settles the operation.
+5. Capital becomes local idle liquidity again.
+
+### 7.6 Emergency Exit
+
+1. Governance / guardian switches strategy to `emergencyExitOnly`.
+2. New allocations are forbidden.
+3. Agent closes allowed positions.
+4. Available funds are sent home.
+5. Strategy moves to `Paused` or `Deprecated`.
+
+## 8. Roles
+
+Required roles include:
+
 - `GOVERNANCE_ROLE`
-- `GUARDIAN_ROLE`
-- `ALLOCATOR_ROLE`
-- `REPORTER_ROLE`
 - `KEEPER_ROLE`
-- `BRIDGE_ROLE` или trusted messenger role
-
-### Права ролей
-
-`GOVERNANCE_ROLE`:
-
-- добавление/удаление стратегий;
-- изменение caps;
-- смена bridge adapter;
-- upgrade;
-- изменение report policy.
-
-`GUARDIAN_ROLE`:
-
-- pause deposits;
-- pause withdraws;
-- pause strategy;
-- emergency exit.
-
-`ALLOCATOR_ROLE`:
-
-- allocate;
-- recall;
-- rebalance capital between strategies.
-
-`REPORTER_ROLE`:
-
-- submit report;
-- submit NAV update;
-- submit execution ack.
-
-`KEEPER_ROLE`:
-
-- process queue;
-- finalize funded withdrawals;
-- trigger harvest/report sync.
-
-## 9. Инварианты
-
-Ниже обязательные инварианты для реализации и тестов.
-
-### 9.1 Accounting invariants
-
-- shares существуют только на home chain;
-- remote contracts не mint/burn shares;
-- `totalAssets()` не должен double-count bridge state;
-- accepted report не может увеличить активы без валидного источника данных;
-- withdraw не может выплатить больше, чем доступно по user shares.
-
-### 9.2 Operation invariants
-
-- любой `opId` исполняется не более одного раза;
-- один bridge ack не может сеттлить более одной операции;
-- `pendingBridgeOut` и `pendingBridgeIn` сходятся к нулю после settlement;
-- операция не может перейти из final state в non-final state.
-
-### 9.3 Security invariants
-
-- stale report не влияет на NAV;
-- unauthorized caller не может запустить allocate/recall/report;
-- replay command не должен менять state;
-- emergency pause должен блокировать новые risky actions.
-
-## 10. Требования к отчетности и NAV
-
-## 10.1 Report freshness
-
-Для каждой стратегии задается:
-
-- `maxReportDelay`;
-- `maxNavDeviationBps`;
-- `maxLossPerReportBps`.
-
-Если отчет stale:
-
-- новые deposits могут быть ограничены глобально или по strategy exposure;
-- новые allocate в stale strategy запрещаются;
-- large withdraw может идти только через queue;
-- governance/guardian получают alert.
-
-## 10.2 NAV acceptance policy
-
-Отчет принимается только если:
-
-- signer авторизован;
-- `reportTimestamp` монотонно возрастает;
-- отклонение не превышает допустимый порог либо требует отдельного governance override;
-- strategy не находится в hard-paused состоянии.
-
-## 11. Требования к bridge layer
-
-- Bridge не должен быть hard-coded в `CrossChainVault`.
-- Логика bridge должна быть вынесена в adapter.
-- Каждая cross-chain команда должна содержать:
-
-```solidity
-struct BridgeCommand {
-    bytes32 opId;
-    uint32 strategyId;
-    uint32 srcChainId;
-    uint32 dstChainId;
-    CommandType commandType;
-    uint256 assets;
-    bytes params;
-}
-```
-
-- Должен быть replay protection по `(srcChainId, opId)`.
-- Должен быть failure path для неуспешной доставки.
-- Должен быть manual recovery path под governance.
-
-## 11.1 LayerZero как базовый transport v1
-
-Для данной кодовой базы базовым transport слоем первой версии нужно считать `LayerZero + Stargate`.
-
-Это связано с тем, что текущая cross-chain реализация уже использует:
-
-- `nativeChainId` / `receiverLzId`;
-- `sgBridge`;
-- Stargate-style asset bridging;
-- router-to-router / router-to-BB flows.
-
-Следовательно, в версии `v1` нужно явно закладывать:
-
-- `LayerZero` как messaging/control plane;
-- `Stargate` как asset transfer plane для settlement asset;
-- bridge abstraction поверх них, чтобы later можно было заменить transport без переписывания `CrossChainVault`.
-
-Для новой реализации это уточняется до актуальных версий:
-
-- `LayerZero V2`, а не legacy V1-style flow;
-- `Stargate V2`, а не legacy Stargate integration pattern.
-
-### 11.1.1 Что это означает технически
-
-Нужно использовать:
-
-- `LayerZero Endpoint V2`;
-- `OApp`-паттерн для messaging между home chain и remote chains;
-- `EID (uint32)` как канонический идентификатор destination/source chain;
-- explicit peer wiring и config management для pathways;
-- `Stargate V2` same-asset transfer path для settlement asset.
-
-Текущие legacy `uint16` LayerZero-style ids из старой реализации не должны использоваться в новой архитектуре как канонический chain identifier.
-
-## 11.2 Разделение ролей LayerZero и Stargate
-
-В ТЗ нужно явно развести две задачи:
-
-1. `Message transport`
-2. `Asset transport`
-
-### Message transport
-
-Используется для доставки:
-
-- `allocate` command;
-- `recall` command;
-- `harvest` command;
-- `emergencyExit` command;
-- `ack` и `report metadata`.
-
-### Asset transport
-
-Используется для доставки:
-
-- settlement asset из home chain в remote strategy;
-- settlement asset из remote strategy обратно в home vault.
-
-Требование:
-
-- управление позицией и перемещение капитала должны быть логически связаны одним `operationId`;
-- но на уровне архитектуры это два разных потока: message и funds.
-
-### 11.2.1 LayerZero V2 profile для проекта
-
-Для MVP принимается следующий профиль:
-
-- `RemoteStrategyAgent` реализуется как `OApp receiver/sender`;
-- trusted peers выставляются явно через owner/governance-controlled config;
-- unordered delivery используется по умолчанию;
-- ordered delivery включается только там, где оно необходимо для корректности operation lifecycle;
-- каждый command и ack должен быть идемпотентен по `opId`.
-
-Ordered delivery допускается только для:
-
-- pathway, где одна стратегия получает конкурентные stateful команды;
-- flows `emergencyExit` и `forcedRecall`, если они должны линейно вытеснять обычные команды.
-
-## 11.3 Рекомендуемый паттерн для v1
-
-Для первой версии рекомендуется следующий flow:
-
-### Allocate
-
-1. Home chain создает `operationId`.
-2. `BridgeAdapterLZ` отправляет settlement asset через `Stargate`.
-3. Вместе с asset transfer отправляется `LayerZero payload` или compose-message с:
-   - `operationId`
-   - `strategyId`
-   - `amount`
-   - `commandType`
-   - `adapterParams`
-4. Remote `RemoteStrategyAgent` принимает asset и command.
-5. Agent исполняет локальный strategy action.
-6. Agent отправляет `ack/report` обратно через LayerZero messaging.
-
-### Recall
-
-1. Home chain отправляет recall command через LayerZero.
-2. Remote agent сворачивает часть позиции и получает settlement asset локально.
-3. Remote agent отправляет settlement asset обратно через Stargate.
-4. Home chain получает asset и settlement confirmation.
-5. `StrategyAllocator` закрывает операцию и обновляет debt state.
-
-### 11.3.1 Payload format для LayerZero V2
-
-Все команды и acknowledgements в MVP должны использовать versioned payload:
-
-```solidity
-enum CommandType {
-    Allocate,
-    Recall,
-    Harvest,
-    EmergencyExit,
-    Ack,
-    Report
-}
-
-struct CommandPayloadV1 {
-    uint8 version;
-    bytes32 opId;
-    uint32 strategyId;
-    CommandType commandType;
-    uint256 assets;
-    uint64 commandTimestamp;
-    bytes params;
-}
-```
-
-Требования:
-
-- `version` обязателен;
-- `opId` обязателен;
-- `strategyId` обязателен;
-- `params` содержит adapter-specific execution data;
-- payload decoding ошибки не должны приводить к silent settlement.
-
-### 11.3.2 Executor options policy
-
-Для `LayerZero V2` сообщений должны использоваться enforced options.
-
-В MVP нужно явно задавать:
-
-- gas budget на `lzReceive`;
-- compose gas, если используется compose pattern;
-- refund address policy;
-- native value policy на destination только при явной необходимости.
-
-Пользовательские произвольные executor options в Vault logic запрещены.
-
-## 11.4 Почему LayerZero не должен быть зашит прямо в Vault
-
-Даже если в `v1` мы используем именно LayerZero, его нельзя зашивать в `CrossChainVault` по трем причинам:
-
-- Vault должен оставаться accounting core, а не bridge-specific контрактом;
-- замена transport слоя не должна требовать миграции пользовательских shares;
-- message/bridge ошибки не должны разрушать логику ERC4626.
-
-Поэтому правильная структура:
-
-- `CrossChainVault`
-- `StrategyAllocator`
-- `IBridgeAdapter`
-- `LayerZeroBridgeAdapter`
-
-а не:
-
-- `CrossChainVault` с прямыми вызовами LayerZero endpoint / Stargate router.
-
-## 11.5 Что нужно реализовать в `LayerZeroBridgeAdapter`
-
-`LayerZeroBridgeAdapter` должен:
-
-- маппить internal `chainId` в `lzEid`/endpoint-specific chain identifier;
-- отправлять settlement asset через Stargate;
-- отправлять command payload через LayerZero;
-- принимать inbound message только от trusted peer;
-- валидировать source chain и source contract;
-- обеспечивать replay protection;
-- эмитить events для `messageSent`, `messageReceived`, `assetBridged`, `assetReceived`;
-- поддерживать `retry / recover / force resume` operational flows, если transport их требует.
-
-Дополнительно `LayerZeroBridgeAdapter` должен:
-
-- работать с `uint32 eid`;
-- хранить `strategyId -> remote peer -> eid`;
-- отделять `message send`, `asset send`, `message receive`, `asset settlement`;
-- уметь делать transport fee quote;
-- не позволять менять pathway security config вне governance flow.
-
-### 11.5.1 `StargateV2AssetRouter`
-
-Логику asset movement лучше вынести в отдельный модуль даже при общем bridge adapter.
-
-`StargateV2AssetRouter` должен:
-
-- готовить `SendParam`/эквивалент V2 transfer params;
-- поддерживать fee quoting;
-- валидировать same-asset route;
-- использовать только approved settlement assets;
-- возвращать receipt, связанный с `opId`.
-
-### 11.5.2 Taxi-only policy для MVP
-
-В MVP разрешается только `taxi` mode.
-
-`Bus` mode запрещен в первой версии, потому что batching и delayed execution усложняют:
-
-- withdraw settlement;
-- transit accounting;
-- timeout policy;
-- incident recovery.
-
-## 11.6 Settlement asset policy для LayerZero/Stargate
-
-В первой версии через LayerZero/Stargate должен перемещаться только `settlement asset`.
-
-Не допускается:
-
-- bridge LP tokens;
-- bridge leveraged position state;
-- bridge protocol-specific receipt tokens как основной capital path;
-- bridge user shares.
-
-Допускается:
-
-- bridge `USDC` или другой утвержденный stable settlement asset;
-- локальное разворачивание позиции уже после получения asset в remote chain;
-- локальное сворачивание позиции в settlement asset перед отправкой обратно домой.
-
-## 11.7 Риски LayerZero/Stargate, которые надо учесть в реализации
-
-- message delivered, asset delayed;
-- asset delivered, message failed;
-- duplicate delivery / replay;
-- peer misconfiguration;
-- wrong destination mapping;
-- partial fill / slippage на bridge;
-- stuck funds / manual recovery case.
-
-Для каждого такого случая должны быть:
-
-- operation state;
-- timeout policy;
-- cancellation/recovery policy;
-- governance recovery path;
-- явные события для off-chain monitoring.
-
-### 11.8 Migration constraints относительно текущего `crosschain_index`
-
-Текущая реализация использует legacy assumptions:
-
-- `uint16` ids;
-- custom `sgBridge` abstraction;
-- router-centric architecture;
-- relayer-driven accounting.
-
-Для перехода на `LayerZero V2 / Stargate V2` нужно считать incompatible и подлежащими замене:
-
-- `ThesaurosRouter`;
-- transport section в `BaseAppStorage`;
-- текущий `transferDeposits / approveWithdraw` accounting flow;
-- legacy payload formats, построенные вокруг router-centric model.
-
-Допускается переиспользовать только:
-
-- protocol-specific execution code как reference;
-- deployment knowledge;
-- chain configuration tables после перевода на `EID`.
-
-## 12. Требования к remote adapters
-
-### 12.1 Aave
-
-Поддержать:
-
-- supply;
-- withdraw;
-- borrow/repay только если стратегия явно leverage-enabled;
-- reward claim;
-- health factor checks;
-- eMode config.
-
-### 12.2 Perpetual
-
-Поддержать:
-
-- deposit collateral;
-- open/adjust/close position;
-- free collateral query;
-- total value query;
-- emergency reduce-only mode;
-- liquidation threshold monitoring.
-
-### 12.3 GMX
-
-Поддержать:
-
-- buy GLP / redeem GLP;
-- reward compounding;
-- TVL query;
-- emergency unwind.
+- `REPORTER_ROLE`
+- `GUARDIAN_ROLE`
+- `VAULT_ROLE`
+- `BRIDGE_ROLE` or equivalent trusted messenger role
+
+Role rights should cover:
+
+- adding / removing strategies;
+- changing caps;
+- changing bridge adapter;
+- changing report policy;
+- emergency pause / exit behavior.
+
+## 9. Invariants
+
+Mandatory invariants for implementation and testing:
+
+- shares exist only on the accounting side;
+- remote contracts never mint / burn shares;
+- `totalAssets()` must not double-count bridge state;
+- accepted reports must not increase assets without a valid source of truth;
+- withdrawals cannot pay out more than allowed by user shares;
+- each `opId` executes at most once;
+- one bridge ack cannot settle more than one operation;
+- `pendingBridgeOut` and `pendingBridgeIn` converge to zero after settlement;
+- final state operations cannot return to non-final states;
+- stale reports cannot silently distort NAV;
+- unauthorized callers cannot trigger allocate / recall / report updates;
+- replayed commands must not mutate state;
+- emergency pause must block risky new actions.
+
+## 10. Reporting and NAV Requirements
+
+Each strategy must define:
+
+- report freshness threshold;
+- acceptable valuation source;
+- allowed variance policy;
+- stale behavior policy.
+
+If a report is stale:
+
+- new allocations into that strategy are forbidden;
+- large withdrawals may be forced into queue;
+- governance / guardian should receive an alert;
+- product behavior should follow conservative valuation assumptions.
+
+Report acceptance requirements:
+
+- signer is authorized;
+- `reportTimestamp` is monotonic;
+- deviation stays within acceptable bounds or requires explicit override;
+- strategy is not hard-paused.
+
+## 11. Bridge Layer Requirements
+
+- Bridge logic must not be hard-coded into `CrossChainVault`.
+- Bridge logic must be implemented through an adapter.
+- Each cross-chain command must include:
+  - version
+  - `opId`
+  - `strategyId`
+  - command type
+  - amount
+  - timestamp
+  - params
+- replay protection is required;
+- failure path for unsuccessful delivery is required.
+
+For v1:
+
+- LayerZero V2 handles messaging;
+- Stargate V2 handles settlement asset transfer;
+- `LayerZeroBridgeAdapter` maps internal chain identifiers to transport-specific ids;
+- only explicit trusted peers are allowed.
+
+## 12. Remote Adapter Requirements
+
+Adapters should support, where relevant:
+
+- deposit / supply;
+- withdraw / recall;
+- harvest;
+- reporting of `totalValue` and `freeLiquidity`;
+- debt-aware execution constraints;
+- emergency unwind hooks.
+
+The first-stage strategy profile should remain lending-first.
 
 ## 13. Upgradeability
 
-### 13.1 Upgradeable контракты
+Upgradeable components may include:
 
-Upgradeable должны быть:
+- remote agents;
+- strategy adapters;
+- bridge adapters;
+- some registry / control modules if needed.
 
-- `StrategyAllocator`
-- `StrategyRegistry`
-- `ReportSettler`
-- `RemoteStrategyAgent`
-- `StrategyAdapter` implementations
+`CrossChainVault` may be:
 
-`CrossChainVault` допустимо:
+- immutable core plus mutable modules;
+- or upgradeable proxy, but only if storage layout discipline and governance process are mature enough.
 
-- либо immutable core + mutable modules;
-- либо upgradeable proxy, если governance и storage discipline готовы.
+For all upgradeable contracts:
 
-Рекомендация:
+- storage gaps / disciplined layouts are required;
+- upgrade authorization must be explicit;
+- layout review is required before each upgrade.
 
-- `CrossChainVault` делать upgradeable только если storage layout и governance process полностью стандартизированы.
+## 14. Events
 
-### 13.2 Storage gap
+Minimum event set should cover:
 
-Для всех upgradeable контрактов:
+- operation creation / status changes;
+- withdrawal queued / funded / claimed;
+- strategy report accepted;
+- bridge asset sent / received;
+- command sent / received / acknowledged;
+- emergency status changes.
 
-- storage gap;
-- versioned initializer;
-- layout review до каждого upgrade.
+## 15. Trust Assumptions
 
-## 14. События
+The system must be designed so that:
 
-Минимальный набор событий:
+- bridge / operator does not control shares;
+- reporter cannot arbitrarily fabricate NAV;
+- remote agent cannot create vault obligations on its own;
+- governance can stop the system and bring capital home.
 
-```solidity
-event StrategyAdded(uint32 indexed strategyId, uint32 indexed chainId, address agent);
-event StrategyStatusChanged(uint32 indexed strategyId, StrategyHealth status);
-event AllocationRequested(bytes32 indexed opId, uint32 indexed strategyId, uint256 assets);
-event AllocationSettled(bytes32 indexed opId, uint32 indexed strategyId, uint256 assets);
-event RecallRequested(bytes32 indexed opId, uint32 indexed strategyId, uint256 assets);
-event RecallSettled(bytes32 indexed opId, uint32 indexed strategyId, uint256 assetsIn);
-event StrategyReported(uint32 indexed strategyId, uint256 totalValue, uint256 freeLiquidity, uint64 reportTimestamp);
-event WithdrawalQueued(uint256 indexed requestId, address indexed owner, uint256 shares, uint256 assetsPreview);
-event WithdrawalFunded(uint256 indexed requestId, uint256 assets);
-event WithdrawalClaimed(uint256 indexed requestId, address indexed receiver, uint256 assets);
-event EmergencyExitTriggered(uint32 indexed strategyId, bytes32 indexed opId);
-```
+Allowed in the first stage:
 
-## 15. Права доступа и trust assumptions
+- operational trust in backend orchestration;
+- explicit governance / guardian controls;
+- trusted reporting policy.
 
-Система должна быть спроектирована так, чтобы:
+Not allowed in the first stage:
 
-- bridge/operator не контролировал shares;
-- reporter не мог произвольно рисовать NAV;
-- remote agent не мог выпускать обязательства Vault;
-- governance могло остановить систему и вернуть капитал.
+- permissionless strategy listing;
+- remote user accounting;
+- uncontrolled bridge-driven state changes.
 
-На первом этапе допускается:
+## 16. Test Plan
 
-- trusted off-chain reporter/keeper set;
-- multisig governance;
-- whitelisted strategies.
+### Unit Tests
 
-На первом этапе не допускается:
+Cover:
 
-- permissionless listing стратегий;
-- permissionless report acceptance;
-- user-level direct remote interaction.
+- deposit / redeem / withdraw with idle liquidity;
+- queued withdrawal behavior;
+- report acceptance and staleness;
+- operation state transitions;
+- pending bridge accounting.
 
-## 16. Тестовый план
+### Integration Tests
 
-## 16.1 Unit tests
+Cover:
 
-Покрыть:
+- allocate to remote agent and recall back;
+- settlement lifecycle;
+- queued withdrawal during illiquid home vault state;
+- bridge failure path.
 
-- deposit/redeem/withdraw при idle liquidity;
-- queue creation;
-- allocation lifecycle;
-- recall lifecycle;
-- report acceptance/rejection;
-- stale report handling;
-- replay protection;
-- emergency exit;
-- strategy caps;
-- bridge pending state accounting.
+### Invariant Tests
 
-## 16.2 Integration tests
+Check:
 
-Покрыть:
+- assets do not disappear without explicit loss;
+- shares never change outside deposit/mint/withdraw/redeem flows;
+- final operations do not re-execute;
+- `totalAssets()` does not double-count transit balances.
 
-- allocate в remote agent и обратный recall;
-- partial liquidity recall;
-- multiple strategies with mixed idle state;
-- stale one strategy while others active;
-- queued withdraw при illiquid home vault;
-- report after loss scenario;
-- emergency exit under open perp position.
+### Fork Tests
 
-## 16.3 Invariant tests
-
-Проверить:
-
-- сумма активов не исчезает без explicit loss;
-- shares не меняются вне deposit/mint/withdraw/redeem;
-- final state operations не переисполняются;
-- `totalAssets` не double-count transit balances.
-
-## 16.4 Fork tests
-
-Нужны fork tests для:
+Needed for:
 
 - Aave;
-- Perpetual/Hyperliquid-like integration если есть EVM target;
-- GMX.
+- Morpho;
+- Compound where relevant;
+- other EVM strategies as they enter scope.
 
-## 17. Этапы реализации
+## 17. Implementation Stages
 
-### Phase 1. Accounting core
+### Stage 1. Accounting Core
 
-Сделать:
+Build:
 
-- `CrossChainVault`;
+- base `CrossChainVault`;
 - `StrategyRegistry`;
-- `StrategyAllocator`;
 - `WithdrawalQueue`;
-- базовый `ReportSettler`;
-- unit tests без реального bridge.
+- `ReportSettler`;
+- unit tests without real bridge.
 
-Критерий готовности:
+Ready when:
 
-- single-chain local mocks;
-- debt accounting работает;
-- queue работает;
-- instant/queued withdraw покрыты тестами.
+- debt accounting works;
+- queue works;
+- instant and queued withdrawal are covered by tests.
 
-### Phase 2. Bridge and remote agent
+### Stage 2. Bridge and Settlement
 
-Сделать:
+Build:
 
-- `BridgeAdapter`;
-- `RemoteStrategyAgent`;
-- command/ack state machine;
-- mock cross-chain integration tests.
+- bridge adapter;
+- remote agent baseline;
+- allocate / recall lifecycle;
+- pending transit accounting.
 
-Критерий готовности:
+Ready when:
 
-- allocate/recall закрывает полный цикл;
-- transit accounting не ломает `totalAssets`.
+- allocate / recall completes the full cycle;
+- transit accounting does not break `totalAssets()`.
 
-### Phase 3. Strategy adapters
+### Stage 3. Strategy Adapters
 
-Сделать:
+Build:
 
-- `AaveAdapter`;
-- `PerpAdapter`;
-- `GmxAdapter`;
-- risk checks per adapter.
+- first adapters;
+- unified reporting surface;
+- fork-tested execution.
 
-Критерий готовности:
+Ready when:
 
-- стратегии могут быть вызваны через единый agent interface;
-- каждая стратегия возвращает `totalValue/freeLiquidity`.
+- strategies can be called through one agent interface;
+- each strategy returns `totalValue / freeLiquidity`.
 
-### Phase 4. Security hardening
+### Stage 4. Hardening
 
-Сделать:
+Build:
 
-- access review;
-- emergency flows;
+- risk controls;
 - stale NAV policy;
-- invariant tests;
-- audit readiness checklist.
+- incident handling;
+- audit package.
 
-## 18. Non-goals для первой версии
+## 18. Non-Goals for v1
 
-В первую версию не входят:
+First version does not include:
 
-- multi-asset vault;
-- permissionless strategies;
-- cross-chain share token;
-- user deposits напрямую в remote chain с instant mint на home chain;
-- optimistic proof system для NAV;
-- fully trustless bridge verification.
+- fully trustless real-time NAV proofs;
+- cross-chain user share tokens;
+- direct remote-chain user deposits with instant mint on the accounting side;
+- permissionless strategy onboarding;
+- fully autonomous cross-chain orchestration;
+- an always-instant withdrawal promise.
 
-## 19. Артефакты реализации
+## 19. Delivery Artifacts
 
-Команда разработки должна по итогу подготовить:
+The implementation should produce:
 
-- набор контрактов accounting plane;
-- набор контрактов execution plane;
-- интерфейсы bridge/reporting;
-- deployment scripts;
-- threat model;
-- unit/integration/invariant test suite;
-- runbook на emergency exit и stale report incident.
+- accounting plane contract set;
+- execution plane contract set;
+- bridge / reporting interfaces;
+- test suite;
+- deployment and incident runbooks.
 
-## 20. Критерий приемки
+## 20. Acceptance Criteria
 
-Реализация считается соответствующей ТЗ, если:
+The implementation is compliant with the specification if:
 
-- один Vault на home chain является единственным источником истины по shares;
-- remote стратегии не ведут пользовательский accounting;
-- `totalAssets()` корректно учитывает idle, debt reports и transit;
-- queued withdraw корректно исполняется при дефиците home liquidity;
-- allocate/recall проходят через идемпотентную operation state machine;
-- stale/invalid report не может исказить NAV;
-- emergency exit позволяет свернуть удаленную экспозицию и вернуть капитал домой.
+- one accounting-side vault remains the sole source of truth for shares;
+- remote strategies do not maintain user accounting;
+- `totalAssets()` correctly accounts for idle, reported debt/value, and transit state;
+- queued withdrawal executes correctly under home-side liquidity shortage;
+- allocate / recall use an idempotent operation state machine;
+- stale / invalid report cannot distort NAV;
+- emergency exit can unwind remote exposure and bring capital home.

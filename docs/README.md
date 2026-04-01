@@ -25,7 +25,12 @@ Thesauros is a decentralized system that automatically redistributes funds betwe
 1. [Installation](development/installation.md)
 2. [System Architecture](architecture.md)
 3. [Cross-Chain Vault Spec](crosschain-vault-spec.md)
-4. [Contract Deployment](development/deployment.md)
+4. [Hybrid Cross-Chain Vault Architecture](hybrid-crosschain-vault-architecture.md)
+5. [ADR-002 Ledger and NAV Model](adr-002-ledger-and-nav-model.md)
+6. [ADR-003 Redemption SLA and Liquidity Buffers](adr-003-redemption-sla-and-liquidity-buffers.md)
+7. [Cross-Chain Vault Development Plan](crosschain-vault-sprints.md)
+8. [Sprint 1 Closeout](crosschain-vault-sprint-1-closeout.md)
+9. [Contract Deployment](development/deployment.md)
 
 ## Contract Documentation
 

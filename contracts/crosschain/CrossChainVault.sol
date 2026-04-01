@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.34;
 
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {CrossChainAccessControl} from "../access/CrossChainAccessControl.sol";
@@ -96,7 +99,7 @@ contract CrossChainVault is
     function totalAssets()
         public
         view
-        override(ERC4626, ICrossChainVault)
+        override(ERC4626, IERC4626)
         returns (uint256 assets)
     {
         assets = homeIdle;
@@ -116,7 +119,7 @@ contract CrossChainVault is
 
     function maxWithdraw(
         address owner
-    ) public view override(ERC4626) returns (uint256) {
+    ) public view override(ERC4626, IERC4626) returns (uint256) {
         if (_hasStaleStrategyReports()) {
             return 0;
         }
@@ -127,7 +130,7 @@ contract CrossChainVault is
 
     function maxRedeem(
         address owner
-    ) public view override(ERC4626) returns (uint256) {
+    ) public view override(ERC4626, IERC4626) returns (uint256) {
         if (_hasStaleStrategyReports()) {
             return 0;
         }
@@ -136,6 +139,15 @@ contract CrossChainVault is
         uint256 liquidShares = _convertToShares(homeIdle, Math.Rounding.Floor);
 
         return ownerShares < liquidShares ? ownerShares : liquidShares;
+    }
+
+    function decimals()
+        public
+        view
+        override(ERC20, ERC4626, IERC20Metadata)
+        returns (uint8)
+    {
+        return super.decimals();
     }
 
     function requestWithdrawal(

@@ -115,9 +115,7 @@ contract Timelock is Ownable2Step {
      * @dev Reverts if called by any account other than the contract itself.
      */
     modifier onlySelf() {
-        if (msg.sender != address(this)) {
-            revert Timelock__Unauthorized();
-        }
+        _onlySelf();
         _;
     }
 
@@ -171,9 +169,7 @@ contract Timelock is Ownable2Step {
             revert Timelock__InvalidTimestamp();
         }
 
-        bytes32 txId = keccak256(
-            abi.encode(target, value, signature, data, timestamp)
-        );
+        bytes32 txId = _getTxId(target, value, signature, data, timestamp);
         queued[txId] = true;
 
         emit Queued(txId, target, value, signature, data, timestamp);
@@ -195,9 +191,7 @@ contract Timelock is Ownable2Step {
         bytes memory data,
         uint256 timestamp
     ) public onlyOwner {
-        bytes32 txId = keccak256(
-            abi.encode(target, value, signature, data, timestamp)
-        );
+        bytes32 txId = _getTxId(target, value, signature, data, timestamp);
         queued[txId] = false;
 
         emit Cancelled(txId, target, value, signature, data, timestamp);
@@ -237,9 +231,7 @@ contract Timelock is Ownable2Step {
         bytes memory data,
         uint256 timestamp
     ) public payable onlyOwner returns (bytes memory) {
-        bytes32 txId = keccak256(
-            abi.encode(target, value, signature, data, timestamp)
-        );
+        bytes32 txId = _getTxId(target, value, signature, data, timestamp);
 
         if (!queued[txId]) {
             revert Timelock__NotQueued();
@@ -281,6 +273,31 @@ contract Timelock is Ownable2Step {
      */
     function setDelay(uint256 _delay) public onlySelf {
         _setDelay(_delay);
+    }
+
+    function _onlySelf() internal view {
+        if (msg.sender != address(this)) {
+            revert Timelock__Unauthorized();
+        }
+    }
+
+    function _getTxId(
+        address target,
+        uint256 value,
+        string memory signature,
+        bytes memory data,
+        uint256 timestamp
+    ) internal pure returns (bytes32 txId) {
+        bytes memory encoded = abi.encode(
+            target,
+            value,
+            signature,
+            data,
+            timestamp
+        );
+        assembly ("memory-safe") {
+            txId := keccak256(add(encoded, 0x20), mload(encoded))
+        }
     }
 
     /**

@@ -48,10 +48,10 @@ contract MorphoProvider is IProvider {
     using MarketParamsLib for MarketParams;
     using MorphoBalancesLib for IMorpho;
 
-    IMetaMorpho private immutable _metaMorpho;
+    IMetaMorpho private immutable _META_MORPHO;
 
     constructor(address metaMorpho_) {
-        _metaMorpho = IMetaMorpho(metaMorpho_);
+        _META_MORPHO = IMetaMorpho(metaMorpho_);
     }
 
     /**
@@ -61,7 +61,7 @@ contract MorphoProvider is IProvider {
         uint256 amount,
         IVault vault
     ) external override returns (bool success) {
-        _metaMorpho.deposit(amount, address(vault));
+        _META_MORPHO.deposit(amount, address(vault));
         success = true;
     }
 
@@ -72,7 +72,7 @@ contract MorphoProvider is IProvider {
         uint256 amount,
         IVault vault
     ) external override returns (bool success) {
-        _metaMorpho.withdraw(amount, address(vault), address(vault));
+        _META_MORPHO.withdraw(amount, address(vault), address(vault));
         success = true;
     }
 
@@ -80,7 +80,7 @@ contract MorphoProvider is IProvider {
      * @dev Returns the Morpho contract of Morpho Blue.
      */
     function _getMorpho() internal view returns (IMorpho) {
-        return _metaMorpho.MORPHO();
+        return _META_MORPHO.MORPHO();
     }
 
     /**
@@ -120,8 +120,8 @@ contract MorphoProvider is IProvider {
         address user,
         IVault
     ) external view override returns (uint256 balance) {
-        uint256 shares = _metaMorpho.balanceOf(user);
-        balance = _metaMorpho.convertToAssets(shares);
+        uint256 shares = _META_MORPHO.balanceOf(user);
+        balance = _META_MORPHO.convertToAssets(shares);
     }
 
     /**
@@ -133,12 +133,12 @@ contract MorphoProvider is IProvider {
         IMorpho morpho = _getMorpho();
 
         uint256 ratio;
-        uint256 queueLength = _metaMorpho.withdrawQueueLength();
+        uint256 queueLength = _META_MORPHO.withdrawQueueLength();
 
-        uint256 totalDeposits = _metaMorpho.totalAssets();
+        uint256 totalDeposits = _META_MORPHO.totalAssets();
 
         for (uint256 i; i < queueLength; i++) {
-            Id idMarket = _metaMorpho.withdrawQueue(i);
+            Id idMarket = _META_MORPHO.withdrawQueue(i);
 
             MarketParams memory marketParams = morpho.idToMarketParams(
                 idMarket
@@ -148,13 +148,13 @@ contract MorphoProvider is IProvider {
             uint256 marketRate = _getMarketRate(marketParams, market);
             uint256 assetsInMarket = morpho.expectedSupplyAssets(
                 marketParams,
-                address(_metaMorpho)
+                address(_META_MORPHO)
             );
             ratio += marketRate.wMulDown(assetsInMarket);
         }
         // Scaled by 1e9 to return ray(1e27) per IProvider specs, Morpho Blue uses base 1e18 number.
         rate =
-            ratio.mulDivDown(1e18 - _metaMorpho.fee(), totalDeposits) *
+            ratio.mulDivDown(1e18 - _META_MORPHO.fee(), totalDeposits) *
             10 ** 9;
     }
 
@@ -166,7 +166,7 @@ contract MorphoProvider is IProvider {
         address,
         address
     ) external view override returns (address source) {
-        source = address(_metaMorpho);
+        source = address(_META_MORPHO);
     }
 
     /**

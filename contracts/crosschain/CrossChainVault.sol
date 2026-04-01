@@ -37,10 +37,10 @@ contract CrossChainVault is
 
     uint256 public override homeIdle;
 
-    IStrategyRegistry public immutable override strategyRegistry;
-    IStrategyAllocator public immutable override strategyAllocator;
-    IReportSettler public immutable override reportSettler;
-    IWithdrawalQueue public immutable override withdrawalQueue;
+    IStrategyRegistry private immutable STRATEGY_REGISTRY;
+    IStrategyAllocator private immutable STRATEGY_ALLOCATOR;
+    IReportSettler private immutable REPORT_SETTLER;
+    IWithdrawalQueue private immutable WITHDRAWAL_QUEUE;
 
     event StrategyReportSettled(
         uint32 indexed strategyId,
@@ -90,10 +90,46 @@ contract CrossChainVault is
             revert CrossChainVault__ZeroAddress();
         }
 
-        strategyRegistry = strategyRegistry_;
-        strategyAllocator = strategyAllocator_;
-        reportSettler = reportSettler_;
-        withdrawalQueue = withdrawalQueue_;
+        STRATEGY_REGISTRY = strategyRegistry_;
+        STRATEGY_ALLOCATOR = strategyAllocator_;
+        REPORT_SETTLER = reportSettler_;
+        WITHDRAWAL_QUEUE = withdrawalQueue_;
+    }
+
+    function strategyRegistry()
+        public
+        view
+        override
+        returns (IStrategyRegistry)
+    {
+        return STRATEGY_REGISTRY;
+    }
+
+    function strategyAllocator()
+        public
+        view
+        override
+        returns (IStrategyAllocator)
+    {
+        return STRATEGY_ALLOCATOR;
+    }
+
+    function reportSettler()
+        public
+        view
+        override
+        returns (IReportSettler)
+    {
+        return REPORT_SETTLER;
+    }
+
+    function withdrawalQueue()
+        public
+        view
+        override
+        returns (IWithdrawalQueue)
+    {
+        return WITHDRAWAL_QUEUE;
     }
 
     function totalAssets()
@@ -104,10 +140,10 @@ contract CrossChainVault is
     {
         assets = homeIdle;
 
-        uint256 count = strategyRegistry.strategyCount();
+        uint256 count = STRATEGY_REGISTRY.strategyCount();
         for (uint256 i; i < count; ++i) {
-            uint32 strategyId = strategyRegistry.strategyIdAt(i);
-            CrossChainTypes.StrategyState memory state = strategyRegistry
+            uint32 strategyId = STRATEGY_REGISTRY.strategyIdAt(i);
+            CrossChainTypes.StrategyState memory state = STRATEGY_REGISTRY
                 .getStrategyState(strategyId);
 
             assets += state.lastReportedValue;
@@ -175,7 +211,7 @@ contract CrossChainVault is
 
         _transfer(owner, address(this), shares);
 
-        requestId = withdrawalQueue.queueWithdrawal(
+        requestId = WITHDRAWAL_QUEUE.queueWithdrawal(
             owner,
             receiver,
             shares,
@@ -194,7 +230,7 @@ contract CrossChainVault is
     function fundWithdrawal(uint256 requestId) external override {
         _requireKeeperOrGovernance();
 
-        CrossChainTypes.WithdrawalRequest memory request = withdrawalQueue
+        CrossChainTypes.WithdrawalRequest memory request = WITHDRAWAL_QUEUE
             .getWithdrawalRequest(requestId);
         if (request.status != CrossChainTypes.WithdrawalStatus.Pending) {
             revert CrossChainVault__InvalidWithdrawalStatus();
@@ -203,7 +239,7 @@ contract CrossChainVault is
             revert CrossChainVault__InsufficientHomeLiquidity();
         }
 
-        withdrawalQueue.setWithdrawalStatus(
+        WITHDRAWAL_QUEUE.setWithdrawalStatus(
             requestId,
             CrossChainTypes.WithdrawalStatus.Funded
         );
@@ -212,7 +248,7 @@ contract CrossChainVault is
     function claimWithdrawal(
         uint256 requestId
     ) external override returns (uint256 assets) {
-        CrossChainTypes.WithdrawalRequest memory request = withdrawalQueue
+        CrossChainTypes.WithdrawalRequest memory request = WITHDRAWAL_QUEUE
             .getWithdrawalRequest(requestId);
         if (request.status != CrossChainTypes.WithdrawalStatus.Funded) {
             revert CrossChainVault__InvalidWithdrawalStatus();
@@ -229,7 +265,7 @@ contract CrossChainVault is
         assets = request.assetsPreview;
         homeIdle -= assets;
 
-        withdrawalQueue.setWithdrawalStatus(
+        WITHDRAWAL_QUEUE.setWithdrawalStatus(
             requestId,
             CrossChainTypes.WithdrawalStatus.Claimed
         );
@@ -255,9 +291,9 @@ contract CrossChainVault is
     function settleStrategyReport(uint32 strategyId) external override {
         _requireKeeperOrGovernance();
 
-        CrossChainTypes.StrategyState memory state = strategyRegistry
+        CrossChainTypes.StrategyState memory state = STRATEGY_REGISTRY
             .getStrategyState(strategyId);
-        CrossChainTypes.StrategyReport memory report = reportSettler
+        CrossChainTypes.StrategyReport memory report = REPORT_SETTLER
             .getLastReport(strategyId);
 
         if (report.reportTimestamp <= state.lastReportTimestamp) {
@@ -269,7 +305,7 @@ contract CrossChainVault is
         state.currentDebt = report.totalDebt;
         state.lastReportTimestamp = report.reportTimestamp;
 
-        strategyRegistry.setStrategyState(strategyId, state);
+        STRATEGY_REGISTRY.setStrategyState(strategyId, state);
 
         emit StrategyReportSettled(
             strategyId,
@@ -320,12 +356,12 @@ contract CrossChainVault is
     }
 
     function _hasStaleStrategyReports() internal view returns (bool) {
-        uint256 count = strategyRegistry.strategyCount();
+        uint256 count = STRATEGY_REGISTRY.strategyCount();
         for (uint256 i; i < count; ++i) {
-            uint32 strategyId = strategyRegistry.strategyIdAt(i);
-            CrossChainTypes.StrategyConfig memory config = strategyRegistry
+            uint32 strategyId = STRATEGY_REGISTRY.strategyIdAt(i);
+            CrossChainTypes.StrategyConfig memory config = STRATEGY_REGISTRY
                 .getStrategyConfig(strategyId);
-            CrossChainTypes.StrategyState memory state = strategyRegistry
+            CrossChainTypes.StrategyState memory state = STRATEGY_REGISTRY
                 .getStrategyState(strategyId);
 
             if (
@@ -342,12 +378,12 @@ contract CrossChainVault is
     }
 
     function _assertNoStaleStrategyReports() internal view {
-        uint256 count = strategyRegistry.strategyCount();
+        uint256 count = STRATEGY_REGISTRY.strategyCount();
         for (uint256 i; i < count; ++i) {
-            uint32 strategyId = strategyRegistry.strategyIdAt(i);
-            CrossChainTypes.StrategyConfig memory config = strategyRegistry
+            uint32 strategyId = STRATEGY_REGISTRY.strategyIdAt(i);
+            CrossChainTypes.StrategyConfig memory config = STRATEGY_REGISTRY
                 .getStrategyConfig(strategyId);
-            CrossChainTypes.StrategyState memory state = strategyRegistry
+            CrossChainTypes.StrategyState memory state = STRATEGY_REGISTRY
                 .getStrategyState(strategyId);
 
             if (

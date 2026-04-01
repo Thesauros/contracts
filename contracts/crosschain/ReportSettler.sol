@@ -11,7 +11,7 @@ contract ReportSettler is CrossChainAccessControl, IReportSettler {
     error ReportSettler__ChainMismatch();
     error ReportSettler__ReportOutdated();
 
-    IStrategyRegistry public immutable strategyRegistry;
+    IStrategyRegistry private immutable STRATEGY_REGISTRY;
 
     mapping(uint32 strategyId => CrossChainTypes.StrategyReport) private _reports;
 
@@ -19,17 +19,21 @@ contract ReportSettler is CrossChainAccessControl, IReportSettler {
         address admin,
         IStrategyRegistry strategyRegistry_
     ) CrossChainAccessControl(admin) {
-        strategyRegistry = strategyRegistry_;
+        STRATEGY_REGISTRY = strategyRegistry_;
+    }
+
+    function strategyRegistry() public view returns (IStrategyRegistry) {
+        return STRATEGY_REGISTRY;
     }
 
     function submitReport(
         CrossChainTypes.StrategyReport calldata report
     ) external onlyRole(REPORTER_ROLE) {
-        if (!strategyRegistry.strategyExists(report.strategyId)) {
+        if (!STRATEGY_REGISTRY.strategyExists(report.strategyId)) {
             revert ReportSettler__UnknownStrategy();
         }
 
-        CrossChainTypes.StrategyConfig memory config = strategyRegistry
+        CrossChainTypes.StrategyConfig memory config = STRATEGY_REGISTRY
             .getStrategyConfig(report.strategyId);
         CrossChainTypes.StrategyReport memory previous = _reports[
             report.strategyId

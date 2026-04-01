@@ -34,8 +34,10 @@ contract CrossChainVault is
     error CrossChainVault__InvalidWithdrawalStatus();
     error CrossChainVault__InsufficientReceivedAssets();
     error CrossChainVault__UnauthorizedClaim();
+    error CrossChainVault__FundedWithdrawalAccountingMismatch();
 
     uint256 public override homeIdle;
+    uint256 public override fundedWithdrawalObligations;
 
     IStrategyRegistry private immutable STRATEGY_REGISTRY;
     IStrategyAllocator private immutable STRATEGY_ALLOCATOR;
@@ -61,6 +63,11 @@ contract CrossChainVault is
         address indexed receiver,
         uint256 assets,
         uint256 shares
+    );
+    event WithdrawalFunded(
+        uint256 indexed requestId,
+        uint256 assetsReserved,
+        uint256 fundedObligationsAfter
     );
     event RecallFundsReceived(uint256 assets, uint256 homeIdleAfter);
 
@@ -132,13 +139,18 @@ contract CrossChainVault is
         return WITHDRAWAL_QUEUE;
     }
 
-    function totalAssets()
+    function availableHomeLiquidity() public view override returns (uint256) {
+        return _availableHomeLiquidity();
+    }
+
+    function navBuckets()
         public
         view
-        override(ERC4626, IERC4626)
-        returns (uint256 assets)
+        override
+        returns (CrossChainTypes.NavBuckets memory buckets)
     {
-        assets = homeIdle;
+        buckets.homeIdle = homeIdle;
+        buckets.fundedWithdrawalObligations = fundedWithdrawalObligations;
 
         uint256 count = STRATEGY_REGISTRY.strategyCount();
         for (uint256 i; i < count; ++i) {
@@ -146,11 +158,28 @@ contract CrossChainVault is
             CrossChainTypes.StrategyState memory state = STRATEGY_REGISTRY
                 .getStrategyState(strategyId);
 
-            assets += state.lastReportedValue;
-            assets += state.pendingBridgeIn;
-            assets += state.pendingBridgeOut;
-            assets -= state.unrealizedLossBuffer;
+            buckets.settledStrategyValue += state.lastReportedValue;
+            buckets.pendingBridgeIn += state.pendingBridgeIn;
+            buckets.pendingBridgeOut += state.pendingBridgeOut;
+            buckets.unrealizedLossBuffer += state.unrealizedLossBuffer;
         }
+
+        buckets.availableHomeLiquidity = _availableHomeLiquidity();
+        buckets.totalManagedAssets =
+            buckets.homeIdle +
+            buckets.settledStrategyValue +
+            buckets.pendingBridgeIn +
+            buckets.pendingBridgeOut -
+            buckets.unrealizedLossBuffer;
+    }
+
+    function totalAssets()
+        public
+        view
+        override(ERC4626, IERC4626)
+        returns (uint256 assets)
+    {
+        assets = navBuckets().totalManagedAssets;
     }
 
     function maxWithdraw(
@@ -161,7 +190,8 @@ contract CrossChainVault is
         }
 
         uint256 ownerAssets = super.maxWithdraw(owner);
-        return ownerAssets < homeIdle ? ownerAssets : homeIdle;
+        uint256 liquidAssets = _availableHomeLiquidity();
+        return ownerAssets < liquidAssets ? ownerAssets : liquidAssets;
     }
 
     function maxRedeem(
@@ -172,7 +202,10 @@ contract CrossChainVault is
         }
 
         uint256 ownerShares = balanceOf(owner);
-        uint256 liquidShares = _convertToShares(homeIdle, Math.Rounding.Floor);
+        uint256 liquidShares = _convertToShares(
+            _availableHomeLiquidity(),
+            Math.Rounding.Floor
+        );
 
         return ownerShares < liquidShares ? ownerShares : liquidShares;
     }
@@ -201,7 +234,7 @@ contract CrossChainVault is
         _assertNoStaleStrategyReports();
 
         assetsPreview = previewRedeem(shares);
-        if (assetsPreview <= homeIdle) {
+        if (assetsPreview <= _availableHomeLiquidity()) {
             revert CrossChainVault__UseInstantWithdraw();
         }
 
@@ -235,13 +268,20 @@ contract CrossChainVault is
         if (request.status != CrossChainTypes.WithdrawalStatus.Pending) {
             revert CrossChainVault__InvalidWithdrawalStatus();
         }
-        if (request.assetsPreview > homeIdle) {
+        if (request.assetsPreview > _availableHomeLiquidity()) {
             revert CrossChainVault__InsufficientHomeLiquidity();
         }
 
+        fundedWithdrawalObligations += request.assetsPreview;
         WITHDRAWAL_QUEUE.setWithdrawalStatus(
             requestId,
             CrossChainTypes.WithdrawalStatus.Funded
+        );
+
+        emit WithdrawalFunded(
+            requestId,
+            request.assetsPreview,
+            fundedWithdrawalObligations
         );
     }
 
@@ -261,8 +301,12 @@ contract CrossChainVault is
         if (request.assetsPreview > homeIdle) {
             revert CrossChainVault__InsufficientHomeLiquidity();
         }
+        if (request.assetsPreview > fundedWithdrawalObligations) {
+            revert CrossChainVault__FundedWithdrawalAccountingMismatch();
+        }
 
         assets = request.assetsPreview;
+        fundedWithdrawalObligations -= assets;
         homeIdle -= assets;
 
         WITHDRAWAL_QUEUE.setWithdrawalStatus(
@@ -350,6 +394,9 @@ contract CrossChainVault is
         if (assets > homeIdle) {
             revert CrossChainVault__InsufficientHomeLiquidity();
         }
+        if (assets > _availableHomeLiquidity()) {
+            revert CrossChainVault__InsufficientHomeLiquidity();
+        }
 
         homeIdle -= assets;
         super._withdraw(caller, receiver, owner, assets, shares);
@@ -414,5 +461,13 @@ contract CrossChainVault is
         ) {
             revert AccessControlUnauthorizedAccount(_msgSender(), BRIDGE_ROLE);
         }
+    }
+
+    function _availableHomeLiquidity() internal view returns (uint256) {
+        if (fundedWithdrawalObligations >= homeIdle) {
+            return 0;
+        }
+
+        return homeIdle - fundedWithdrawalObligations;
     }
 }

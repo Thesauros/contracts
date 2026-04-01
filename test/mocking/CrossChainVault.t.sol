@@ -54,25 +54,25 @@ contract CrossChainVaultTests is Test {
         vault.grantRole(vault.BRIDGE_ROLE(), bridge);
 
         asset.mint(alice, 1_000_000e6);
-
-        vm.prank(alice);
-        asset.approve(address(vault), type(uint256).max);
     }
 
     function testDepositIncreasesHomeIdle() public {
-        vm.prank(alice);
-        vault.deposit(DEPOSIT_AMOUNT, alice);
+        _depositAsAlice(DEPOSIT_AMOUNT);
+
+        CrossChainTypes.NavBuckets memory buckets = vault.navBuckets();
 
         assertEq(vault.homeIdle(), DEPOSIT_AMOUNT);
         assertEq(vault.totalAssets(), DEPOSIT_AMOUNT);
         assertEq(vault.balanceOf(alice), DEPOSIT_AMOUNT);
+        assertEq(buckets.homeIdle, DEPOSIT_AMOUNT);
+        assertEq(buckets.availableHomeLiquidity, DEPOSIT_AMOUNT);
+        assertEq(buckets.totalManagedAssets, DEPOSIT_AMOUNT);
     }
 
     function testSettleStrategyReportUpdatesTotalAssets() public {
         _configureStrategy();
 
-        vm.prank(alice);
-        vault.deposit(DEPOSIT_AMOUNT, alice);
+        _depositAsAlice(DEPOSIT_AMOUNT);
 
         _submitReport(REMOTE_VALUE, REMOTE_VALUE, REMOTE_VALUE, uint64(block.timestamp));
 
@@ -89,11 +89,43 @@ contract CrossChainVaultTests is Test {
         assertEq(vault.totalAssets(), DEPOSIT_AMOUNT + REMOTE_VALUE);
     }
 
+    function testNavBucketsIncludeStrategyTransitAndLossState() public {
+        _configureStrategy();
+
+        _depositAsAlice(DEPOSIT_AMOUNT);
+
+        registry.setStrategyState(
+            STRATEGY_ID,
+            CrossChainTypes.StrategyState({
+                currentDebt: REMOTE_VALUE,
+                lastReportedValue: REMOTE_VALUE,
+                pendingBridgeIn: 10e6,
+                pendingBridgeOut: 5e6,
+                freeLiquidity: 20e6,
+                unrealizedLossBuffer: 3e6,
+                lastReportTimestamp: uint64(block.timestamp),
+                lastAckTimestamp: 0,
+                health: CrossChainTypes.StrategyHealth.Active
+            })
+        );
+
+        CrossChainTypes.NavBuckets memory buckets = vault.navBuckets();
+
+        assertEq(buckets.homeIdle, DEPOSIT_AMOUNT);
+        assertEq(buckets.settledStrategyValue, REMOTE_VALUE);
+        assertEq(buckets.pendingBridgeIn, 10e6);
+        assertEq(buckets.pendingBridgeOut, 5e6);
+        assertEq(buckets.unrealizedLossBuffer, 3e6);
+        assertEq(
+            buckets.totalManagedAssets,
+            DEPOSIT_AMOUNT + REMOTE_VALUE + 10e6 + 5e6 - 3e6
+        );
+    }
+
     function testRequestAndClaimQueuedWithdrawalAfterRecallFunds() public {
         _configureStrategy();
 
-        vm.prank(alice);
-        vault.deposit(DEPOSIT_AMOUNT, alice);
+        _depositAsAlice(DEPOSIT_AMOUNT);
 
         _submitReport(REMOTE_VALUE, REMOTE_VALUE, REMOTE_VALUE, uint64(block.timestamp));
 
@@ -140,11 +172,54 @@ contract CrossChainVaultTests is Test {
         assertEq(vault.homeIdle(), DEPOSIT_AMOUNT + REMOTE_VALUE - claimedAssets);
     }
 
+    function testFundedWithdrawalReservesLiquidity() public {
+        _configureStrategy();
+
+        _depositAsAlice(DEPOSIT_AMOUNT);
+
+        _submitReport(
+            REMOTE_VALUE,
+            REMOTE_VALUE,
+            REMOTE_VALUE,
+            uint64(block.timestamp)
+        );
+
+        vm.prank(keeper);
+        vault.settleStrategyReport(STRATEGY_ID);
+
+        vm.prank(alice);
+        (uint256 requestId, uint256 assetsPreview) = vault.requestWithdrawal(
+            vault.balanceOf(alice),
+            alice,
+            alice
+        );
+
+        asset.mint(address(vault), REMOTE_VALUE);
+
+        vm.prank(bridge);
+        vault.receiveRecallFunds(REMOTE_VALUE);
+
+        vm.prank(keeper);
+        vault.fundWithdrawal(requestId);
+
+        CrossChainTypes.NavBuckets memory buckets = vault.navBuckets();
+
+        assertEq(vault.fundedWithdrawalObligations(), assetsPreview);
+        assertEq(
+            vault.availableHomeLiquidity(),
+            DEPOSIT_AMOUNT + REMOTE_VALUE - assetsPreview
+        );
+        assertEq(buckets.fundedWithdrawalObligations, assetsPreview);
+        assertEq(
+            buckets.availableHomeLiquidity,
+            DEPOSIT_AMOUNT + REMOTE_VALUE - assetsPreview
+        );
+    }
+
     function testMaxWithdrawReturnsZeroWhenReportIsStale() public {
         _configureStrategy();
 
-        vm.prank(alice);
-        vault.deposit(DEPOSIT_AMOUNT, alice);
+        _depositAsAlice(DEPOSIT_AMOUNT);
 
         assertEq(vault.maxWithdraw(alice), 0);
         assertEq(vault.maxRedeem(alice), 0);
@@ -187,5 +262,15 @@ contract CrossChainVaultTests is Test {
                 positionsHash: keccak256("positions")
             })
         );
+    }
+
+    function _depositAsAlice(uint256 assets) internal {
+        vm.prank(alice);
+        asset.approve(address(vault), type(uint256).max);
+
+        assertEq(asset.allowance(alice, address(vault)), type(uint256).max);
+
+        vm.prank(alice);
+        vault.deposit(assets, alice);
     }
 }

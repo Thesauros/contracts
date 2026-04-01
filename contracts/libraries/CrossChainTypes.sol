@@ -111,6 +111,17 @@ library CrossChainTypes {
         bytes32 positionsHash;
     }
 
+    struct NavBuckets {
+        uint256 homeIdle;
+        uint256 settledStrategyValue;
+        uint256 pendingBridgeIn;
+        uint256 pendingBridgeOut;
+        uint256 unrealizedLossBuffer;
+        uint256 fundedWithdrawalObligations;
+        uint256 availableHomeLiquidity;
+        uint256 totalManagedAssets;
+    }
+
     struct CommandPayloadV1 {
         uint8 version;
         bytes32 opId;

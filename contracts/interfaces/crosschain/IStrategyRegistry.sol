@@ -16,6 +16,14 @@ interface IStrategyRegistry {
         uint256 currentDebt,
         uint256 lastReportedValue
     );
+    event StrategyAccountingUpdated(
+        uint32 indexed strategyId,
+        uint256 pendingBridgeIn,
+        uint256 pendingBridgeOut,
+        uint256 freeLiquidity,
+        uint256 unrealizedLossBuffer,
+        uint64 lastReportTimestamp
+    );
 
     function upsertStrategy(
         CrossChainTypes.StrategyConfig calldata config

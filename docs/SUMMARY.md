@@ -5,6 +5,7 @@
 * [Hybrid Cross-Chain Vault Architecture](hybrid-crosschain-vault-architecture.md)
 * [ADR-002 Ledger and NAV Model](adr-002-ledger-and-nav-model.md)
 * [ADR-003 Redemption SLA and Liquidity Buffers](adr-003-redemption-sla-and-liquidity-buffers.md)
+* [Cross-Chain Ledger Event Catalogue](crosschain-ledger-event-catalogue.md)
 * [Cross-Chain Vault Development Plan](crosschain-vault-sprints.md)
 * [Sprint 1 Closeout](crosschain-vault-sprint-1-closeout.md)
 * [Quick Start](quick-start.md)

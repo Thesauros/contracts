@@ -6,9 +6,11 @@ import {IReportSettler} from "./IReportSettler.sol";
 import {IStrategyAllocator} from "./IStrategyAllocator.sol";
 import {IStrategyRegistry} from "./IStrategyRegistry.sol";
 import {IWithdrawalQueue} from "./IWithdrawalQueue.sol";
+import {CrossChainTypes} from "../../libraries/CrossChainTypes.sol";
 
 interface ICrossChainVault is IERC4626 {
     function homeIdle() external view returns (uint256);
+    function fundedWithdrawalObligations() external view returns (uint256);
 
     function strategyRegistry() external view returns (IStrategyRegistry);
 
@@ -17,6 +19,13 @@ interface ICrossChainVault is IERC4626 {
     function reportSettler() external view returns (IReportSettler);
 
     function withdrawalQueue() external view returns (IWithdrawalQueue);
+
+    function availableHomeLiquidity() external view returns (uint256);
+
+    function navBuckets()
+        external
+        view
+        returns (CrossChainTypes.NavBuckets memory);
 
     function requestWithdrawal(
         uint256 shares,

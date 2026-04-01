@@ -75,6 +75,14 @@ contract StrategyRegistry is CrossChainAccessControl, IStrategyRegistry {
             state.currentDebt,
             state.lastReportedValue
         );
+        emit StrategyAccountingUpdated(
+            strategyId,
+            state.pendingBridgeIn,
+            state.pendingBridgeOut,
+            state.freeLiquidity,
+            state.unrealizedLossBuffer,
+            state.lastReportTimestamp
+        );
     }
 
     function getStrategyConfig(

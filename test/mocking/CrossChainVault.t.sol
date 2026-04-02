@@ -67,8 +67,34 @@ contract CrossChainVaultTests is Test {
         assertEq(vault.totalAssets(), DEPOSIT_AMOUNT);
         assertEq(vault.balanceOf(alice), DEPOSIT_AMOUNT);
         assertEq(buckets.homeIdle, DEPOSIT_AMOUNT);
+        assertEq(buckets.localBufferAssets, 0);
         assertEq(buckets.availableHomeLiquidity, DEPOSIT_AMOUNT);
         assertEq(buckets.totalManagedAssets, DEPOSIT_AMOUNT);
+    }
+
+    function testNavBucketsExposeLocalBufferAsSubsetOfHomeIdle() public {
+        _depositAsAlice(DEPOSIT_AMOUNT);
+
+        vault.setTargetLocalBufferAssets(25e6);
+
+        CrossChainTypes.NavBuckets memory buckets = vault.navBuckets();
+
+        assertEq(vault.targetLocalBufferAssets(), 25e6);
+        assertEq(buckets.homeIdle, DEPOSIT_AMOUNT);
+        assertEq(buckets.localBufferAssets, 25e6);
+        assertEq(buckets.totalManagedAssets, DEPOSIT_AMOUNT);
+    }
+
+    function testLocalBufferAssetsAreCappedByHomeIdle() public {
+        _depositAsAlice(10e6);
+
+        vault.setTargetLocalBufferAssets(25e6);
+
+        CrossChainTypes.NavBuckets memory buckets = vault.navBuckets();
+
+        assertEq(buckets.homeIdle, 10e6);
+        assertEq(buckets.localBufferAssets, 10e6);
+        assertEq(buckets.totalManagedAssets, 10e6);
     }
 
     function testSettleStrategyReportUpdatesTotalAssets() public {
@@ -134,12 +160,11 @@ contract CrossChainVaultTests is Test {
         vm.prank(keeper);
         vault.settleStrategyReport(STRATEGY_ID);
 
+        uint256 aliceShares = vault.balanceOf(alice);
+
         vm.prank(alice);
-        (uint256 requestId, uint256 assetsPreview) = vault.requestWithdrawal(
-            vault.balanceOf(alice),
-            alice,
-            alice
-        );
+        (uint256 requestId, uint256 assetsPreview) =
+            vault.requestWithdrawal(aliceShares, alice, alice);
 
         CrossChainTypes.WithdrawalRequest memory request = queue
             .getWithdrawalRequest(requestId);
@@ -189,12 +214,11 @@ contract CrossChainVaultTests is Test {
         vm.prank(keeper);
         vault.settleStrategyReport(STRATEGY_ID);
 
+        uint256 aliceShares = vault.balanceOf(alice);
+
         vm.prank(alice);
-        (uint256 requestId, uint256 assetsPreview) = vault.requestWithdrawal(
-            vault.balanceOf(alice),
-            alice,
-            alice
-        );
+        (uint256 requestId, uint256 assetsPreview) =
+            vault.requestWithdrawal(aliceShares, alice, alice);
 
         asset.mint(address(vault), REMOTE_VALUE);
 

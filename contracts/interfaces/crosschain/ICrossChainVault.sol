@@ -10,6 +10,7 @@ import {CrossChainTypes} from "../../libraries/CrossChainTypes.sol";
 
 interface ICrossChainVault is IERC4626 {
     function homeIdle() external view returns (uint256);
+    function targetLocalBufferAssets() external view returns (uint256);
     function fundedWithdrawalObligations() external view returns (uint256);
 
     function strategyRegistry() external view returns (IStrategyRegistry);
@@ -38,6 +39,8 @@ interface ICrossChainVault is IERC4626 {
     function claimWithdrawal(uint256 requestId) external returns (uint256 assets);
 
     function settleStrategyReport(uint32 strategyId) external;
+
+    function setTargetLocalBufferAssets(uint256 assets) external;
 
     function syncOperationAccounting(bytes32 opId) external;
 

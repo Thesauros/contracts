@@ -1,6 +1,6 @@
 # Cross-Chain Ledger Event Catalogue
 
-Current as of **2026-04-01**.
+Current as of **2026-04-02**.
 
 ## Purpose
 
@@ -10,6 +10,7 @@ It is not a full reconciliation runbook. It is the event catalogue required to r
 
 - user position changes;
 - accepted strategy state;
+- home-side local buffer tagging;
 - queued and funded withdrawal obligations;
 - operation lifecycle transitions;
 - conservative NAV bucket composition.
@@ -89,21 +90,37 @@ Interpretation:
 - this is the on-chain signal that recalled assets were recognized into `homeIdle`;
 - it must be linked to operation and bridge lifecycle records off-chain.
 
+### 6. Home Buffer Configuration
+
+Primary source:
+
+- `LocalBufferTargetUpdated` from [`contracts/crosschain/CrossChainVault.sol`](../contracts/crosschain/CrossChainVault.sol)
+
+Interpretation:
+
+- the current Sprint 2 implementation models `localBufferAssets` as a tagged subset of `homeIdle`;
+- the event changes the governance target for that tagged subset;
+- the effective buffer at any checkpoint is `min(homeIdle, targetLocalBufferAssets)`;
+- this does not create new asset mass and must not be added on top of `homeIdle` during NAV reconstruction.
+
 ## Minimum NAV Reconstruction Inputs
 
 The backend ledger should reconstruct these buckets from the on-chain surface plus internal orchestration records:
 
 1. `homeIdle`
-2. `settledStrategyValue`
-3. `pendingBridgeIn`
-4. `pendingBridgeOut`
-5. `unrealizedLossBuffer`
-6. `fundedWithdrawalObligations`
-7. `availableHomeLiquidity`
+2. `localBufferAssets`
+3. `settledStrategyValue`
+4. `pendingBridgeIn`
+5. `pendingBridgeOut`
+6. `unrealizedLossBuffer`
+7. `fundedWithdrawalObligations`
+8. `availableHomeLiquidity`
 
 ## Current On-Chain Helper Surface
 
 The vault now exposes [`navBuckets()`](../contracts/crosschain/CrossChainVault.sol) for compact on-chain bucket reads.
+
+For Sprint 2, `localBufferAssets` is reported as a home-side composition field, not an additive top-level bucket separate from `homeIdle`.
 
 This helper is intended for:
 

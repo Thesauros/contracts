@@ -1,6 +1,6 @@
 # Cross-Chain Vault: Development Plan
 
-Current as of **2026-04-01**.
+Current as of **2026-04-02**.
 
 This plan is based on the target hybrid architecture:
 
@@ -217,6 +217,10 @@ Lock product semantics and eliminate conflict between the old and new architectu
 
 ## Sprint 2. Ledger and NAV Foundation
 
+### Status
+
+`Completed on 2026-04-02`
+
 ### Goal
 
 Make the accounting model suitable for the real hybrid product.
@@ -248,6 +252,10 @@ Make the accounting model suitable for the real hybrid product.
 - `totalAssets()` does not double-count transit state;
 - stale strategy state has explicit policy;
 - backend ledger can reconstruct product NAV from approved inputs.
+
+### Closeout Record
+
+- [Sprint 2 Closeout](crosschain-vault-sprint-2-closeout.md)
 
 ## Sprint 3. Redemption and Buffer Semantics
 

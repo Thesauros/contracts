@@ -58,6 +58,7 @@ contract CrossChainVault is
     );
 
     uint256 public override homeIdle;
+    uint256 public override targetLocalBufferAssets;
     uint256 public override fundedWithdrawalObligations;
 
     IStrategyRegistry private immutable STRATEGY_REGISTRY;
@@ -91,6 +92,11 @@ contract CrossChainVault is
         uint256 indexed requestId,
         uint256 assetsReserved,
         uint256 fundedObligationsAfter
+    );
+    event LocalBufferTargetUpdated(
+        uint256 previousTarget,
+        uint256 newTarget,
+        uint256 effectiveLocalBufferAssets
     );
     event OperationAccountingSynced(
         bytes32 indexed opId,
@@ -180,6 +186,7 @@ contract CrossChainVault is
         returns (CrossChainTypes.NavBuckets memory buckets)
     {
         buckets.homeIdle = homeIdle;
+        buckets.localBufferAssets = _localBufferAssets();
         buckets.fundedWithdrawalObligations = fundedWithdrawalObligations;
 
         uint256 count = STRATEGY_REGISTRY.strategyCount();
@@ -387,6 +394,19 @@ contract CrossChainVault is
             report.freeLiquidity,
             report.totalDebt,
             report.reportTimestamp
+        );
+    }
+
+    function setTargetLocalBufferAssets(
+        uint256 assets
+    ) external override onlyRole(GOVERNANCE_ROLE) {
+        uint256 previousTarget = targetLocalBufferAssets;
+        targetLocalBufferAssets = assets;
+
+        emit LocalBufferTargetUpdated(
+            previousTarget,
+            assets,
+            _localBufferAssets()
         );
     }
 
@@ -619,6 +639,13 @@ contract CrossChainVault is
         }
 
         return homeIdle - fundedWithdrawalObligations;
+    }
+
+    function _localBufferAssets() internal view returns (uint256) {
+        return
+            homeIdle < targetLocalBufferAssets
+                ? homeIdle
+                : targetLocalBufferAssets;
     }
 
     function _statusReached(

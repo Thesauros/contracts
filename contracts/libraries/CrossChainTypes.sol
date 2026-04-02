@@ -113,6 +113,7 @@ library CrossChainTypes {
 
     struct NavBuckets {
         uint256 homeIdle;
+        uint256 localBufferAssets;
         uint256 settledStrategyValue;
         uint256 pendingBridgeIn;
         uint256 pendingBridgeOut;

@@ -9,6 +9,7 @@
 * [Cross-Chain Reconciliation Boundaries](crosschain-reconciliation-boundaries.md)
 * [Cross-Chain Vault Development Plan](crosschain-vault-sprints.md)
 * [Sprint 1 Closeout](crosschain-vault-sprint-1-closeout.md)
+* [Sprint 2 Closeout](crosschain-vault-sprint-2-closeout.md)
 * [Quick Start](quick-start.md)
 
 ## Contracts

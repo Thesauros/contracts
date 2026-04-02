@@ -1,6 +1,6 @@
 # Cross-Chain Reconciliation Boundaries
 
-Current as of **2026-04-01**.
+Current as of **2026-04-02**.
 
 ## Purpose
 
@@ -18,10 +18,11 @@ The on-chain control plane is authoritative for:
 
 1. share balances
 2. `homeIdle`
-3. `fundedWithdrawalObligations`
-4. accepted strategy state stored in `StrategyRegistry`
-5. withdrawal request ownership and status
-6. operation status stored in `StrategyAllocator`
+3. `targetLocalBufferAssets`
+4. `fundedWithdrawalObligations`
+5. accepted strategy state stored in `StrategyRegistry`
+6. withdrawal request ownership and status
+7. operation status stored in `StrategyAllocator`
 
 If these values differ from the backend ledger, the ledger must reconcile to chain state.
 
@@ -97,19 +98,21 @@ The backend ledger should continuously verify:
 
 1. `navBuckets().totalManagedAssets == totalAssets()`
 2. `availableHomeLiquidity == homeIdle - fundedWithdrawalObligations`
-3. `pendingBridgeOut` and `pendingBridgeIn` never go negative
-4. settled allocate operations do not retain `pendingBridgeOut`
-5. settled recall operations do not retain `pendingBridgeIn`
-6. funded withdrawals do not exceed available home liquidity at funding time
+3. `localBufferAssets <= homeIdle`
+4. `pendingBridgeOut` and `pendingBridgeIn` never go negative
+5. settled allocate operations do not retain `pendingBridgeOut`
+6. settled recall operations do not retain `pendingBridgeIn`
+7. funded withdrawals do not exceed available home liquidity at funding time
 
 ## Incident Conditions
 
 The system should enter reconciliation incident mode when:
 
 1. an operation is final in the allocator but its accounting sync is missing
-2. `pendingBridgeIn` or `pendingBridgeOut` cannot be cleared at settlement
-3. `currentDebt` would become negative during recall accounting
-4. funded withdrawal obligations exceed home-side asset reality
+2. `localBufferAssets` exceeds `homeIdle`
+3. `pendingBridgeIn` or `pendingBridgeOut` cannot be cleared at settlement
+4. `currentDebt` would become negative during recall accounting
+5. funded withdrawal obligations exceed home-side asset reality
 
 ## Sprint 2 Scope Limit
 

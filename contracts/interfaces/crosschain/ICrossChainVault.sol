@@ -39,5 +39,7 @@ interface ICrossChainVault is IERC4626 {
 
     function settleStrategyReport(uint32 strategyId) external;
 
+    function syncOperationAccounting(bytes32 opId) external;
+
     function receiveRecallFunds(uint256 assets) external;
 }

@@ -48,6 +48,8 @@ contract CrossChainVaultTests is Test {
         );
 
         registry.grantRole(registry.VAULT_ROLE(), address(vault));
+        allocator.grantRole(allocator.ALLOCATOR_ROLE(), address(this));
+        allocator.grantRole(allocator.KEEPER_ROLE(), keeper);
         queue.grantRole(queue.VAULT_ROLE(), address(vault));
         settler.grantRole(settler.REPORTER_ROLE(), reporter);
         vault.grantRole(vault.KEEPER_ROLE(), keeper);
@@ -214,6 +216,132 @@ contract CrossChainVaultTests is Test {
             buckets.availableHomeLiquidity,
             DEPOSIT_AMOUNT + REMOTE_VALUE - assetsPreview
         );
+    }
+
+    function testSyncOperationAccountingForAllocateLifecycle() public {
+        _configureStrategy();
+
+        _depositAsAlice(DEPOSIT_AMOUNT);
+
+        bytes32 opId = allocator.createOperation(
+            STRATEGY_ID,
+            CrossChainTypes.OperationType.Allocate,
+            40e6,
+            39e6,
+            uint64(block.timestamp + 1 days)
+        );
+
+        vm.prank(keeper);
+        allocator.setOperationStatus(
+            opId,
+            CrossChainTypes.OperationStatus.Sent
+        );
+
+        vm.prank(keeper);
+        vault.syncOperationAccounting(opId);
+
+        CrossChainTypes.StrategyState memory state = registry.getStrategyState(
+            STRATEGY_ID
+        );
+
+        assertEq(vault.homeIdle(), DEPOSIT_AMOUNT - 40e6);
+        assertEq(state.pendingBridgeOut, 40e6);
+        assertEq(state.currentDebt, 0);
+
+        vm.prank(keeper);
+        allocator.setOperationStatus(
+            opId,
+            CrossChainTypes.OperationStatus.Received
+        );
+        vm.prank(keeper);
+        allocator.setOperationStatus(
+            opId,
+            CrossChainTypes.OperationStatus.Executed
+        );
+        vm.prank(keeper);
+        allocator.setOperationStatus(
+            opId,
+            CrossChainTypes.OperationStatus.Settled
+        );
+
+        vm.prank(keeper);
+        vault.syncOperationAccounting(opId);
+
+        state = registry.getStrategyState(STRATEGY_ID);
+
+        assertEq(vault.homeIdle(), DEPOSIT_AMOUNT - 40e6);
+        assertEq(state.pendingBridgeOut, 0);
+        assertEq(state.currentDebt, 40e6);
+    }
+
+    function testSyncOperationAccountingForRecallLifecycle() public {
+        _configureStrategy();
+
+        _depositAsAlice(DEPOSIT_AMOUNT);
+
+        _submitReport(
+            REMOTE_VALUE,
+            REMOTE_VALUE,
+            REMOTE_VALUE,
+            uint64(block.timestamp)
+        );
+
+        vm.prank(keeper);
+        vault.settleStrategyReport(STRATEGY_ID);
+
+        bytes32 opId = allocator.createOperation(
+            STRATEGY_ID,
+            CrossChainTypes.OperationType.Recall,
+            20e6,
+            19e6,
+            uint64(block.timestamp + 1 days)
+        );
+
+        vm.prank(keeper);
+        allocator.setOperationStatus(
+            opId,
+            CrossChainTypes.OperationStatus.Sent
+        );
+        vm.prank(keeper);
+        allocator.setOperationStatus(
+            opId,
+            CrossChainTypes.OperationStatus.Received
+        );
+        vm.prank(keeper);
+        allocator.setOperationStatus(
+            opId,
+            CrossChainTypes.OperationStatus.Executed
+        );
+
+        vm.prank(keeper);
+        vault.syncOperationAccounting(opId);
+
+        CrossChainTypes.StrategyState memory state = registry.getStrategyState(
+            STRATEGY_ID
+        );
+
+        assertEq(state.currentDebt, REMOTE_VALUE - 20e6);
+        assertEq(state.pendingBridgeIn, 20e6);
+
+        asset.mint(address(vault), 20e6);
+
+        vm.prank(bridge);
+        vault.receiveRecallFunds(20e6);
+
+        vm.prank(keeper);
+        allocator.setOperationStatus(
+            opId,
+            CrossChainTypes.OperationStatus.Settled
+        );
+
+        vm.prank(keeper);
+        vault.syncOperationAccounting(opId);
+
+        state = registry.getStrategyState(STRATEGY_ID);
+
+        assertEq(vault.homeIdle(), DEPOSIT_AMOUNT + 20e6);
+        assertEq(state.pendingBridgeIn, 0);
+        assertEq(state.currentDebt, REMOTE_VALUE - 20e6);
     }
 
     function testMaxWithdrawReturnsZeroWhenReportIsStale() public {

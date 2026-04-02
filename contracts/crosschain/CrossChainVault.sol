@@ -35,6 +35,27 @@ contract CrossChainVault is
     error CrossChainVault__InsufficientReceivedAssets();
     error CrossChainVault__UnauthorizedClaim();
     error CrossChainVault__FundedWithdrawalAccountingMismatch();
+    error CrossChainVault__OperationAccountingAlreadySynced(bytes32 opId);
+    error CrossChainVault__UnsupportedOperationType();
+    error CrossChainVault__UnsupportedOperationStatus(
+        bytes32 opId,
+        CrossChainTypes.OperationStatus status
+    );
+    error CrossChainVault__InsufficientStrategyDebt(
+        uint32 strategyId,
+        uint256 currentDebt,
+        uint256 requiredDebt
+    );
+    error CrossChainVault__InsufficientPendingBridgeOut(
+        uint32 strategyId,
+        uint256 pendingBridgeOut,
+        uint256 requiredPendingBridgeOut
+    );
+    error CrossChainVault__InsufficientPendingBridgeIn(
+        uint32 strategyId,
+        uint256 pendingBridgeIn,
+        uint256 requiredPendingBridgeIn
+    );
 
     uint256 public override homeIdle;
     uint256 public override fundedWithdrawalObligations;
@@ -43,6 +64,8 @@ contract CrossChainVault is
     IStrategyAllocator private immutable STRATEGY_ALLOCATOR;
     IReportSettler private immutable REPORT_SETTLER;
     IWithdrawalQueue private immutable WITHDRAWAL_QUEUE;
+    mapping(bytes32 opId => CrossChainTypes.OperationStatus)
+        private _accountedOperationStatuses;
 
     event StrategyReportSettled(
         uint32 indexed strategyId,
@@ -68,6 +91,13 @@ contract CrossChainVault is
         uint256 indexed requestId,
         uint256 assetsReserved,
         uint256 fundedObligationsAfter
+    );
+    event OperationAccountingSynced(
+        bytes32 indexed opId,
+        uint32 indexed strategyId,
+        CrossChainTypes.OperationType opType,
+        CrossChainTypes.OperationStatus previousStatus,
+        CrossChainTypes.OperationStatus currentStatus
     );
     event RecallFundsReceived(uint256 assets, uint256 homeIdleAfter);
 
@@ -360,6 +390,41 @@ contract CrossChainVault is
         );
     }
 
+    function syncOperationAccounting(bytes32 opId) external override {
+        _requireKeeperOrGovernance();
+
+        CrossChainTypes.Operation memory operation = STRATEGY_ALLOCATOR
+            .getOperation(opId);
+        CrossChainTypes.OperationStatus previousStatus = _accountedOperationStatuses[
+            opId
+        ];
+        if (previousStatus == operation.status) {
+            revert CrossChainVault__OperationAccountingAlreadySynced(opId);
+        }
+
+        CrossChainTypes.StrategyState memory state = STRATEGY_REGISTRY
+            .getStrategyState(operation.strategyId);
+
+        if (operation.opType == CrossChainTypes.OperationType.Allocate) {
+            _syncAllocateAccounting(operation, previousStatus, state);
+        } else if (operation.opType == CrossChainTypes.OperationType.Recall) {
+            _syncRecallAccounting(operation, previousStatus, state);
+        } else {
+            revert CrossChainVault__UnsupportedOperationType();
+        }
+
+        STRATEGY_REGISTRY.setStrategyState(operation.strategyId, state);
+        _accountedOperationStatuses[opId] = operation.status;
+
+        emit OperationAccountingSynced(
+            opId,
+            operation.strategyId,
+            operation.opType,
+            previousStatus,
+            operation.status
+        );
+    }
+
     function receiveRecallFunds(uint256 assets) external override {
         _requireBridgeKeeperOrGovernance();
 
@@ -463,11 +528,117 @@ contract CrossChainVault is
         }
     }
 
+    function _syncAllocateAccounting(
+        CrossChainTypes.Operation memory operation,
+        CrossChainTypes.OperationStatus previousStatus,
+        CrossChainTypes.StrategyState memory state
+    ) internal {
+        if (
+            _statusReached(previousStatus, operation.status, CrossChainTypes.OperationStatus.Sent)
+        ) {
+            if (operation.assets > _availableHomeLiquidity()) {
+                revert CrossChainVault__InsufficientHomeLiquidity();
+            }
+
+            homeIdle -= operation.assets;
+            state.pendingBridgeOut += operation.assets;
+        }
+
+        if (
+            _statusReached(previousStatus, operation.status, CrossChainTypes.OperationStatus.Settled)
+        ) {
+            if (state.pendingBridgeOut < operation.assets) {
+                revert CrossChainVault__InsufficientPendingBridgeOut(
+                    operation.strategyId,
+                    state.pendingBridgeOut,
+                    operation.assets
+                );
+            }
+
+            state.pendingBridgeOut -= operation.assets;
+            state.currentDebt += operation.assets;
+        }
+
+        if (
+            !_isSupportedAccountingStatus(operation.status)
+        ) {
+            revert CrossChainVault__UnsupportedOperationStatus(
+                operation.opId,
+                operation.status
+            );
+        }
+    }
+
+    function _syncRecallAccounting(
+        CrossChainTypes.Operation memory operation,
+        CrossChainTypes.OperationStatus previousStatus,
+        CrossChainTypes.StrategyState memory state
+    ) internal pure {
+        if (
+            _statusReached(previousStatus, operation.status, CrossChainTypes.OperationStatus.Executed)
+        ) {
+            if (state.currentDebt < operation.assets) {
+                revert CrossChainVault__InsufficientStrategyDebt(
+                    operation.strategyId,
+                    state.currentDebt,
+                    operation.assets
+                );
+            }
+
+            state.currentDebt -= operation.assets;
+            state.pendingBridgeIn += operation.assets;
+        }
+
+        if (
+            _statusReached(previousStatus, operation.status, CrossChainTypes.OperationStatus.Settled)
+        ) {
+            if (state.pendingBridgeIn < operation.assets) {
+                revert CrossChainVault__InsufficientPendingBridgeIn(
+                    operation.strategyId,
+                    state.pendingBridgeIn,
+                    operation.assets
+                );
+            }
+
+            state.pendingBridgeIn -= operation.assets;
+        }
+
+        if (
+            !_isSupportedAccountingStatus(operation.status)
+        ) {
+            revert CrossChainVault__UnsupportedOperationStatus(
+                operation.opId,
+                operation.status
+            );
+        }
+    }
+
     function _availableHomeLiquidity() internal view returns (uint256) {
         if (fundedWithdrawalObligations >= homeIdle) {
             return 0;
         }
 
         return homeIdle - fundedWithdrawalObligations;
+    }
+
+    function _statusReached(
+        CrossChainTypes.OperationStatus previousStatus,
+        CrossChainTypes.OperationStatus currentStatus,
+        CrossChainTypes.OperationStatus checkpoint
+    ) internal pure returns (bool) {
+        return
+            uint8(previousStatus) < uint8(checkpoint) &&
+            uint8(currentStatus) >= uint8(checkpoint);
+    }
+
+    function _isSupportedAccountingStatus(
+        CrossChainTypes.OperationStatus status
+    ) internal pure returns (bool) {
+        return
+            status == CrossChainTypes.OperationStatus.Created ||
+            status == CrossChainTypes.OperationStatus.Sent ||
+            status == CrossChainTypes.OperationStatus.Received ||
+            status == CrossChainTypes.OperationStatus.Executed ||
+            status == CrossChainTypes.OperationStatus.Settled;
     }
 }

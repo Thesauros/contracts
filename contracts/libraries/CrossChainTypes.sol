@@ -39,9 +39,15 @@ library CrossChainTypes {
     enum WithdrawalStatus {
         Undefined,
         Pending,
+        Processing,
         Funded,
         Claimed,
         Cancelled
+    }
+
+    enum RedemptionMode {
+        Normal,
+        Degraded
     }
 
     enum CommandType {
@@ -97,6 +103,9 @@ library CrossChainTypes {
         uint256 shares;
         uint256 assetsPreview;
         uint64 createdAt;
+        uint64 updatedAt;
+        uint64 fundedAt;
+        uint64 claimedAt;
         WithdrawalStatus status;
     }
 

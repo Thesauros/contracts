@@ -72,6 +72,15 @@ contract CrossChainVaultTests is Test {
         assertEq(buckets.totalManagedAssets, DEPOSIT_AMOUNT);
     }
 
+    function testInstantWithdrawalCapacityHonorsMinimumResidualLiquidity() public {
+        _depositAsAlice(DEPOSIT_AMOUNT);
+
+        vault.setMinimumResidualLiquidity(20e6);
+
+        assertEq(vault.instantWithdrawalCapacity(), 80e6);
+        assertEq(vault.maxWithdraw(alice), 80e6);
+    }
+
     function testNavBucketsExposeLocalBufferAsSubsetOfHomeIdle() public {
         _depositAsAlice(DEPOSIT_AMOUNT);
 
@@ -183,6 +192,9 @@ contract CrossChainVaultTests is Test {
         vault.receiveRecallFunds(REMOTE_VALUE);
 
         vm.prank(keeper);
+        vault.startWithdrawalFunding(requestId);
+
+        vm.prank(keeper);
         vault.fundWithdrawal(requestId);
 
         vm.prank(alice);
@@ -195,6 +207,9 @@ contract CrossChainVaultTests is Test {
             uint8(request.status),
             uint8(CrossChainTypes.WithdrawalStatus.Claimed)
         );
+        assertGt(request.updatedAt, 0);
+        assertGt(request.fundedAt, 0);
+        assertGt(request.claimedAt, 0);
         assertEq(asset.balanceOf(alice), 1_000_000e6 - DEPOSIT_AMOUNT + claimedAssets);
         assertEq(vault.homeIdle(), DEPOSIT_AMOUNT + REMOTE_VALUE - claimedAssets);
     }
@@ -226,6 +241,9 @@ contract CrossChainVaultTests is Test {
         vault.receiveRecallFunds(REMOTE_VALUE);
 
         vm.prank(keeper);
+        vault.startWithdrawalFunding(requestId);
+
+        vm.prank(keeper);
         vault.fundWithdrawal(requestId);
 
         CrossChainTypes.NavBuckets memory buckets = vault.navBuckets();
@@ -240,6 +258,142 @@ contract CrossChainVaultTests is Test {
             buckets.availableHomeLiquidity,
             DEPOSIT_AMOUNT + REMOTE_VALUE - assetsPreview
         );
+    }
+
+    function testRequestWithdrawalUsesDelayedModeWhenResidualBufferWouldBeViolated()
+        public
+    {
+        _depositAsAlice(DEPOSIT_AMOUNT);
+        vault.setMinimumResidualLiquidity(20e6);
+
+        uint256 aliceShares = vault.balanceOf(alice);
+
+        vm.prank(alice);
+        (uint256 requestId, uint256 assetsPreview) =
+            vault.requestWithdrawal(aliceShares, alice, alice);
+
+        CrossChainTypes.WithdrawalRequest memory request = queue
+            .getWithdrawalRequest(requestId);
+
+        assertEq(assetsPreview, DEPOSIT_AMOUNT);
+        assertEq(
+            uint8(request.status),
+            uint8(CrossChainTypes.WithdrawalStatus.Pending)
+        );
+        assertEq(vault.instantWithdrawalCapacity(), 80e6);
+    }
+
+    function testStartWithdrawalFundingMarksRequestProcessing() public {
+        _depositAsAlice(DEPOSIT_AMOUNT);
+        vault.setMinimumResidualLiquidity(20e6);
+
+        uint256 aliceShares = vault.balanceOf(alice);
+
+        vm.prank(alice);
+        (uint256 requestId,) = vault.requestWithdrawal(aliceShares, alice, alice);
+
+        vm.prank(keeper);
+        vault.startWithdrawalFunding(requestId);
+
+        CrossChainTypes.WithdrawalRequest memory request = queue
+            .getWithdrawalRequest(requestId);
+
+        assertEq(
+            uint8(request.status),
+            uint8(CrossChainTypes.WithdrawalStatus.Processing)
+        );
+        assertEq(request.fundedAt, 0);
+        assertEq(request.claimedAt, 0);
+        assertEq(vault.currentRedemptionSla(), 15 minutes);
+    }
+
+    function testFundWithdrawalRespectsMinimumResidualLiquidity() public {
+        _depositAsAlice(DEPOSIT_AMOUNT);
+        vault.setMinimumResidualLiquidity(20e6);
+
+        uint256 aliceShares = vault.balanceOf(alice);
+
+        vm.prank(alice);
+        (uint256 requestId,) = vault.requestWithdrawal(aliceShares, alice, alice);
+
+        vm.prank(keeper);
+        vault.startWithdrawalFunding(requestId);
+
+        asset.mint(address(vault), 40e6);
+
+        vm.prank(bridge);
+        vault.receiveRecallFunds(40e6);
+
+        vm.prank(keeper);
+        vault.fundWithdrawal(requestId);
+
+        CrossChainTypes.WithdrawalRequest memory request = queue
+            .getWithdrawalRequest(requestId);
+
+        assertEq(
+            uint8(request.status),
+            uint8(CrossChainTypes.WithdrawalStatus.Funded)
+        );
+        assertGt(request.fundedAt, 0);
+        assertEq(vault.availableHomeLiquidity(), 40e6);
+        assertEq(vault.instantWithdrawalCapacity(), 20e6);
+    }
+
+    function testCancelWithdrawalReturnsSharesToOwner() public {
+        _depositAsAlice(DEPOSIT_AMOUNT);
+        vault.setMinimumResidualLiquidity(20e6);
+
+        uint256 aliceShares = vault.balanceOf(alice);
+
+        vm.prank(alice);
+        (uint256 requestId,) = vault.requestWithdrawal(aliceShares, alice, alice);
+
+        assertEq(vault.balanceOf(alice), 0);
+        assertEq(vault.balanceOf(address(vault)), aliceShares);
+
+        vm.prank(alice);
+        vault.cancelWithdrawal(requestId);
+
+        CrossChainTypes.WithdrawalRequest memory request = queue
+            .getWithdrawalRequest(requestId);
+
+        assertEq(
+            uint8(request.status),
+            uint8(CrossChainTypes.WithdrawalStatus.Cancelled)
+        );
+        assertEq(vault.balanceOf(alice), aliceShares);
+        assertEq(vault.balanceOf(address(vault)), 0);
+    }
+
+    function testDegradedModeUsesConfiguredSla() public {
+        vault.setRedemptionSla(15 minutes, 2 hours);
+        vault.setDegradedRedemptionMode(true);
+
+        assertEq(
+            uint8(vault.currentRedemptionMode()),
+            uint8(CrossChainTypes.RedemptionMode.Degraded)
+        );
+        assertEq(vault.currentRedemptionSla(), 2 hours);
+    }
+
+    function testDelayedFundingPauseBlocksFundingHooks() public {
+        _depositAsAlice(DEPOSIT_AMOUNT);
+        vault.setMinimumResidualLiquidity(20e6);
+
+        uint256 aliceShares = vault.balanceOf(alice);
+
+        vm.prank(alice);
+        (uint256 requestId,) = vault.requestWithdrawal(aliceShares, alice, alice);
+
+        vault.setDelayedFundingPaused(true);
+
+        vm.prank(keeper);
+        vm.expectRevert(CrossChainVault.CrossChainVault__DelayedFundingPaused.selector);
+        vault.startWithdrawalFunding(requestId);
+
+        vm.prank(keeper);
+        vm.expectRevert(CrossChainVault.CrossChainVault__DelayedFundingPaused.selector);
+        vault.fundWithdrawal(requestId);
     }
 
     function testSyncOperationAccountingForAllocateLifecycle() public {

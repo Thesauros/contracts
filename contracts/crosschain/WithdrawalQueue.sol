@@ -7,6 +7,10 @@ import {CrossChainTypes} from "../libraries/CrossChainTypes.sol";
 
 contract WithdrawalQueue is CrossChainAccessControl, IWithdrawalQueue {
     error WithdrawalQueue__UnknownRequest();
+    error WithdrawalQueue__InvalidStatusTransition(
+        CrossChainTypes.WithdrawalStatus currentStatus,
+        CrossChainTypes.WithdrawalStatus nextStatus
+    );
 
     uint256 public nextRequestId = 1;
 
@@ -36,6 +40,9 @@ contract WithdrawalQueue is CrossChainAccessControl, IWithdrawalQueue {
             shares: shares,
             assetsPreview: assetsPreview,
             createdAt: uint64(block.timestamp),
+            updatedAt: uint64(block.timestamp),
+            fundedAt: 0,
+            claimedAt: 0,
             status: CrossChainTypes.WithdrawalStatus.Pending
         });
 
@@ -63,8 +70,30 @@ contract WithdrawalQueue is CrossChainAccessControl, IWithdrawalQueue {
             revert WithdrawalQueue__UnknownRequest();
         }
 
-        _requests[requestId].status = status;
+        CrossChainTypes.WithdrawalRequest storage request = _requests[requestId];
+        if (!_isValidStatusTransition(request.status, status)) {
+            revert WithdrawalQueue__InvalidStatusTransition(
+                request.status,
+                status
+            );
+        }
+
+        request.status = status;
+        request.updatedAt = uint64(block.timestamp);
+
+        if (status == CrossChainTypes.WithdrawalStatus.Funded) {
+            request.fundedAt = uint64(block.timestamp);
+        } else if (status == CrossChainTypes.WithdrawalStatus.Claimed) {
+            request.claimedAt = uint64(block.timestamp);
+        }
+
         emit WithdrawalStatusUpdated(requestId, status);
+        emit WithdrawalTimestampsUpdated(
+            requestId,
+            request.updatedAt,
+            request.fundedAt,
+            request.claimedAt
+        );
     }
 
     function getWithdrawalRequest(
@@ -74,5 +103,33 @@ contract WithdrawalQueue is CrossChainAccessControl, IWithdrawalQueue {
             revert WithdrawalQueue__UnknownRequest();
         }
         return _requests[requestId];
+    }
+
+    function _isValidStatusTransition(
+        CrossChainTypes.WithdrawalStatus currentStatus,
+        CrossChainTypes.WithdrawalStatus nextStatus
+    ) internal pure returns (bool) {
+        if (currentStatus == nextStatus) {
+            return false;
+        }
+
+        if (currentStatus == CrossChainTypes.WithdrawalStatus.Pending) {
+            return
+                nextStatus == CrossChainTypes.WithdrawalStatus.Processing ||
+                nextStatus == CrossChainTypes.WithdrawalStatus.Funded ||
+                nextStatus == CrossChainTypes.WithdrawalStatus.Cancelled;
+        }
+
+        if (currentStatus == CrossChainTypes.WithdrawalStatus.Processing) {
+            return
+                nextStatus == CrossChainTypes.WithdrawalStatus.Funded ||
+                nextStatus == CrossChainTypes.WithdrawalStatus.Cancelled;
+        }
+
+        if (currentStatus == CrossChainTypes.WithdrawalStatus.Funded) {
+            return nextStatus == CrossChainTypes.WithdrawalStatus.Claimed;
+        }
+
+        return false;
     }
 }

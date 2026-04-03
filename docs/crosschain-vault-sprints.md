@@ -259,6 +259,10 @@ Make the accounting model suitable for the real hybrid product.
 
 ## Sprint 3. Redemption and Buffer Semantics
 
+### Status
+
+`Completed on 2026-04-02`
+
 ### Goal
 
 Make withdrawal behavior a first-class product component.
@@ -285,6 +289,10 @@ Make withdrawal behavior a first-class product component.
 - queue covers required statuses;
 - target SLA is defined for normal and degraded mode;
 - MVP buffer policy is approved.
+
+### Closeout Record
+
+- [Sprint 3 Closeout](crosschain-vault-sprint-3-closeout.md)
 
 ## Sprint 4. Entry Layer Refactor
 

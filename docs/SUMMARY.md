@@ -10,6 +10,10 @@
 * [Cross-Chain Vault Development Plan](crosschain-vault-sprints.md)
 * [Sprint 1 Closeout](crosschain-vault-sprint-1-closeout.md)
 * [Sprint 2 Closeout](crosschain-vault-sprint-2-closeout.md)
+* [Redemption Flow Spec](redemption-flow-spec.md)
+* [Buffer Policy v1](buffer-policy-v1.md)
+* [Queue Lifecycle Matrix](queue-lifecycle-matrix.md)
+* [Sprint 3 Closeout](crosschain-vault-sprint-3-closeout.md)
 * [Quick Start](quick-start.md)
 
 ## Contracts

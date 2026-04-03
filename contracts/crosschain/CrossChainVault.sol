@@ -56,10 +56,18 @@ contract CrossChainVault is
         uint256 pendingBridgeIn,
         uint256 requiredPendingBridgeIn
     );
+    error CrossChainVault__DelayedFundingPaused();
+    error CrossChainVault__InsufficientInstantLiquidity();
+    error CrossChainVault__UnauthorizedCancellation();
 
     uint256 public override homeIdle;
     uint256 public override targetLocalBufferAssets;
+    uint256 public override minimumResidualLiquidity;
     uint256 public override fundedWithdrawalObligations;
+    uint64 public override normalRedemptionSla = 15 minutes;
+    uint64 public override degradedRedemptionSla = 60 minutes;
+    bool public override delayedFundingPaused;
+    bool private _manualDegradedRedemptionMode;
 
     IStrategyRegistry private immutable STRATEGY_REGISTRY;
     IStrategyAllocator private immutable STRATEGY_ALLOCATOR;
@@ -97,6 +105,29 @@ contract CrossChainVault is
         uint256 previousTarget,
         uint256 newTarget,
         uint256 effectiveLocalBufferAssets
+    );
+    event MinimumResidualLiquidityUpdated(
+        uint256 previousMinimum,
+        uint256 newMinimum
+    );
+    event RedemptionSlaUpdated(
+        uint64 previousNormalSla,
+        uint64 previousDegradedSla,
+        uint64 newNormalSla,
+        uint64 newDegradedSla
+    );
+    event DegradedRedemptionModeUpdated(bool enabled);
+    event DelayedFundingPauseUpdated(bool paused);
+    event WithdrawalFundingStarted(
+        uint256 indexed requestId,
+        uint256 assetsPreview,
+        uint64 targetSla,
+        CrossChainTypes.RedemptionMode mode
+    );
+    event WithdrawalCancelled(
+        uint256 indexed requestId,
+        address indexed owner,
+        uint256 sharesReturned
     );
     event OperationAccountingSynced(
         bytes32 indexed opId,
@@ -179,6 +210,48 @@ contract CrossChainVault is
         return _availableHomeLiquidity();
     }
 
+    function instantWithdrawalCapacity()
+        public
+        view
+        override
+        returns (uint256)
+    {
+        uint256 liquidAssets = _availableHomeLiquidity();
+        if (liquidAssets <= minimumResidualLiquidity) {
+            return 0;
+        }
+
+        return liquidAssets - minimumResidualLiquidity;
+    }
+
+    function currentRedemptionMode()
+        public
+        view
+        override
+        returns (CrossChainTypes.RedemptionMode)
+    {
+        if (_manualDegradedRedemptionMode || _hasStaleStrategyReports()) {
+            return CrossChainTypes.RedemptionMode.Degraded;
+        }
+
+        return CrossChainTypes.RedemptionMode.Normal;
+    }
+
+    function currentRedemptionSla()
+        public
+        view
+        override
+        returns (uint64)
+    {
+        if (
+            currentRedemptionMode() == CrossChainTypes.RedemptionMode.Degraded
+        ) {
+            return degradedRedemptionSla;
+        }
+
+        return normalRedemptionSla;
+    }
+
     function navBuckets()
         public
         view
@@ -227,7 +300,7 @@ contract CrossChainVault is
         }
 
         uint256 ownerAssets = super.maxWithdraw(owner);
-        uint256 liquidAssets = _availableHomeLiquidity();
+        uint256 liquidAssets = instantWithdrawalCapacity();
         return ownerAssets < liquidAssets ? ownerAssets : liquidAssets;
     }
 
@@ -240,7 +313,7 @@ contract CrossChainVault is
 
         uint256 ownerShares = balanceOf(owner);
         uint256 liquidShares = _convertToShares(
-            _availableHomeLiquidity(),
+            instantWithdrawalCapacity(),
             Math.Rounding.Floor
         );
 
@@ -271,7 +344,7 @@ contract CrossChainVault is
         _assertNoStaleStrategyReports();
 
         assetsPreview = previewRedeem(shares);
-        if (assetsPreview <= _availableHomeLiquidity()) {
+        if (assetsPreview <= instantWithdrawalCapacity()) {
             revert CrossChainVault__UseInstantWithdraw();
         }
 
@@ -297,16 +370,49 @@ contract CrossChainVault is
         );
     }
 
-    function fundWithdrawal(uint256 requestId) external override {
+    function startWithdrawalFunding(uint256 requestId) external override {
         _requireKeeperOrGovernance();
+
+        if (delayedFundingPaused) {
+            revert CrossChainVault__DelayedFundingPaused();
+        }
 
         CrossChainTypes.WithdrawalRequest memory request = WITHDRAWAL_QUEUE
             .getWithdrawalRequest(requestId);
         if (request.status != CrossChainTypes.WithdrawalStatus.Pending) {
             revert CrossChainVault__InvalidWithdrawalStatus();
         }
-        if (request.assetsPreview > _availableHomeLiquidity()) {
-            revert CrossChainVault__InsufficientHomeLiquidity();
+
+        WITHDRAWAL_QUEUE.setWithdrawalStatus(
+            requestId,
+            CrossChainTypes.WithdrawalStatus.Processing
+        );
+
+        emit WithdrawalFundingStarted(
+            requestId,
+            request.assetsPreview,
+            currentRedemptionSla(),
+            currentRedemptionMode()
+        );
+    }
+
+    function fundWithdrawal(uint256 requestId) external override {
+        _requireKeeperOrGovernance();
+
+        if (delayedFundingPaused) {
+            revert CrossChainVault__DelayedFundingPaused();
+        }
+
+        CrossChainTypes.WithdrawalRequest memory request = WITHDRAWAL_QUEUE
+            .getWithdrawalRequest(requestId);
+        if (
+            request.status != CrossChainTypes.WithdrawalStatus.Pending &&
+            request.status != CrossChainTypes.WithdrawalStatus.Processing
+        ) {
+            revert CrossChainVault__InvalidWithdrawalStatus();
+        }
+        if (request.assetsPreview > instantWithdrawalCapacity()) {
+            revert CrossChainVault__InsufficientInstantLiquidity();
         }
 
         fundedWithdrawalObligations += request.assetsPreview;
@@ -320,6 +426,32 @@ contract CrossChainVault is
             request.assetsPreview,
             fundedWithdrawalObligations
         );
+    }
+
+    function cancelWithdrawal(uint256 requestId) external override {
+        CrossChainTypes.WithdrawalRequest memory request = WITHDRAWAL_QUEUE
+            .getWithdrawalRequest(requestId);
+        if (
+            request.status != CrossChainTypes.WithdrawalStatus.Pending &&
+            request.status != CrossChainTypes.WithdrawalStatus.Processing
+        ) {
+            revert CrossChainVault__InvalidWithdrawalStatus();
+        }
+        if (
+            _msgSender() != request.owner &&
+            !hasRole(KEEPER_ROLE, _msgSender()) &&
+            !hasRole(GOVERNANCE_ROLE, _msgSender())
+        ) {
+            revert CrossChainVault__UnauthorizedCancellation();
+        }
+
+        WITHDRAWAL_QUEUE.setWithdrawalStatus(
+            requestId,
+            CrossChainTypes.WithdrawalStatus.Cancelled
+        );
+        _transfer(address(this), request.owner, request.shares);
+
+        emit WithdrawalCancelled(requestId, request.owner, request.shares);
     }
 
     function claimWithdrawal(
@@ -408,6 +540,47 @@ contract CrossChainVault is
             assets,
             _localBufferAssets()
         );
+    }
+
+    function setMinimumResidualLiquidity(
+        uint256 assets
+    ) external override onlyRole(GOVERNANCE_ROLE) {
+        uint256 previousMinimum = minimumResidualLiquidity;
+        minimumResidualLiquidity = assets;
+
+        emit MinimumResidualLiquidityUpdated(previousMinimum, assets);
+    }
+
+    function setRedemptionSla(
+        uint64 normalModeSla,
+        uint64 degradedModeSla
+    ) external override onlyRole(GOVERNANCE_ROLE) {
+        uint64 previousNormalSla = normalRedemptionSla;
+        uint64 previousDegradedSla = degradedRedemptionSla;
+
+        normalRedemptionSla = normalModeSla;
+        degradedRedemptionSla = degradedModeSla;
+
+        emit RedemptionSlaUpdated(
+            previousNormalSla,
+            previousDegradedSla,
+            normalModeSla,
+            degradedModeSla
+        );
+    }
+
+    function setDegradedRedemptionMode(
+        bool enabled
+    ) external override onlyRole(GOVERNANCE_ROLE) {
+        _manualDegradedRedemptionMode = enabled;
+        emit DegradedRedemptionModeUpdated(enabled);
+    }
+
+    function setDelayedFundingPaused(
+        bool paused
+    ) external override onlyRole(GOVERNANCE_ROLE) {
+        delayedFundingPaused = paused;
+        emit DelayedFundingPauseUpdated(paused);
     }
 
     function syncOperationAccounting(bytes32 opId) external override {

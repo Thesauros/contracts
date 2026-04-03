@@ -15,6 +15,12 @@ interface IWithdrawalQueue {
         uint256 indexed requestId,
         CrossChainTypes.WithdrawalStatus status
     );
+    event WithdrawalTimestampsUpdated(
+        uint256 indexed requestId,
+        uint64 updatedAt,
+        uint64 fundedAt,
+        uint64 claimedAt
+    );
 
     function getWithdrawalRequest(
         uint256 requestId

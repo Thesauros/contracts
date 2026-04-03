@@ -11,7 +11,11 @@ import {CrossChainTypes} from "../../libraries/CrossChainTypes.sol";
 interface ICrossChainVault is IERC4626 {
     function homeIdle() external view returns (uint256);
     function targetLocalBufferAssets() external view returns (uint256);
+    function minimumResidualLiquidity() external view returns (uint256);
     function fundedWithdrawalObligations() external view returns (uint256);
+    function normalRedemptionSla() external view returns (uint64);
+    function degradedRedemptionSla() external view returns (uint64);
+    function delayedFundingPaused() external view returns (bool);
 
     function strategyRegistry() external view returns (IStrategyRegistry);
 
@@ -22,6 +26,9 @@ interface ICrossChainVault is IERC4626 {
     function withdrawalQueue() external view returns (IWithdrawalQueue);
 
     function availableHomeLiquidity() external view returns (uint256);
+    function instantWithdrawalCapacity() external view returns (uint256);
+    function currentRedemptionMode() external view returns (CrossChainTypes.RedemptionMode);
+    function currentRedemptionSla() external view returns (uint64);
 
     function navBuckets()
         external
@@ -34,6 +41,8 @@ interface ICrossChainVault is IERC4626 {
         address owner
     ) external returns (uint256 requestId, uint256 assetsPreview);
 
+    function startWithdrawalFunding(uint256 requestId) external;
+
     function fundWithdrawal(uint256 requestId) external;
 
     function claimWithdrawal(uint256 requestId) external returns (uint256 assets);
@@ -41,6 +50,11 @@ interface ICrossChainVault is IERC4626 {
     function settleStrategyReport(uint32 strategyId) external;
 
     function setTargetLocalBufferAssets(uint256 assets) external;
+    function setMinimumResidualLiquidity(uint256 assets) external;
+    function setRedemptionSla(uint64 normalModeSla, uint64 degradedModeSla) external;
+    function setDegradedRedemptionMode(bool enabled) external;
+    function setDelayedFundingPaused(bool paused) external;
+    function cancelWithdrawal(uint256 requestId) external;
 
     function syncOperationAccounting(bytes32 opId) external;
 

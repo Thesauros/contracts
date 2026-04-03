@@ -159,6 +159,9 @@ contract CrossChainMorphoPipelineTests is Test {
         );
 
         vm.prank(bridge);
+        homeBridge.acknowledgeMessage(allocateMessageId, allocatePayload);
+
+        vm.prank(bridge);
         remoteAgent.receiveBridgeAsset(allocatePayload);
 
         vm.prank(keeper);
@@ -283,6 +286,9 @@ contract CrossChainMorphoPipelineTests is Test {
             address(vault),
             recallPayload
         );
+
+        vm.prank(bridge);
+        remoteBridge.acknowledgeMessage(recallReturnMessageId, recallPayload);
 
         vm.prank(bridge);
         vault.receiveRecallFunds(RECALL_AMOUNT);

@@ -372,6 +372,10 @@ Bring the routing layer to a controlled operational model.
 
 ## Sprint 6. Transfer and Settlement MVP
 
+### Status
+
+`Completed on 2026-04-03`
+
 ### Goal
 
 Integrate transport without breaking product semantics.
@@ -396,6 +400,10 @@ Integrate transport without breaking product semantics.
 - bridge lifecycle is integrated into the operation model;
 - `pendingBridgeIn / pendingBridgeOut` match NAV assumptions;
 - transport failures become recoverable states.
+
+### Closeout Record
+
+- [Sprint 6 Closeout](crosschain-vault-sprint-6-closeout.md)
 
 ## Sprint 7. Remote Execution MVP
 

@@ -54,8 +54,10 @@ contract LayerZeroBridgeAdapterTests is Test {
         assertEq(message.amount, 100e6);
         assertEq(message.payloadHash, keccak256(payload));
         assertEq(message.sentAt, block.timestamp);
+        assertEq(message.timeoutAt, block.timestamp + adapter.messageTimeout());
         assertEq(message.receivedAt, 0);
         assertFalse(message.delivered);
+        assertFalse(message.acknowledged);
         assertFalse(message.failed);
         assertEq(asset.balanceOf(address(adapter)), 100e6);
         assertEq(asset.balanceOf(bridge), 1_000_000e6 - 100e6);
@@ -106,6 +108,7 @@ contract LayerZeroBridgeAdapterTests is Test {
         assertEq(message.payloadHash, keccak256(payload));
         assertEq(message.receivedAt, block.timestamp);
         assertTrue(message.delivered);
+        assertFalse(message.acknowledged);
         assertFalse(message.failed);
         assertEq(asset.balanceOf(receiver), 25e6);
     }
@@ -155,6 +158,7 @@ contract LayerZeroBridgeAdapterTests is Test {
         );
         vm.stopPrank();
 
+        vm.warp(block.timestamp + adapter.messageTimeout());
         adapter.failMessage(messageId, receiver);
 
         LayerZeroBridgeAdapter.BridgeMessage memory message = adapter.getMessage(
@@ -167,5 +171,52 @@ contract LayerZeroBridgeAdapterTests is Test {
         assertTrue(message.failed);
         assertEq(asset.balanceOf(receiver), 40e6);
         assertEq(asset.balanceOf(address(adapter)), 0);
+    }
+
+    function testAcknowledgeMessageMarksOutboundSettlement() public {
+        bytes memory payload = abi.encode("allocate");
+        bytes memory ackPayload = abi.encode("ack");
+
+        vm.startPrank(bridge);
+        asset.approve(address(adapter), type(uint256).max);
+        bytes32 messageId = adapter.sendAssetAndMessage(
+            REMOTE_EID,
+            address(asset),
+            10e6,
+            payload
+        );
+        adapter.acknowledgeMessage(messageId, ackPayload);
+        vm.stopPrank();
+
+        LayerZeroBridgeAdapter.BridgeMessage memory message = adapter.getMessage(
+            messageId
+        );
+
+        assertTrue(message.delivered);
+        assertTrue(message.acknowledged);
+        assertEq(message.ackHash, keccak256(ackPayload));
+        assertEq(message.acknowledgedAt, block.timestamp);
+    }
+
+    function testMessageFailureRejectsRecoveryBeforeTimeout() public {
+        bytes memory payload = abi.encode("allocate");
+
+        vm.startPrank(bridge);
+        asset.approve(address(adapter), type(uint256).max);
+        bytes32 messageId = adapter.sendAssetAndMessage(
+            REMOTE_EID,
+            address(asset),
+            15e6,
+            payload
+        );
+        vm.stopPrank();
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                LayerZeroBridgeAdapter.LayerZeroBridgeAdapter__RecoveryNotEligible.selector,
+                messageId
+            )
+        );
+        adapter.failMessage(messageId, receiver);
     }
 }

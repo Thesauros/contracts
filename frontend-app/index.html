@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thesauros Cross-Chain Flow Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css?v=2" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="ambient ambient-a"></div>
+      <div class="ambient ambient-b"></div>
+      <div class="grid-noise"></div>
+
+      <main class="layout">
+        <section class="hero panel">
+          <div class="eyebrow">
+            <span class="status-dot"></span>
+            Thesauros / Cross-chain capital orchestration
+          </div>
+
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <p class="section-kicker">Flow visualizer</p>
+              <h1>Cross-chain fund flow.</h1>
+              <p class="hero-text">
+                <span class="inline-ref">CrossChainVault</span>
+                <span class="inline-ref">-></span>
+                <span class="inline-ref">BridgeAdapter</span>
+                <span class="inline-ref">-></span>
+                <span class="inline-ref">RemoteStrategyAgent</span>
+                <span class="inline-ref">-></span>
+                <span class="inline-ref">MorphoProvider</span>
+                <span class="inline-ref">-></span>
+                <span class="inline-ref">Morpho</span>
+              </p>
+            </div>
+
+            <aside class="hero-aside">
+              <div class="signal-card">
+                <div class="signal-label">Selected scenario</div>
+                <div class="signal-value" id="scenarioTitle">Allocate</div>
+                <div class="signal-subline">
+                  <span id="scenarioAmount">$2.8M</span>
+                  <span id="scenarioEta">Vault -> Bridge -> Agent -> Morpho</span>
+                </div>
+              </div>
+
+              <div class="chain-ribbon" id="chainRibbon"></div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="scenario-strip panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-kicker">Scenarios</p>
+              <h2>Choose view</h2>
+            </div>
+            <p class="panel-note">Graph first.</p>
+          </div>
+          <div class="scenario-list" id="scenarioList"></div>
+        </section>
+
+        <section class="topology panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-kicker">Topology</p>
+              <h2>Cross-chain route to remote strategy execution</h2>
+            </div>
+            <div class="legend">
+              <span><i class="legend-swatch incoming"></i>accounting</span>
+              <span><i class="legend-swatch routing"></i>bridge</span>
+              <span><i class="legend-swatch execution"></i>agent</span>
+              <span><i class="legend-swatch provider"></i>protocol</span>
+            </div>
+          </div>
+
+          <div class="topology-stage" id="topologyStage">
+            <svg class="route-layer" id="routeLayer" viewBox="0 0 1200 760" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#8ec5ff"></stop>
+                  <stop offset="50%" stop-color="#8bffb0"></stop>
+                  <stop offset="100%" stop-color="#f0ff7a"></stop>
+                </linearGradient>
+                <filter id="routeGlow">
+                  <feGaussianBlur stdDeviation="6" result="blur"></feGaussianBlur>
+                  <feMerge>
+                    <feMergeNode in="blur"></feMergeNode>
+                    <feMergeNode in="SourceGraphic"></feMergeNode>
+                  </feMerge>
+                </filter>
+              </defs>
+            </svg>
+
+            <div class="node-group" id="nodeGroup"></div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <script src="./app.js?v=2"></script>
+  </body>
+</html>

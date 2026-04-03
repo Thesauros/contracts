@@ -8,9 +8,11 @@ import {IStrategyAdapter} from "../interfaces/crosschain/IStrategyAdapter.sol";
 import {CrossChainTypes} from "../libraries/CrossChainTypes.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
 contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
     using SafeERC20 for IERC20;
+    using SafeCast for uint256;
 
     error RemoteStrategyAgent__AssetNotConfigured();
     error RemoteStrategyAgent__StrategyAdapterNotConfigured();
@@ -44,6 +46,7 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
         uint256 trackedIdleAssets
     );
     error RemoteStrategyAgent__InvalidBridgeAdapter();
+    error RemoteStrategyAgent__InvalidReportChainId();
 
     struct StoredCommand {
         bytes32 payloadHash;
@@ -63,6 +66,7 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
     IStrategyAdapter private _strategyAdapter;
     uint256 public idleAssets;
     uint256 public deployedAssets;
+    uint64 public lastPreparedReportTimestamp;
 
     mapping(bytes32 opId => StoredCommand command) private _commands;
 
@@ -275,6 +279,46 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
         emit CommandExecuted(payload.opId, STRATEGY_ID);
     }
 
+    function previewStrategyReport(
+        uint32 chainId,
+        bytes32 positionsHash
+    ) external view returns (CrossChainTypes.StrategyReport memory report) {
+        _requireConfigured();
+        report = _buildStrategyReport(
+            chainId,
+            positionsHash,
+            uint64(block.timestamp)
+        );
+    }
+
+    function prepareStrategyReport(
+        uint32 chainId,
+        bytes32 positionsHash
+    )
+        external
+        onlyRole(REPORTER_ROLE)
+        returns (CrossChainTypes.StrategyReport memory report)
+    {
+        _requireConfigured();
+        report = _buildStrategyReport(
+            chainId,
+            positionsHash,
+            uint64(block.timestamp)
+        );
+        lastPreparedReportTimestamp = report.reportTimestamp;
+
+        emit StrategyReportPrepared(
+            report.strategyId,
+            report.chainId,
+            report.reportTimestamp,
+            report.positionsHash,
+            report.totalValue,
+            report.freeLiquidity,
+            report.totalDebt,
+            report.pnl
+        );
+    }
+
     function _requireConfigured() internal view {
         if (asset == address(0)) {
             revert RemoteStrategyAgent__AssetNotConfigured();
@@ -379,5 +423,35 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
                 storedCommand.commandType
             );
         }
+    }
+
+    function _buildStrategyReport(
+        uint32 chainId,
+        bytes32 positionsHash,
+        uint64 reportTimestamp
+    ) internal view returns (CrossChainTypes.StrategyReport memory report) {
+        if (chainId == 0) {
+            revert RemoteStrategyAgent__InvalidReportChainId();
+        }
+
+        uint256 strategyValue = _strategyAdapter.totalValue();
+        uint256 strategyFreeLiquidity = _strategyAdapter.freeLiquidity();
+        int256 pnl;
+        if (strategyValue >= deployedAssets) {
+            pnl = (strategyValue - deployedAssets).toInt256();
+        } else {
+            pnl = -((deployedAssets - strategyValue).toInt256());
+        }
+
+        report = CrossChainTypes.StrategyReport({
+            strategyId: STRATEGY_ID,
+            chainId: chainId,
+            totalValue: strategyValue,
+            freeLiquidity: strategyFreeLiquidity,
+            totalDebt: deployedAssets,
+            pnl: pnl,
+            reportTimestamp: reportTimestamp,
+            positionsHash: positionsHash
+        });
     }
 }

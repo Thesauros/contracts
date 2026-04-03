@@ -15,9 +15,11 @@ contract RemoteStrategyAgentTests is Test {
     address internal bridge = makeAddr("bridge");
     address internal keeper = makeAddr("keeper");
     address internal guardian = makeAddr("guardian");
+    address internal reporter = makeAddr("reporter");
 
     uint32 internal constant STRATEGY_ID = 7;
     uint32 internal constant SOURCE_CHAIN_ID = 8_453;
+    uint32 internal constant REMOTE_CHAIN_ID = 30_101;
 
     function setUp() public {
         agent = new RemoteStrategyAgent(address(this), STRATEGY_ID);
@@ -27,6 +29,7 @@ contract RemoteStrategyAgentTests is Test {
         agent.grantRole(agent.BRIDGE_ROLE(), bridge);
         agent.grantRole(agent.KEEPER_ROLE(), keeper);
         agent.grantRole(agent.GUARDIAN_ROLE(), guardian);
+        agent.grantRole(agent.REPORTER_ROLE(), reporter);
         agent.setAsset(address(asset));
         agent.setStrategyAdapter(address(strategyAdapter));
     }
@@ -184,6 +187,87 @@ contract RemoteStrategyAgentTests is Test {
             )
         );
         agent.executeAllocate(payload);
+    }
+
+    function testPreviewStrategyReportUsesStrategyAdapterState() public {
+        bytes32 opId = keccak256("allocate-report");
+        bytes memory payload = _buildCommandPayload(
+            opId,
+            CrossChainTypes.CommandType.Allocate,
+            120e6,
+            0,
+            bytes("")
+        );
+
+        asset.mint(address(agent), 120e6);
+
+        vm.prank(bridge);
+        agent.receiveBridgeAsset(payload);
+
+        vm.prank(keeper);
+        agent.executeAllocate(payload);
+
+        strategyAdapter.setReportingState(135e6, 55e6);
+
+        CrossChainTypes.StrategyReport memory report = agent
+            .previewStrategyReport(REMOTE_CHAIN_ID, keccak256("positions"));
+
+        assertEq(report.strategyId, STRATEGY_ID);
+        assertEq(report.chainId, REMOTE_CHAIN_ID);
+        assertEq(report.totalValue, 135e6);
+        assertEq(report.freeLiquidity, 55e6);
+        assertEq(report.totalDebt, 120e6);
+        assertEq(report.pnl, int256(15e6));
+        assertEq(report.positionsHash, keccak256("positions"));
+        assertEq(report.reportTimestamp, block.timestamp);
+    }
+
+    function testPrepareStrategyReportExcludesRemoteIdleAwaitingBridgeHome() public {
+        bytes32 allocateOpId = keccak256("allocate-report");
+        bytes memory allocatePayload = _buildCommandPayload(
+            allocateOpId,
+            CrossChainTypes.CommandType.Allocate,
+            120e6,
+            0,
+            bytes("")
+        );
+
+        asset.mint(address(agent), 120e6);
+
+        vm.prank(bridge);
+        agent.receiveBridgeAsset(allocatePayload);
+
+        vm.prank(keeper);
+        agent.executeAllocate(allocatePayload);
+
+        bytes32 recallOpId = keccak256("recall-report");
+        bytes memory recallPayload = _buildCommandPayload(
+            recallOpId,
+            CrossChainTypes.CommandType.Recall,
+            50e6,
+            50e6,
+            bytes("")
+        );
+
+        vm.prank(bridge);
+        agent.receiveBridgeAsset(recallPayload);
+
+        vm.prank(keeper);
+        agent.executeRecall(recallPayload);
+
+        strategyAdapter.setReportingState(72e6, 30e6);
+
+        vm.prank(reporter);
+        CrossChainTypes.StrategyReport memory report = agent
+            .prepareStrategyReport(REMOTE_CHAIN_ID, keccak256("report"));
+
+        assertEq(agent.idleAssets(), 50e6);
+        assertEq(agent.deployedAssets(), 70e6);
+        assertEq(report.totalValue, 72e6);
+        assertEq(report.freeLiquidity, 30e6);
+        assertEq(report.totalDebt, 70e6);
+        assertEq(report.pnl, int256(2e6));
+        assertEq(agent.lastPreparedReportTimestamp(), block.timestamp);
     }
 
     function _buildCommandPayload(

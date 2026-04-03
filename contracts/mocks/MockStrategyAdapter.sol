@@ -13,6 +13,9 @@ contract MockStrategyAdapter is IStrategyAdapter {
     uint256 public deployedBalance;
     int256 public harvestPnl;
     uint256 public harvestAssetsOut;
+    uint256 public totalValueOverride;
+    uint256 public freeLiquidityOverride;
+    bool public hasReportingOverrides;
 
     constructor(address asset_) {
         ASSET = IERC20(asset_);
@@ -21,6 +24,21 @@ contract MockStrategyAdapter is IStrategyAdapter {
     function setHarvestResult(int256 pnl, uint256 assetsOut) external {
         harvestPnl = pnl;
         harvestAssetsOut = assetsOut;
+    }
+
+    function setReportingState(
+        uint256 totalValue_,
+        uint256 freeLiquidity_
+    ) external {
+        totalValueOverride = totalValue_;
+        freeLiquidityOverride = freeLiquidity_;
+        hasReportingOverrides = true;
+    }
+
+    function clearReportingState() external {
+        totalValueOverride = 0;
+        freeLiquidityOverride = 0;
+        hasReportingOverrides = false;
     }
 
     function deployCapital(uint256 assets, bytes calldata) external {
@@ -52,10 +70,16 @@ contract MockStrategyAdapter is IStrategyAdapter {
     }
 
     function totalValue() external view returns (uint256) {
+        if (hasReportingOverrides) {
+            return totalValueOverride;
+        }
         return deployedBalance;
     }
 
     function freeLiquidity() external view returns (uint256) {
+        if (hasReportingOverrides) {
+            return freeLiquidityOverride;
+        }
         return deployedBalance;
     }
 

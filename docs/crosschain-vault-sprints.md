@@ -296,6 +296,10 @@ Make withdrawal behavior a first-class product component.
 
 ## Sprint 4. Entry Layer Refactor
 
+### Status
+
+`Completed on 2026-04-03`
+
 ### Goal
 
 Bring the on-chain entry layer to the correct product shape.
@@ -321,6 +325,10 @@ Bring the on-chain entry layer to the correct product shape.
 
 - deposit path does not depend on remote execution availability;
 - entry layer semantics match the architecture docs.
+
+### Closeout Record
+
+- [Sprint 4 Closeout](crosschain-vault-sprint-4-closeout.md)
 
 ## Sprint 5. Routing and Operation Lifecycle
 

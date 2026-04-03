@@ -81,6 +81,30 @@ contract CrossChainVaultTests is Test {
         assertEq(vault.maxWithdraw(alice), 80e6);
     }
 
+    function testEntryChainIdMatchesDeploymentChain() public view {
+        assertEq(vault.entryChainId(), block.chainid);
+    }
+
+    function testPositionViewTracksOneUserBalanceAcrossRemoteState() public {
+        _configureStrategy();
+        _depositAsAlice(DEPOSIT_AMOUNT);
+
+        _submitReport(REMOTE_VALUE, REMOTE_VALUE, REMOTE_VALUE, uint64(block.timestamp));
+
+        vm.prank(keeper);
+        vault.settleStrategyReport(STRATEGY_ID);
+
+        CrossChainTypes.EntryPosition memory position = vault.positionView(alice);
+        uint256 expectedAssets = vault.previewRedeem(DEPOSIT_AMOUNT);
+        uint256 expectedMaxWithdraw = vault.maxWithdraw(alice);
+        uint256 expectedMaxRedeem = vault.maxRedeem(alice);
+
+        assertEq(position.shares, DEPOSIT_AMOUNT);
+        assertEq(position.assetEquivalent, expectedAssets);
+        assertEq(position.maxInstantWithdrawAssets, expectedMaxWithdraw);
+        assertEq(position.maxInstantRedeemShares, expectedMaxRedeem);
+    }
+
     function testNavBucketsExposeLocalBufferAsSubsetOfHomeIdle() public {
         _depositAsAlice(DEPOSIT_AMOUNT);
 

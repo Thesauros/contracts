@@ -14,6 +14,9 @@
 * [Buffer Policy v1](buffer-policy-v1.md)
 * [Queue Lifecycle Matrix](queue-lifecycle-matrix.md)
 * [Sprint 3 Closeout](crosschain-vault-sprint-3-closeout.md)
+* [Entry Boundary Decision](entry-boundary-decision.md)
+* [Entry Event Model](entry-event-model.md)
+* [Sprint 4 Closeout](crosschain-vault-sprint-4-closeout.md)
 * [Quick Start](quick-start.md)
 
 ## Contracts

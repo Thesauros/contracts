@@ -132,6 +132,13 @@ library CrossChainTypes {
         uint256 totalManagedAssets;
     }
 
+    struct EntryPosition {
+        uint256 shares;
+        uint256 assetEquivalent;
+        uint256 maxInstantWithdrawAssets;
+        uint256 maxInstantRedeemShares;
+    }
+
     struct CommandPayloadV1 {
         uint8 version;
         bytes32 opId;

@@ -60,6 +60,7 @@ contract CrossChainVault is
     error CrossChainVault__InsufficientInstantLiquidity();
     error CrossChainVault__UnauthorizedCancellation();
 
+    uint256 private immutable ENTRY_CHAIN_ID;
     uint256 public override homeIdle;
     uint256 public override targetLocalBufferAssets;
     uint256 public override minimumResidualLiquidity;
@@ -129,6 +130,11 @@ contract CrossChainVault is
         address indexed owner,
         uint256 sharesReturned
     );
+    event EntryBoundaryConfirmed(
+        uint256 indexed entryChainId,
+        bool finalEntryVault,
+        bool accountingCore
+    );
     event OperationAccountingSynced(
         bytes32 indexed opId,
         uint32 indexed strategyId,
@@ -164,10 +170,17 @@ contract CrossChainVault is
             revert CrossChainVault__ZeroAddress();
         }
 
+        ENTRY_CHAIN_ID = block.chainid;
         STRATEGY_REGISTRY = strategyRegistry_;
         STRATEGY_ALLOCATOR = strategyAllocator_;
         REPORT_SETTLER = reportSettler_;
         WITHDRAWAL_QUEUE = withdrawalQueue_;
+
+        emit EntryBoundaryConfirmed(ENTRY_CHAIN_ID, true, true);
+    }
+
+    function entryChainId() public view returns (uint256) {
+        return ENTRY_CHAIN_ID;
     }
 
     function strategyRegistry()
@@ -250,6 +263,15 @@ contract CrossChainVault is
         }
 
         return normalRedemptionSla;
+    }
+
+    function positionView(
+        address owner
+    ) public view returns (CrossChainTypes.EntryPosition memory position) {
+        position.shares = balanceOf(owner);
+        position.assetEquivalent = previewRedeem(position.shares);
+        position.maxInstantWithdrawAssets = maxWithdraw(owner);
+        position.maxInstantRedeemShares = maxRedeem(owner);
     }
 
     function navBuckets()

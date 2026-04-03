@@ -270,6 +270,39 @@ contract RemoteStrategyAgentTests is Test {
         assertEq(agent.lastPreparedReportTimestamp(), block.timestamp);
     }
 
+    function testPrepareStrategyReportRejectsLiquidityAboveTotalValue() public {
+        bytes32 opId = keccak256("allocate-invalid-report");
+        bytes memory payload = _buildCommandPayload(
+            opId,
+            CrossChainTypes.CommandType.Allocate,
+            40e6,
+            0,
+            bytes("")
+        );
+
+        asset.mint(address(agent), 40e6);
+
+        vm.prank(bridge);
+        agent.receiveBridgeAsset(payload);
+
+        vm.prank(keeper);
+        agent.executeAllocate(payload);
+
+        strategyAdapter.setReportingState(39e6, 40e6);
+
+        vm.prank(reporter);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RemoteStrategyAgent
+                    .RemoteStrategyAgent__InvalidReportLiquidity
+                    .selector,
+                39e6,
+                40e6
+            )
+        );
+        agent.prepareStrategyReport(REMOTE_CHAIN_ID, keccak256("invalid"));
+    }
+
     function _buildCommandPayload(
         bytes32 opId,
         CrossChainTypes.CommandType commandType,

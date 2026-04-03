@@ -10,6 +10,7 @@ contract ReportSettler is CrossChainAccessControl, IReportSettler {
     error ReportSettler__UnknownStrategy();
     error ReportSettler__ChainMismatch();
     error ReportSettler__ReportOutdated();
+    error ReportSettler__ReportStale();
 
     IStrategyRegistry private immutable STRATEGY_REGISTRY;
 
@@ -44,6 +45,12 @@ contract ReportSettler is CrossChainAccessControl, IReportSettler {
         }
         if (report.reportTimestamp <= previous.reportTimestamp) {
             revert ReportSettler__ReportOutdated();
+        }
+        if (
+            config.maxReportDelay != 0 &&
+            block.timestamp > uint256(report.reportTimestamp) + config.maxReportDelay
+        ) {
+            revert ReportSettler__ReportStale();
         }
 
         _reports[report.strategyId] = report;

@@ -47,6 +47,10 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
     );
     error RemoteStrategyAgent__InvalidBridgeAdapter();
     error RemoteStrategyAgent__InvalidReportChainId();
+    error RemoteStrategyAgent__InvalidReportLiquidity(
+        uint256 totalValue,
+        uint256 freeLiquidity
+    );
 
     struct StoredCommand {
         bytes32 payloadHash;
@@ -436,6 +440,13 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
 
         uint256 strategyValue = _strategyAdapter.totalValue();
         uint256 strategyFreeLiquidity = _strategyAdapter.freeLiquidity();
+        if (strategyFreeLiquidity > strategyValue) {
+            revert RemoteStrategyAgent__InvalidReportLiquidity(
+                strategyValue,
+                strategyFreeLiquidity
+            );
+        }
+
         int256 pnl;
         if (strategyValue >= deployedAssets) {
             pnl = (strategyValue - deployedAssets).toInt256();

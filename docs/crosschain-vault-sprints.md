@@ -407,6 +407,10 @@ Integrate transport without breaking product semantics.
 
 ## Sprint 7. Remote Execution MVP
 
+### Status
+
+`Functionally complete on 2026-04-03, pending live fork validation`
+
 ### Goal
 
 Build the execution layer as a modular layer, not the product core.
@@ -435,6 +439,10 @@ Build the execution layer as a modular layer, not the product core.
 - at least 2 strategies pass the full lifecycle;
 - remote execution does not mutate user shares;
 - reports feed NAV and redemption correctly.
+
+### Closeout Record
+
+- [Sprint 7 Closeout](crosschain-vault-sprint-7-closeout.md)
 
 ## Sprint 8. Rebalancing Policy and Risk Limits
 

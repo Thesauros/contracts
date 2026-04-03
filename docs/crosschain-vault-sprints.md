@@ -332,6 +332,10 @@ Bring the on-chain entry layer to the correct product shape.
 
 ## Sprint 5. Routing and Operation Lifecycle
 
+### Status
+
+`Completed on 2026-04-03`
+
 ### Goal
 
 Bring the routing layer to a controlled operational model.
@@ -361,6 +365,10 @@ Bring the routing layer to a controlled operational model.
 - allocator does not touch user shares;
 - recall flow is tied to redemption model;
 - lifecycle is observable and idempotent.
+
+### Closeout Record
+
+- [Sprint 5 Closeout](crosschain-vault-sprint-5-closeout.md)
 
 ## Sprint 6. Transfer and Settlement MVP
 

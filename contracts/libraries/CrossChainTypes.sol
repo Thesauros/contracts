@@ -87,13 +87,27 @@ library CrossChainTypes {
 
     struct Operation {
         bytes32 opId;
+        uint64 nonce;
         uint32 strategyId;
         OperationType opType;
         uint256 assets;
         uint256 minAssetsOut;
         uint64 createdAt;
         uint64 deadline;
+        uint64 lastUpdatedAt;
         OperationStatus status;
+    }
+
+    struct OperationDispatch {
+        bytes32 opId;
+        uint32 dstEid;
+        address remoteAgent;
+        bytes32 bridgeMessageId;
+        bytes32 payloadHash;
+        uint64 dispatchedAt;
+        uint64 receivedAt;
+        uint64 executedAt;
+        uint64 settledAt;
     }
 
     struct WithdrawalRequest {
@@ -143,8 +157,11 @@ library CrossChainTypes {
         uint8 version;
         bytes32 opId;
         uint32 strategyId;
+        uint32 sourceChainId;
         CommandType commandType;
         uint256 assets;
+        uint256 minAssetsOut;
+        uint64 deadline;
         uint64 commandTimestamp;
         bytes params;
     }

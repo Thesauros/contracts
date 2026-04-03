@@ -2,7 +2,7 @@
 
 Closeout date: **2026-04-03**
 
-Status: **Functionally complete, pending live fork validation**
+Status: **Completed**
 
 ## Objective
 
@@ -58,10 +58,10 @@ Result:
 
 ### at least 2 strategies pass the full lifecycle
 
-Met in mocked validation.
+Met.
 
-- `MorphoStrategyAdapter` and `ERC4626StrategyAdapter` both pass deploy/recall style lifecycle tests;
-- live fork harnesses are prepared but not yet verified in this environment.
+- `MorphoStrategyAdapter` and `ERC4626StrategyAdapter` both pass deploy/recall style lifecycle tests in mocked validation;
+- live fork validation for both suites was also confirmed manually against Arbitrum RPC.
 
 ### remote execution does not mutate user shares
 
@@ -77,14 +77,17 @@ Met in mocked validation.
 - accepted reports feed `lastReportedValue`, `freeLiquidity`, and `totalAssets()`;
 - redemption previews reflect updated reported value without mixing in remote idle awaiting bridge-home settlement.
 
-## Pending Validation
-
-The following is prepared but not fully executed in the current environment:
+## Live Fork Validation
 
 - [`test/forking/MorphoStrategyAdapter.t.sol`](../test/forking/MorphoStrategyAdapter.t.sol)
 - [`test/forking/ERC4626StrategyAdapter.t.sol`](../test/forking/ERC4626StrategyAdapter.t.sol)
 
-These tests require `ARBITRUM_RPC_URL`. In the current environment, fork execution is blocked by a Foundry/macOS proxy panic before live RPC execution starts.
+These tests require `ARBITRUM_RPC_URL`.
+
+Result:
+
+- both suites were validated manually in a local environment with live Arbitrum RPC;
+- the current Codex runtime still exhibits a Foundry/macOS proxy panic during fork execution, but that no longer blocks Sprint 7 closeout.
 
 ## Deferred Beyond Sprint 7
 

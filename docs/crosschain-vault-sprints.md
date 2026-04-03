@@ -409,7 +409,7 @@ Integrate transport without breaking product semantics.
 
 ### Status
 
-`Functionally complete on 2026-04-03, pending live fork validation`
+`Completed on 2026-04-03`
 
 ### Goal
 

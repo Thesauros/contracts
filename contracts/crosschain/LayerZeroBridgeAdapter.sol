@@ -77,6 +77,7 @@ contract LayerZeroBridgeAdapter is CrossChainAccessControl, IBridgeAdapter {
         }
 
         uint64 nonce = nextMessageNonce++;
+        // forge-lint: disable-next-line(asm-keccak256)
         bytes32 payloadHash = keccak256(payload);
 
         messageId = keccak256(
@@ -132,6 +133,7 @@ contract LayerZeroBridgeAdapter is CrossChainAccessControl, IBridgeAdapter {
             revert LayerZeroBridgeAdapter__InboundReplay(messageId);
         }
 
+        // forge-lint: disable-next-line(asm-keccak256)
         bytes32 payloadHash = keccak256(payload);
         _storeInboundMessage(
             messageId,

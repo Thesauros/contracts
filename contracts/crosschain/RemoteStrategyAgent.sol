@@ -2,6 +2,7 @@
 pragma solidity 0.8.34;
 
 import {CrossChainAccessControl} from "../access/CrossChainAccessControl.sol";
+import {IBridgeAdapter} from "../interfaces/crosschain/IBridgeAdapter.sol";
 import {IRemoteStrategyAgent} from "../interfaces/crosschain/IRemoteStrategyAgent.sol";
 import {IStrategyAdapter} from "../interfaces/crosschain/IStrategyAdapter.sol";
 import {CrossChainTypes} from "../libraries/CrossChainTypes.sol";
@@ -22,6 +23,8 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
     error RemoteStrategyAgent__UnknownCommand(bytes32 opId);
     error RemoteStrategyAgent__CommandAlreadyReceived(bytes32 opId);
     error RemoteStrategyAgent__CommandAlreadyExecuted(bytes32 opId);
+    error RemoteStrategyAgent__CommandNotExecuted(bytes32 opId);
+    error RemoteStrategyAgent__CommandAlreadyBridged(bytes32 opId);
     error RemoteStrategyAgent__PayloadMismatch(bytes32 opId);
     error RemoteStrategyAgent__DeadlineExpired(
         bytes32 opId,
@@ -40,15 +43,19 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
         uint256 balance,
         uint256 trackedIdleAssets
     );
+    error RemoteStrategyAgent__InvalidBridgeAdapter();
 
     struct StoredCommand {
         bytes32 payloadHash;
+        bytes32 bridgeMessageId;
         CrossChainTypes.CommandType commandType;
         uint256 assets;
         uint256 minAssetsOut;
+        uint256 executedAssets;
         uint64 deadline;
         uint64 receivedAt;
         uint64 executedAt;
+        uint64 bridgedAt;
     }
 
     uint32 private immutable STRATEGY_ID;
@@ -119,6 +126,7 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
         storedCommand.commandType = command.commandType;
         storedCommand.assets = command.assets;
         storedCommand.minAssetsOut = command.minAssetsOut;
+        storedCommand.executedAssets = 0;
         storedCommand.deadline = command.deadline;
         storedCommand.receivedAt = uint64(block.timestamp);
 
@@ -152,7 +160,7 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
 
         idleAssets -= payload.assets;
         deployedAssets += payload.assets;
-        _markCommandExecuted(payload.opId);
+        _markCommandExecuted(payload.opId, payload.assets);
 
         emit CommandExecuted(payload.opId, STRATEGY_ID);
     }
@@ -184,9 +192,52 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
             deployedAssets -= assetsFreed;
         }
         _assertIdleAssetBalance();
-        _markCommandExecuted(payload.opId);
+        _markCommandExecuted(payload.opId, assetsFreed);
 
         emit CommandExecuted(payload.opId, STRATEGY_ID);
+    }
+
+    function bridgeAssetsHome(
+        bytes calldata command,
+        address bridgeAdapter,
+        uint32 dstEid
+    ) external onlyRole(BRIDGE_ROLE) returns (bytes32 messageId) {
+        _requireConfigured();
+        if (bridgeAdapter == address(0)) {
+            revert RemoteStrategyAgent__InvalidBridgeAdapter();
+        }
+
+        CrossChainTypes.CommandPayloadV1 memory payload = _requireBridgeableCommand(
+            command
+        );
+        StoredCommand storage storedCommand = _commands[payload.opId];
+
+        if (idleAssets < storedCommand.executedAssets) {
+            revert RemoteStrategyAgent__InsufficientIdleAssets(
+                storedCommand.executedAssets,
+                idleAssets
+            );
+        }
+
+        IERC20(asset).forceApprove(bridgeAdapter, storedCommand.executedAssets);
+        messageId = IBridgeAdapter(bridgeAdapter).sendAssetAndMessage(
+            dstEid,
+            asset,
+            storedCommand.executedAssets,
+            command
+        );
+        IERC20(asset).forceApprove(bridgeAdapter, 0);
+
+        idleAssets -= storedCommand.executedAssets;
+        storedCommand.bridgeMessageId = messageId;
+        storedCommand.bridgedAt = uint64(block.timestamp);
+
+        emit CommandBridged(
+            payload.opId,
+            messageId,
+            dstEid,
+            storedCommand.executedAssets
+        );
     }
 
     function harvest(bytes calldata command) external onlyRole(KEEPER_ROLE) {
@@ -200,7 +251,7 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
 
         idleAssets += assetsOut;
         _assertIdleAssetBalance();
-        _markCommandExecuted(payload.opId);
+        _markCommandExecuted(payload.opId, assetsOut);
 
         emit CommandExecuted(payload.opId, STRATEGY_ID);
     }
@@ -219,7 +270,7 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
         idleAssets += assetsOut;
         deployedAssets = 0;
         _assertIdleAssetBalance();
-        _markCommandExecuted(payload.opId);
+        _markCommandExecuted(payload.opId, assetsOut);
 
         emit CommandExecuted(payload.opId, STRATEGY_ID);
     }
@@ -276,8 +327,9 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
         }
     }
 
-    function _markCommandExecuted(bytes32 opId) internal {
+    function _markCommandExecuted(bytes32 opId, uint256 executedAssets) internal {
         _commands[opId].executedAt = uint64(block.timestamp);
+        _commands[opId].executedAssets = executedAssets;
     }
 
     function _requireActiveDeadline(bytes32 opId, uint64 deadline) internal view {
@@ -296,6 +348,35 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
             revert RemoteStrategyAgent__AssetBalanceInvariant(
                 balance,
                 idleAssets
+            );
+        }
+    }
+
+    function _requireBridgeableCommand(
+        bytes calldata command
+    ) internal view returns (CrossChainTypes.CommandPayloadV1 memory payload) {
+        payload = _decodeAndValidateCommand(command);
+
+        StoredCommand memory storedCommand = _commands[payload.opId];
+        if (storedCommand.receivedAt == 0) {
+            revert RemoteStrategyAgent__UnknownCommand(payload.opId);
+        }
+        if (storedCommand.executedAt == 0) {
+            revert RemoteStrategyAgent__CommandNotExecuted(payload.opId);
+        }
+        if (storedCommand.bridgedAt != 0) {
+            revert RemoteStrategyAgent__CommandAlreadyBridged(payload.opId);
+        }
+        if (storedCommand.payloadHash != keccak256(command)) {
+            revert RemoteStrategyAgent__PayloadMismatch(payload.opId);
+        }
+        if (
+            storedCommand.commandType == CrossChainTypes.CommandType.Allocate ||
+            storedCommand.commandType == CrossChainTypes.CommandType.Ack ||
+            storedCommand.commandType == CrossChainTypes.CommandType.Report
+        ) {
+            revert RemoteStrategyAgent__UnsupportedCommandType(
+                storedCommand.commandType
             );
         }
     }

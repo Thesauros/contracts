@@ -129,6 +129,7 @@ contract StrategyAllocator is CrossChainAccessControl, IStrategyAllocator {
         );
         _validatePayload(operation, payload);
 
+        // forge-lint: disable-next-line(asm-keccak256)
         bytes32 payloadHash = keccak256(encodedPayload);
         _dispatches[opId] = CrossChainTypes.OperationDispatch({
             opId: opId,
@@ -188,10 +189,11 @@ contract StrategyAllocator is CrossChainAccessControl, IStrategyAllocator {
         bytes calldata params
     ) external view returns (bytes32) {
         CrossChainTypes.Operation memory operation = _requireOperation(opId);
-        return
-            keccak256(
-                abi.encode(_buildCommandPayload(operation, commandTimestamp, params))
-            );
+        bytes memory encodedPayload = abi.encode(
+            _buildCommandPayload(operation, commandTimestamp, params)
+        );
+        // forge-lint: disable-next-line(asm-keccak256)
+        return keccak256(encodedPayload);
     }
 
     function _isValidTransition(
@@ -317,4 +319,5 @@ contract StrategyAllocator is CrossChainAccessControl, IStrategyAllocator {
             dispatch.settledAt = timestamp;
         }
     }
+
 }

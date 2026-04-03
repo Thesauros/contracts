@@ -6,6 +6,12 @@ interface IRemoteStrategyAgent {
     event StrategyAdapterConfigured(address indexed strategyAdapter);
     event CommandReceived(bytes32 indexed opId, uint32 indexed strategyId);
     event CommandExecuted(bytes32 indexed opId, uint32 indexed strategyId);
+    event CommandBridged(
+        bytes32 indexed opId,
+        bytes32 indexed messageId,
+        uint32 indexed dstEid,
+        uint256 assets
+    );
 
     function asset() external view returns (address);
     function strategyAdapter() external view returns (address);
@@ -17,6 +23,11 @@ interface IRemoteStrategyAgent {
     function receiveBridgeAsset(bytes calldata payload) external;
     function executeAllocate(bytes calldata command) external;
     function executeRecall(bytes calldata command) external;
+    function bridgeAssetsHome(
+        bytes calldata command,
+        address bridgeAdapter,
+        uint32 dstEid
+    ) external returns (bytes32 messageId);
     function harvest(bytes calldata command) external;
     function emergencyExit(bytes calldata command) external;
 }

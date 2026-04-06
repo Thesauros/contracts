@@ -5,21 +5,30 @@ import {CrossChainAccessControl} from "../access/CrossChainAccessControl.sol";
 import {IReportSettler} from "../interfaces/crosschain/IReportSettler.sol";
 import {IStrategyRegistry} from "../interfaces/crosschain/IStrategyRegistry.sol";
 import {CrossChainTypes} from "../libraries/CrossChainTypes.sol";
+import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-contract ReportSettler is CrossChainAccessControl, IReportSettler {
+contract ReportSettler is CrossChainAccessControl, IReportSettler, EIP712 {
     error ReportSettler__UnknownStrategy();
     error ReportSettler__ChainMismatch();
     error ReportSettler__ReportOutdated();
     error ReportSettler__ReportStale();
+    error ReportSettler__InvalidAttestation();
+    error ReportSettler__AttestorNotAuthorized();
 
     IStrategyRegistry private immutable STRATEGY_REGISTRY;
 
     mapping(uint32 strategyId => CrossChainTypes.StrategyReport) private _reports;
 
+    bytes32 private constant REPORT_TYPEHASH =
+        keccak256(
+            "StrategyReport(uint32 strategyId,uint32 chainId,uint256 totalValue,uint256 freeLiquidity,uint256 totalDebt,int256 pnl,uint64 reportTimestamp,bytes32 positionsHash)"
+        );
+
     constructor(
         address admin,
         IStrategyRegistry strategyRegistry_
-    ) CrossChainAccessControl(admin) {
+    ) CrossChainAccessControl(admin) EIP712("CrossChainVaultReport", "1") {
         STRATEGY_REGISTRY = strategyRegistry_;
     }
 
@@ -30,15 +39,53 @@ contract ReportSettler is CrossChainAccessControl, IReportSettler {
     function submitReport(
         CrossChainTypes.StrategyReport calldata report
     ) external onlyRole(REPORTER_ROLE) {
+        _acceptReport(report);
+    }
+
+    function submitReportAttested(
+        CrossChainTypes.StrategyReport calldata report,
+        bytes calldata signature
+    ) external {
+        bytes32 digest = _hashTypedDataV4(_hashReport(report));
+        address attestor = ECDSA.recover(digest, signature);
+
+        if (attestor == address(0)) {
+            revert ReportSettler__InvalidAttestation();
+        }
+        if (!hasRole(REPORT_ATTESTOR_ROLE, attestor)) {
+            revert ReportSettler__AttestorNotAuthorized();
+        }
+
+        _acceptReport(report);
+    }
+
+    function _hashReport(
+        CrossChainTypes.StrategyReport calldata report
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    REPORT_TYPEHASH,
+                    report.strategyId,
+                    report.chainId,
+                    report.totalValue,
+                    report.freeLiquidity,
+                    report.totalDebt,
+                    report.pnl,
+                    report.reportTimestamp,
+                    report.positionsHash
+                )
+            );
+    }
+
+    function _acceptReport(CrossChainTypes.StrategyReport calldata report) internal {
         if (!STRATEGY_REGISTRY.strategyExists(report.strategyId)) {
             revert ReportSettler__UnknownStrategy();
         }
 
         CrossChainTypes.StrategyConfig memory config = STRATEGY_REGISTRY
             .getStrategyConfig(report.strategyId);
-        CrossChainTypes.StrategyReport memory previous = _reports[
-            report.strategyId
-        ];
+        CrossChainTypes.StrategyReport memory previous = _reports[report.strategyId];
 
         if (config.chainId != report.chainId) {
             revert ReportSettler__ChainMismatch();

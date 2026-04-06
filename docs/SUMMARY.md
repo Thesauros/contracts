@@ -28,6 +28,7 @@
 * [Cross-Chain Vault Incident Test Suite](crosschain-vault-incident-test-suite.md)
 * [Cross-Chain Vault Threat Model](crosschain-vault-threat-model.md)
 * [Cross-Chain Vault Audit Package](crosschain-vault-audit-package.md)
+* [Cross-Chain Vault Testnet Rehearsal Runbook](crosschain-vault-testnet-rehearsal-runbook.md)
 * [Quick Start](quick-start.md)
 
 ## Contracts

@@ -26,6 +26,7 @@ This package covers the cross-chain vault control plane and its mocked execution
 - [Cross-Chain Vault Threat Model](crosschain-vault-threat-model.md)
 - [Cross-Chain Vault RC Checklist](crosschain-vault-rc-checklist.md)
 - [Cross-Chain Vault Incident Test Suite](crosschain-vault-incident-test-suite.md)
+- [Cross-Chain Vault Testnet Rehearsal Runbook](crosschain-vault-testnet-rehearsal-runbook.md)
 - [Cross-Chain Vault Development Plan](crosschain-vault-sprints.md)
 
 ## Critical Code Map
@@ -81,4 +82,3 @@ Fork suites:
 - production report attestation/signer policy (beyond the mocked reporter role)
 - testnet rehearsal and end-to-end bridging integration
 - chain-level caps enforcement module (beyond per-strategy and vault-level limits)
-

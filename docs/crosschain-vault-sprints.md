@@ -484,7 +484,7 @@ Make routing economically correct and operationally safe.
 
 ### Status
 
-`In progress as of 2026-04-06`
+`Completed on 2026-04-06`
 
 ### Goal
 
@@ -515,6 +515,10 @@ Prepare the system for audit handoff and production-style testnet rehearsal.
 - delayed redemption and bridge incidents are rehearsed;
 - end-to-end testnet flow passes;
 - audit package is ready.
+
+### Closeout Record
+
+- [Sprint 9 Closeout](crosschain-vault-sprint-9-closeout.md)
 
 ## 8. Dependencies
 

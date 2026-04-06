@@ -48,7 +48,7 @@ contract CrossChainERC4626PipelineTests is Test {
             "myv2USDC"
         );
         registry = new StrategyRegistry(address(this));
-        allocator = new StrategyAllocator(address(this));
+        allocator = new StrategyAllocator(address(this), registry);
         queue = new WithdrawalQueue(address(this));
         settler = new ReportSettler(address(this), registry);
         vault = new CrossChainVault(

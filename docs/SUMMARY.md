@@ -5,6 +5,8 @@
 * [Hybrid Cross-Chain Vault Architecture](hybrid-crosschain-vault-architecture.md)
 * [ADR-002 Ledger and NAV Model](adr-002-ledger-and-nav-model.md)
 * [ADR-003 Redemption SLA and Liquidity Buffers](adr-003-redemption-sla-and-liquidity-buffers.md)
+* [ADR-004 Rebalancing Policy and Risk Limits](adr-004-rebalancing-policy-and-risk-limits.md)
+* [Risk Limits Matrix](risk-limits-matrix.md)
 * [Cross-Chain Ledger Event Catalogue](crosschain-ledger-event-catalogue.md)
 * [Cross-Chain Reconciliation Boundaries](crosschain-reconciliation-boundaries.md)
 * [Cross-Chain Vault Development Plan](crosschain-vault-sprints.md)
@@ -17,6 +19,10 @@
 * [Entry Boundary Decision](entry-boundary-decision.md)
 * [Entry Event Model](entry-event-model.md)
 * [Sprint 4 Closeout](crosschain-vault-sprint-4-closeout.md)
+* [Sprint 5 Closeout](crosschain-vault-sprint-5-closeout.md)
+* [Sprint 6 Closeout](crosschain-vault-sprint-6-closeout.md)
+* [Sprint 7 Closeout](crosschain-vault-sprint-7-closeout.md)
+* [Sprint 8 Closeout](crosschain-vault-sprint-8-closeout.md)
 * [Quick Start](quick-start.md)
 
 ## Contracts

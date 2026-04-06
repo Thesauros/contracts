@@ -1,6 +1,6 @@
 # Cross-Chain Vault: Development Plan
 
-Current as of **2026-04-02**.
+Current as of **2026-04-06**.
 
 This plan is based on the target hybrid architecture:
 
@@ -446,6 +446,10 @@ Build the execution layer as a modular layer, not the product core.
 
 ## Sprint 8. Rebalancing Policy and Risk Limits
 
+### Status
+
+`Completed on 2026-04-06`
+
 ### Goal
 
 Make routing economically correct and operationally safe.
@@ -471,6 +475,10 @@ Make routing economically correct and operationally safe.
 
 - move decisions are based on net benefit, not raw APR;
 - risk guardrails are integrated into operations and backend flows.
+
+### Closeout Record
+
+- [Sprint 8 Closeout](crosschain-vault-sprint-8-closeout.md)
 
 ## Sprint 9. Hardening and Release Candidate
 

@@ -42,7 +42,7 @@ contract CrossChainMorphoPipelineTests is Test {
         asset = new MockERC20("USD Coin", "USDC", 6);
         metaMorpho = new MockMetaMorphoVault(asset);
         registry = new StrategyRegistry(address(this));
-        allocator = new StrategyAllocator(address(this));
+        allocator = new StrategyAllocator(address(this), registry);
         queue = new WithdrawalQueue(address(this));
         settler = new ReportSettler(address(this), registry);
         vault = new CrossChainVault(

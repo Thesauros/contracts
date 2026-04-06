@@ -33,7 +33,7 @@ contract CrossChainVaultTests is Test {
     function setUp() public {
         asset = new MockERC20("USD Coin", "USDC", 6);
         registry = new StrategyRegistry(address(this));
-        allocator = new StrategyAllocator(address(this));
+        allocator = new StrategyAllocator(address(this), registry);
         queue = new WithdrawalQueue(address(this));
         settler = new ReportSettler(address(this), registry);
         vault = new CrossChainVault(
@@ -429,7 +429,7 @@ contract CrossChainVaultTests is Test {
             STRATEGY_ID,
             CrossChainTypes.OperationType.Allocate,
             40e6,
-            39e6,
+            396e5,
             uint64(block.timestamp + 1 days)
         );
 
@@ -495,7 +495,7 @@ contract CrossChainVaultTests is Test {
             STRATEGY_ID,
             CrossChainTypes.OperationType.Recall,
             20e6,
-            19e6,
+            198e5,
             uint64(block.timestamp + 1 days)
         );
 
@@ -550,6 +550,22 @@ contract CrossChainVaultTests is Test {
         _configureStrategy();
 
         _depositAsAlice(DEPOSIT_AMOUNT);
+
+        // Create a non-zero exposure without a report timestamp to trigger staleness checks.
+        registry.setStrategyState(
+            STRATEGY_ID,
+            CrossChainTypes.StrategyState({
+                currentDebt: 1,
+                lastReportedValue: 1,
+                pendingBridgeIn: 0,
+                pendingBridgeOut: 0,
+                freeLiquidity: 0,
+                unrealizedLossBuffer: 0,
+                lastReportTimestamp: 0,
+                lastAckTimestamp: 0,
+                health: CrossChainTypes.StrategyHealth.Active
+            })
+        );
 
         assertEq(vault.maxWithdraw(alice), 0);
         assertEq(vault.maxRedeem(alice), 0);

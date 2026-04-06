@@ -2,7 +2,9 @@
 pragma solidity 0.8.34;
 
 import {CrossChainAccessControl} from "../access/CrossChainAccessControl.sol";
+import {ICrossChainRoutingPolicy} from "../interfaces/crosschain/ICrossChainRoutingPolicy.sol";
 import {IStrategyAllocator} from "../interfaces/crosschain/IStrategyAllocator.sol";
+import {IStrategyRegistry} from "../interfaces/crosschain/IStrategyRegistry.sol";
 import {CrossChainTypes} from "../libraries/CrossChainTypes.sol";
 
 contract StrategyAllocator is CrossChainAccessControl, IStrategyAllocator {
@@ -18,12 +20,61 @@ contract StrategyAllocator is CrossChainAccessControl, IStrategyAllocator {
     error StrategyAllocator__DispatchAlreadyRegistered(bytes32 opId);
     error StrategyAllocator__InvalidPayloadVersion(uint8 version);
     error StrategyAllocator__PayloadOperationMismatch(bytes32 opId);
+    error StrategyAllocator__UnknownStrategy(uint32 strategyId);
+    error StrategyAllocator__EmergencyExitOnly(uint32 strategyId);
+    error StrategyAllocator__DepositsDisabled(uint32 strategyId);
+    error StrategyAllocator__WithdrawalsDisabled(uint32 strategyId);
+    error StrategyAllocator__StrategyNotActive(
+        uint32 strategyId,
+        CrossChainTypes.StrategyHealth health
+    );
+    error StrategyAllocator__StrategyReportStale(uint32 strategyId);
+    error StrategyAllocator__DebtLimitExceeded(
+        uint32 strategyId,
+        uint256 requestedDebtAfter,
+        uint256 debtLimit
+    );
+    error StrategyAllocator__MinAssetsOutTooLow(
+        uint32 strategyId,
+        uint256 minAssetsOut,
+        uint256 requiredMinAssetsOut
+    );
+    error StrategyAllocator__DegradedModeNoAllocations();
+    error StrategyAllocator__AllocationExceedsMaxAllocatable(
+        uint256 assets,
+        uint256 maxAllocatable
+    );
+
+    event RoutingPolicyUpdated(address indexed previous, address indexed current);
 
     uint64 public nextOperationNonce = 1;
     mapping(bytes32 opId => CrossChainTypes.Operation) private _operations;
     mapping(bytes32 opId => CrossChainTypes.OperationDispatch) private _dispatches;
 
-    constructor(address admin) CrossChainAccessControl(admin) {}
+    IStrategyRegistry private immutable STRATEGY_REGISTRY;
+    ICrossChainRoutingPolicy public routingPolicy;
+
+    constructor(
+        address admin,
+        IStrategyRegistry strategyRegistry_
+    ) CrossChainAccessControl(admin) {
+        if (address(strategyRegistry_) == address(0)) {
+            revert StrategyAllocator__UnknownStrategy(0);
+        }
+        STRATEGY_REGISTRY = strategyRegistry_;
+    }
+
+    function strategyRegistry() public view returns (IStrategyRegistry) {
+        return STRATEGY_REGISTRY;
+    }
+
+    function setRoutingPolicy(
+        ICrossChainRoutingPolicy routingPolicy_
+    ) external onlyRole(GOVERNANCE_ROLE) {
+        address previous = address(routingPolicy);
+        routingPolicy = routingPolicy_;
+        emit RoutingPolicyUpdated(previous, address(routingPolicy_));
+    }
 
     function createOperation(
         uint32 strategyId,
@@ -35,6 +86,17 @@ contract StrategyAllocator is CrossChainAccessControl, IStrategyAllocator {
         if (deadline < block.timestamp) {
             revert StrategyAllocator__InvalidDeadline();
         }
+
+        if (!STRATEGY_REGISTRY.strategyExists(strategyId)) {
+            revert StrategyAllocator__UnknownStrategy(strategyId);
+        }
+
+        CrossChainTypes.StrategyConfig memory config = STRATEGY_REGISTRY
+            .getStrategyConfig(strategyId);
+        CrossChainTypes.StrategyState memory state = STRATEGY_REGISTRY
+            .getStrategyState(strategyId);
+
+        _validateOperationRequest(config, state, opType, assets, minAssetsOut);
 
         uint64 nonce = nextOperationNonce++;
         opId = keccak256(
@@ -87,6 +149,27 @@ contract StrategyAllocator is CrossChainAccessControl, IStrategyAllocator {
                 operation.status,
                 status
             );
+        }
+
+        if (
+            operation.opType == CrossChainTypes.OperationType.Allocate &&
+            operation.status == CrossChainTypes.OperationStatus.Created &&
+            status == CrossChainTypes.OperationStatus.Sent
+        ) {
+            ICrossChainRoutingPolicy policy = routingPolicy;
+            if (address(policy) != address(0)) {
+                if (policy.hasStaleStrategyReports()) {
+                    revert StrategyAllocator__DegradedModeNoAllocations();
+                }
+
+                uint256 maxAllocatable = policy.maxAllocatableAssets();
+                if (operation.assets > maxAllocatable) {
+                    revert StrategyAllocator__AllocationExceedsMaxAllocatable(
+                        operation.assets,
+                        maxAllocatable
+                    );
+                }
+            }
         }
 
         CrossChainTypes.OperationStatus previousStatus = operation.status;
@@ -285,6 +368,129 @@ contract StrategyAllocator is CrossChainAccessControl, IStrategyAllocator {
         ) {
             revert StrategyAllocator__PayloadOperationMismatch(operation.opId);
         }
+    }
+
+    function _validateOperationRequest(
+        CrossChainTypes.StrategyConfig memory config,
+        CrossChainTypes.StrategyState memory state,
+        CrossChainTypes.OperationType opType,
+        uint256 assets,
+        uint256 minAssetsOut
+    ) internal view {
+        if (
+            state.health == CrossChainTypes.StrategyHealth.Paused ||
+            state.health == CrossChainTypes.StrategyHealth.EmergencyExitOnly ||
+            state.health == CrossChainTypes.StrategyHealth.Deprecated
+        ) {
+            if (
+                opType == CrossChainTypes.OperationType.Allocate ||
+                opType == CrossChainTypes.OperationType.Harvest
+            ) {
+                revert StrategyAllocator__StrategyNotActive(
+                    config.strategyId,
+                    state.health
+                );
+            }
+        }
+
+        if (
+            config.emergencyExitOnly ||
+            state.health == CrossChainTypes.StrategyHealth.EmergencyExitOnly
+        ) {
+            if (
+                opType == CrossChainTypes.OperationType.Allocate ||
+                opType == CrossChainTypes.OperationType.Harvest
+            ) {
+                revert StrategyAllocator__EmergencyExitOnly(config.strategyId);
+            }
+        }
+
+        if (opType == CrossChainTypes.OperationType.Allocate) {
+            if (assets == 0) {
+                // treat as no-op; disallow to avoid confusing accounting and policy.
+                revert StrategyAllocator__DebtLimitExceeded(
+                    config.strategyId,
+                    0,
+                    0
+                );
+            }
+            if (!config.depositsEnabled) {
+                revert StrategyAllocator__DepositsDisabled(config.strategyId);
+            }
+
+            // Only require freshness when the strategy already has exposure; this allows the
+            // very first allocation into a new strategy.
+            if (_strategyHasExposure(state) && _isStale(config, state)) {
+                revert StrategyAllocator__StrategyReportStale(config.strategyId);
+            }
+
+            if (config.debtLimit != 0) {
+                uint256 requestedAfter = state.currentDebt + state.pendingBridgeOut + assets;
+                if (requestedAfter > uint256(config.debtLimit)) {
+                    revert StrategyAllocator__DebtLimitExceeded(
+                        config.strategyId,
+                        requestedAfter,
+                        uint256(config.debtLimit)
+                    );
+                }
+            }
+        } else if (opType == CrossChainTypes.OperationType.Recall) {
+            if (assets == 0) {
+                revert StrategyAllocator__DebtLimitExceeded(
+                    config.strategyId,
+                    0,
+                    0
+                );
+            }
+            if (!config.withdrawalsEnabled) {
+                revert StrategyAllocator__WithdrawalsDisabled(config.strategyId);
+            }
+            if (assets > state.currentDebt) {
+                revert StrategyAllocator__DebtLimitExceeded(
+                    config.strategyId,
+                    assets,
+                    state.currentDebt
+                );
+            }
+        } else if (opType == CrossChainTypes.OperationType.Harvest) {
+            // no additional checks for v1 beyond state/emergency gating above.
+        } else if (opType == CrossChainTypes.OperationType.EmergencyExit) {
+            // always allowed; state/emergency gating above already restricts non-emergency ops.
+        }
+
+        if (assets != 0 && minAssetsOut != 0 && config.maxSlippageBps != 0) {
+            uint256 requiredMinOut = (assets * (10_000 - uint256(config.maxSlippageBps))) / 10_000;
+            if (minAssetsOut < requiredMinOut) {
+                revert StrategyAllocator__MinAssetsOutTooLow(
+                    config.strategyId,
+                    minAssetsOut,
+                    requiredMinOut
+                );
+            }
+        }
+    }
+
+    function _strategyHasExposure(
+        CrossChainTypes.StrategyState memory state
+    ) internal pure returns (bool) {
+        return
+            state.currentDebt != 0 ||
+            state.pendingBridgeIn != 0 ||
+            state.pendingBridgeOut != 0 ||
+            state.lastReportedValue != 0;
+    }
+
+    function _isStale(
+        CrossChainTypes.StrategyConfig memory config,
+        CrossChainTypes.StrategyState memory state
+    ) internal view returns (bool) {
+        if (config.maxReportDelay == 0) {
+            return false;
+        }
+        if (state.lastReportTimestamp == 0) {
+            return true;
+        }
+        return block.timestamp > uint256(state.lastReportTimestamp) + config.maxReportDelay;
     }
 
     function _recordDispatchTimestamp(

@@ -3,22 +3,42 @@ pragma solidity 0.8.34;
 
 import {Test} from "forge-std/Test.sol";
 import {StrategyAllocator} from "../../contracts/crosschain/StrategyAllocator.sol";
+import {StrategyRegistry} from "../../contracts/crosschain/StrategyRegistry.sol";
 import {CrossChainTypes} from "../../contracts/libraries/CrossChainTypes.sol";
 
 contract StrategyAllocatorTests is Test {
     StrategyAllocator internal allocator;
+    StrategyRegistry internal registry;
 
     address internal keeper = makeAddr("keeper");
     address internal bridge = makeAddr("bridge");
+    address internal remoteAgent = makeAddr("remoteAgent");
 
     uint32 internal constant STRATEGY_ID = 7;
     uint32 internal constant DST_EID = 30_101;
 
     function setUp() public {
-        allocator = new StrategyAllocator(address(this));
+        registry = new StrategyRegistry(address(this));
+        allocator = new StrategyAllocator(address(this), registry);
         allocator.grantRole(allocator.ALLOCATOR_ROLE(), address(this));
         allocator.grantRole(allocator.KEEPER_ROLE(), keeper);
         allocator.grantRole(allocator.BRIDGE_ROLE(), bridge);
+
+        registry.upsertStrategy(
+            CrossChainTypes.StrategyConfig({
+                strategyId: STRATEGY_ID,
+                chainId: 1,
+                agent: remoteAgent,
+                asset: makeAddr("asset"),
+                debtLimit: uint96(type(uint96).max),
+                maxSlippageBps: 200,
+                maxReportDelay: 1 days,
+                depositsEnabled: true,
+                withdrawalsEnabled: true,
+                emergencyExitOnly: false,
+                kind: CrossChainTypes.StrategyKind.Custom
+            })
+        );
     }
 
     function testCreateOperationAssignsNonceAndCreatedState() public {
@@ -49,6 +69,7 @@ contract StrategyAllocatorTests is Test {
     }
 
     function testBuildCommandPayloadForRecallMatchesOperation() public {
+        _setStrategyDebt(60e6);
         bytes32 opId = _createOperation(
             CrossChainTypes.OperationType.Recall,
             50e6,
@@ -176,10 +197,11 @@ contract StrategyAllocatorTests is Test {
     }
 
     function testReceivedOperationCanBeCancelled() public {
+        _setStrategyDebt(30e6);
         bytes32 opId = _createOperation(
             CrossChainTypes.OperationType.Recall,
             25e6,
-            24e6
+            245e5
         );
 
         vm.prank(keeper);
@@ -258,6 +280,23 @@ contract StrategyAllocatorTests is Test {
             makeAddr("remoteAgent"),
             keccak256(abi.encode(opId, "msg")),
             encodedPayload
+        );
+    }
+
+    function _setStrategyDebt(uint256 assets) internal {
+        registry.setStrategyState(
+            STRATEGY_ID,
+            CrossChainTypes.StrategyState({
+                currentDebt: assets,
+                lastReportedValue: assets,
+                pendingBridgeIn: 0,
+                pendingBridgeOut: 0,
+                freeLiquidity: assets,
+                unrealizedLossBuffer: 0,
+                lastReportTimestamp: uint64(block.timestamp),
+                lastAckTimestamp: 0,
+                health: CrossChainTypes.StrategyHealth.Active
+            })
         );
     }
 }

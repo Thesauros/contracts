@@ -223,6 +223,30 @@ contract CrossChainVault is
         return _availableHomeLiquidity();
     }
 
+    /// @dev Routing helper for off-chain policy. This is intentionally conservative and does not
+    ///      attempt to model bridge latency or strategy liquidity; it only answers whether the
+    ///      system is visibility-degraded due to stale reports.
+    function hasStaleStrategyReports() external view returns (bool) {
+        return _hasStaleStrategyReports();
+    }
+
+    /// @dev Routing helper for off-chain policy: maximum assets that can be allocated while
+    ///      preserving the local buffer target and residual liquidity floor.
+    function maxAllocatableAssets() external view returns (uint256) {
+        uint256 liquidAssets = _availableHomeLiquidity();
+
+        uint256 required = minimumResidualLiquidity;
+        if (targetLocalBufferAssets > required) {
+            required = targetLocalBufferAssets;
+        }
+
+        if (liquidAssets <= required) {
+            return 0;
+        }
+
+        return liquidAssets - required;
+    }
+
     function instantWithdrawalCapacity()
         public
         view
@@ -691,6 +715,10 @@ contract CrossChainVault is
             CrossChainTypes.StrategyState memory state = STRATEGY_REGISTRY
                 .getStrategyState(strategyId);
 
+            if (!_strategyHasExposure(state)) {
+                continue;
+            }
+
             if (
                 config.maxReportDelay != 0 &&
                 (state.lastReportTimestamp == 0 ||
@@ -713,6 +741,10 @@ contract CrossChainVault is
             CrossChainTypes.StrategyState memory state = STRATEGY_REGISTRY
                 .getStrategyState(strategyId);
 
+            if (!_strategyHasExposure(state)) {
+                continue;
+            }
+
             if (
                 config.maxReportDelay != 0 &&
                 (state.lastReportTimestamp == 0 ||
@@ -722,6 +754,16 @@ contract CrossChainVault is
                 revert CrossChainVault__StaleStrategyReport(strategyId);
             }
         }
+    }
+
+    function _strategyHasExposure(
+        CrossChainTypes.StrategyState memory state
+    ) internal pure returns (bool) {
+        return
+            state.currentDebt != 0 ||
+            state.pendingBridgeIn != 0 ||
+            state.pendingBridgeOut != 0 ||
+            state.lastReportedValue != 0;
     }
 
     function _requireKeeperOrGovernance() internal view {

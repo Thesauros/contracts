@@ -69,6 +69,34 @@ contract ReportSettlerTests is Test {
         settler.submitReport(report);
     }
 
+    function testSubmitReportRejectsOutdatedReportTimestamp() public {
+        CrossChainTypes.StrategyReport memory report = _buildReport(
+            uint64(block.timestamp)
+        );
+
+        vm.prank(reporter);
+        settler.submitReport(report);
+
+        CrossChainTypes.StrategyReport memory outdated = _buildReport(
+            uint64(block.timestamp)
+        );
+
+        vm.prank(reporter);
+        vm.expectRevert(ReportSettler.ReportSettler__ReportOutdated.selector);
+        settler.submitReport(outdated);
+    }
+
+    function testSubmitReportRejectsChainMismatch() public {
+        CrossChainTypes.StrategyReport memory report = _buildReport(
+            uint64(block.timestamp)
+        );
+        report.chainId = REMOTE_CHAIN_ID + 1;
+
+        vm.prank(reporter);
+        vm.expectRevert(ReportSettler.ReportSettler__ChainMismatch.selector);
+        settler.submitReport(report);
+    }
+
     function _buildReport(
         uint64 reportTimestamp
     ) internal pure returns (CrossChainTypes.StrategyReport memory report) {

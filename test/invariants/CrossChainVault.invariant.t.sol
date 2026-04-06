@@ -162,6 +162,10 @@ contract CrossChainVaultInvariantTests is StdInvariant, Test {
         vault.grantRole(vault.BRIDGE_ROLE(), bridge);
 
         handler = new CrossChainVaultHandler(asset, vault);
+        // Let the handler actually exercise keeper/bridge paths (otherwise calls revert and get
+        // swallowed by try/catch, or counted as invariant reverts).
+        vault.grantRole(vault.KEEPER_ROLE(), address(handler));
+        vault.grantRole(vault.BRIDGE_ROLE(), address(handler));
         targetContract(address(handler));
     }
 
@@ -178,4 +182,3 @@ contract CrossChainVaultInvariantTests is StdInvariant, Test {
         assertGe(asset.balanceOf(address(vault)), vault.homeIdle());
     }
 }
-

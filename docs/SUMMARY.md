@@ -23,6 +23,9 @@
 * [Sprint 6 Closeout](crosschain-vault-sprint-6-closeout.md)
 * [Sprint 7 Closeout](crosschain-vault-sprint-7-closeout.md)
 * [Sprint 8 Closeout](crosschain-vault-sprint-8-closeout.md)
+* [Cross-Chain Vault RC Checklist](crosschain-vault-rc-checklist.md)
+* [Cross-Chain Vault Incident Test Suite](crosschain-vault-incident-test-suite.md)
+* [Cross-Chain Vault Threat Model](crosschain-vault-threat-model.md)
 * [Quick Start](quick-start.md)
 
 ## Contracts

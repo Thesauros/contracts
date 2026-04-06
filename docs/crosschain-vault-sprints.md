@@ -482,6 +482,10 @@ Make routing economically correct and operationally safe.
 
 ## Sprint 9. Hardening and Release Candidate
 
+### Status
+
+`In progress as of 2026-04-06`
+
 ### Goal
 
 Prepare the system for audit handoff and production-style testnet rehearsal.

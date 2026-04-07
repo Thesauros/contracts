@@ -35,12 +35,6 @@ contract LocalRehearsal is Script {
         uint256 attestorKey = vm.envOr("ATTESTOR_KEY", uint256(0xA11CE));
         address attestor = vm.addr(attestorKey);
 
-        // One funded user for deposits/withdrawals.
-        address alice = vm.envOr("ALICE", address(0));
-        if (alice == address(0)) {
-            alice = makeAddr("alice");
-        }
-
         uint256 depositAmount = vm.envOr("DEPOSIT_ASSETS", uint256(1_000e6));
         uint256 allocateAmount = vm.envOr("ALLOCATE_ASSETS", uint256(250e6));
         uint256 recallAmount = vm.envOr("RECALL_ASSETS", uint256(100e6));
@@ -92,16 +86,11 @@ contract LocalRehearsal is Script {
             })
         );
 
-        // Fund Alice and deposit.
-        asset.mint(alice, depositAmount);
-        vm.stopBroadcast();
-
-        vm.startBroadcast(deployerKey);
-        vm.prank(alice);
+        // Fund the deployer and deposit (single-signer rehearsal).
+        asset.mint(deployer, depositAmount);
         asset.approve(address(vault), depositAmount);
 
-        vm.prank(alice);
-        vault.deposit(depositAmount, alice);
+        vault.deposit(depositAmount, deployer);
 
         console2.log("vault", address(vault));
         console2.log("asset", address(asset));
@@ -124,8 +113,14 @@ contract LocalRehearsal is Script {
         // This is only for local rehearsal using MockERC20.
         asset.burn(address(vault), allocateAmount);
 
+        allocator.setOperationStatus(allocateOpId, CrossChainTypes.OperationStatus.Received);
+        vault.syncOperationAccounting(allocateOpId); // Sent -> Received (no-op)
+
+        allocator.setOperationStatus(allocateOpId, CrossChainTypes.OperationStatus.Executed);
+        vault.syncOperationAccounting(allocateOpId); // Received -> Executed (no-op)
+
         allocator.setOperationStatus(allocateOpId, CrossChainTypes.OperationStatus.Settled);
-        vault.syncOperationAccounting(allocateOpId); // Sent -> Settled
+        vault.syncOperationAccounting(allocateOpId); // Executed -> Settled
 
         console2.log("homeIdle after allocate", vault.homeIdle());
 
@@ -160,8 +155,14 @@ contract LocalRehearsal is Script {
         );
 
         vault.syncOperationAccounting(recallOpId); // Undefined -> Created
+        allocator.setOperationStatus(recallOpId, CrossChainTypes.OperationStatus.Sent);
+        vault.syncOperationAccounting(recallOpId); // Created -> Sent (no-op)
+
+        allocator.setOperationStatus(recallOpId, CrossChainTypes.OperationStatus.Received);
+        vault.syncOperationAccounting(recallOpId); // Sent -> Received (no-op)
+
         allocator.setOperationStatus(recallOpId, CrossChainTypes.OperationStatus.Executed);
-        vault.syncOperationAccounting(recallOpId); // Created -> Executed
+        vault.syncOperationAccounting(recallOpId); // Received -> Executed
 
         // Simulate recall funds arriving home.
         asset.mint(address(vault), recallAmount);
@@ -213,4 +214,3 @@ contract LocalRehearsal is Script {
         return keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
     }
 }
-

@@ -38,6 +38,7 @@ contract LocalRehearsal is Script {
         uint256 depositAmount = vm.envOr("DEPOSIT_ASSETS", uint256(1_000e6));
         uint256 allocateAmount = vm.envOr("ALLOCATE_ASSETS", uint256(250e6));
         uint256 recallAmount = vm.envOr("RECALL_ASSETS", uint256(100e6));
+        address remoteEscrow = makeAddr("remoteEscrow");
 
         vm.startBroadcast(deployerKey);
 
@@ -109,9 +110,11 @@ contract LocalRehearsal is Script {
         allocator.setOperationStatus(allocateOpId, CrossChainTypes.OperationStatus.Sent);
         vault.syncOperationAccounting(allocateOpId); // Created -> Sent
 
-        // Simulate that capital left the home chain by burning from the vault balance.
-        // This is only for local rehearsal using MockERC20.
+        // Simulate that capital left the home chain.
+        // For a cleaner accounting rehearsal, we keep the mock token totalSupply constant by
+        // minting to a "remote escrow" as we burn from the home vault.
         asset.burn(address(vault), allocateAmount);
+        asset.mint(remoteEscrow, allocateAmount);
 
         allocator.setOperationStatus(allocateOpId, CrossChainTypes.OperationStatus.Received);
         vault.syncOperationAccounting(allocateOpId); // Sent -> Received (no-op)
@@ -136,12 +139,7 @@ contract LocalRehearsal is Script {
             positionsHash: keccak256("positions")
         });
 
-        bytes32 digest = _reportDigest(address(settler), report);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(attestorKey, digest);
-        bytes memory sig = abi.encodePacked(r, s, v);
-
-        settler.submitReportAttested(report, sig);
-        vault.settleStrategyReport(STRATEGY_ID);
+        _submitAttestedReport(attestorKey, report);
 
         console2.log("totalAssets after report", vault.totalAssets());
 
@@ -165,6 +163,8 @@ contract LocalRehearsal is Script {
         vault.syncOperationAccounting(recallOpId); // Received -> Executed
 
         // Simulate recall funds arriving home.
+        // Burn from the remote escrow and mint to the home vault to keep mock totalSupply constant.
+        asset.burn(remoteEscrow, recallAmount);
         asset.mint(address(vault), recallAmount);
         vault.receiveRecallFunds(recallAmount);
 
@@ -172,9 +172,38 @@ contract LocalRehearsal is Script {
         vault.syncOperationAccounting(recallOpId); // Executed -> Settled
 
         console2.log("homeIdle after recall settlement", vault.homeIdle());
+
+        // After recall we need a fresh report to reflect reduced strategy TVL; totalAssets is based
+        // on lastReportedValue (not currentDebt), by design.
+        CrossChainTypes.StrategyReport memory reportAfterRecall = CrossChainTypes
+            .StrategyReport({
+                strategyId: STRATEGY_ID,
+                chainId: uint32(block.chainid),
+                totalValue: allocateAmount - recallAmount,
+                freeLiquidity: (allocateAmount - recallAmount) / 2,
+                totalDebt: allocateAmount - recallAmount,
+                pnl: 0,
+                reportTimestamp: uint64(block.timestamp + 1),
+                positionsHash: keccak256("positions-after-recall")
+            });
+
+        _submitAttestedReport(attestorKey, reportAfterRecall);
+
         console2.log("totalAssets after recall settlement", vault.totalAssets());
 
         vm.stopBroadcast();
+    }
+
+    function _submitAttestedReport(
+        uint256 attestorKey,
+        CrossChainTypes.StrategyReport memory report
+    ) internal {
+        bytes32 digest = _reportDigest(address(settler), report);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(attestorKey, digest);
+        bytes memory sig = abi.encodePacked(r, s, v);
+
+        settler.submitReportAttested(report, sig);
+        vault.settleStrategyReport(STRATEGY_ID);
     }
 
     function _reportDigest(

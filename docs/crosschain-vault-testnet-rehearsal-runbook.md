@@ -14,6 +14,18 @@ Goal: run an end-to-end rehearsal on testnet(s) that exercises the operational l
 
 ## Rehearsal Tracks
 
+### Track 0: Local Dry Run (Anvil)
+
+Before testnet, validate the lifecycle locally with the Foundry script:
+
+- [`scripts/LocalRehearsal.s.sol`](../scripts/LocalRehearsal.s.sol)
+
+Example commands:
+
+`anvil`
+
+`PRIVATE_KEY=<anvil_private_key> forge script scripts/LocalRehearsal.s.sol:LocalRehearsal --rpc-url http://127.0.0.1:8545 --broadcast`
+
 ### Track A: Happy Path Lifecycle
 
 1. Deploy:
@@ -68,4 +80,3 @@ Minimum set:
 - bridge peer config snapshot
 - incident rehearsal notes and postmortems
 - list of any required on-chain parameter changes before audit or mainnet
-

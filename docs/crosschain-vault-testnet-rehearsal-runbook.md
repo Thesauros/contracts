@@ -8,6 +8,8 @@ Goal: run an end-to-end rehearsal on testnet(s) that exercises the operational l
 
 - deployment wallets and governance/guardian/keeper keys are prepared
 - RPC endpoints are configured
+- Base + Arbitrum are the default target chains in this project
+- Stargate is the only supported bridge choice (peer config uses Stargate/LayerZero eids)
 - chosen bridge adapter is deployed and peers are configured
 - at least one remote strategy agent is deployed on the remote chain
 - a backend ledger is ready to ingest events and reconcile NAV buckets
@@ -25,6 +27,25 @@ Example commands:
 `anvil`
 
 `PRIVATE_KEY=<anvil_private_key> forge script scripts/LocalRehearsal.s.sol:LocalRehearsal --rpc-url http://127.0.0.1:8545 --broadcast`
+
+### Track 0b: Deploy Scripts (Base/Arbitrum)
+
+Home chain (Base) stack:
+
+- [`scripts/deploy/DeployCrossChainHome.s.sol`](../scripts/deploy/DeployCrossChainHome.s.sol)
+
+Remote chain (Arbitrum) agent + bridge + mock ERC4626 path:
+
+- [`scripts/deploy/DeployCrossChainRemote.s.sol`](../scripts/deploy/DeployCrossChainRemote.s.sol)
+
+Peer wiring (Stargate/LayerZero EIDs):
+
+- [`scripts/deploy/ConfigureStargatePeers.s.sol`](../scripts/deploy/ConfigureStargatePeers.s.sol)
+
+Notes:
+
+- run `forge script` with `--offline` to avoid Foundry/macOS proxy crashes during signature identification;
+- peer configuration requires `PEER_EID` and `PEER` (`bytes32`) values for the target chain.
 
 ### Track A: Happy Path Lifecycle
 

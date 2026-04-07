@@ -42,10 +42,16 @@ Peer wiring (Stargate/LayerZero EIDs):
 
 - [`scripts/deploy/ConfigureStargatePeers.s.sol`](../scripts/deploy/ConfigureStargatePeers.s.sol)
 
+Environment template:
+
+- [`.env.crosschain.example`](../.env.crosschain.example)
+
 Notes:
 
 - run `forge script` with `--offline` to avoid Foundry/macOS proxy crashes during signature identification;
 - peer configuration requires `PEER_EID` and `PEER` (`bytes32`) values for the target chain.
+  - `PEER` should be the remote bridge adapter `localPeer()` value.
+  - do not guess EIDs: use the Stargate/LayerZero official values for Base/Arbitrum.
 
 ### Track A: Happy Path Lifecycle
 

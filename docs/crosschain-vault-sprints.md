@@ -571,3 +571,16 @@ Before the next implementation iteration starts:
 3. make the `CrossChainVault vs EntryVault wrapper` decision;
 4. freeze backend ledger event schema;
 5. freeze redemption orchestrator responsibilities.
+
+## 12. Post-Plan Extension: Sprint 10
+
+Sprint 10 extends the original 9-sprint plan for production readiness.
+
+Focus:
+
+- report attestation policy and signer governance
+- testnet rehearsal and incident drill
+
+Deliverable:
+
+- [Sprint 10 Closeout](crosschain-vault-sprint-10-closeout.md)

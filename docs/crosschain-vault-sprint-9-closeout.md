@@ -65,3 +65,5 @@ Fork suites remain environment-dependent (RPC + Foundry/macOS proxy panic noted 
 - testnet rehearsal (end-to-end bridging, operational runbook, and incident response drill)
 - production report attestation policy (signers, replay protection, governance workflow)
 
+Note: the report attestation policy was implemented in Sprint 10 and is documented in
+`crosschain-vault-report-attestation-policy.md`.

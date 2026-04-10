@@ -13,6 +13,8 @@ Goal: run an end-to-end rehearsal on testnet(s) that exercises the operational l
 - chosen bridge adapter is deployed and peers are configured
 - at least one remote strategy agent is deployed on the remote chain
 - a backend ledger is ready to ingest events and reconcile NAV buckets
+- report attestation signers are provisioned and `REPORT_ATTESTOR_ROLE` is granted
+- `attestationRequired` is set to true on `ReportSettler` for rehearsal
 
 ## Rehearsal Tracks
 
@@ -61,7 +63,7 @@ Notes:
    - `GOVERNANCE_ROLE` and `GUARDIAN_ROLE` to multisig (or timelock)
    - `KEEPER_ROLE` to keeper bot(s)
    - `BRIDGE_ROLE` to bridge adapter(s)
-   - `REPORT_ATTESTOR_ROLE` (or `REPORTER_ROLE`) to the reporting authority
+   - `REPORT_ATTESTOR_ROLE` to the reporting authority
 3. Configure one strategy in the registry:
    - chainId, agent address, asset address, debt limit, report delay, slippage
 4. Deposit and confirm accounting:
@@ -73,7 +75,7 @@ Notes:
    - `registerBridgeDispatch`
    - remote: execute allocate, prepare report
 6. Report and settle:
-   - home: submit report (prefer `submitReportAttested`)
+   - home: submit report with `submitReportAttested` (attestation required)
    - verify `totalAssets()` updates and staleness windows behave as expected
 7. Recall:
    - `createOperation(Recall)`
@@ -100,10 +102,26 @@ Minimum set:
 - chain mismatch and stale report rejection in `ReportSettler`
 - unauthorized redemption actions revert
 
+## Minimum Monitoring for Rehearsal
+
+Alerts (minimum):
+
+- stale strategy report (max report delay breached)
+- bridge timeout (unacknowledged message)
+- stuck operation (no status change within SLA)
+- withdrawal SLA breach (queued beyond target window)
+
+Sources:
+
+- on-chain events (`StrategyReportAccepted`, operation lifecycle events)
+- bridge adapter logs/acks
+- backend ledger reconciliation deltas
+
 ## Exit Artifacts
 
 - deployed addresses per chain
 - role assignment matrix used on testnet
 - bridge peer config snapshot
 - incident rehearsal notes and postmortems
+- testnet rehearsal report (`crosschain-vault-testnet-rehearsal-report.md`)
 - list of any required on-chain parameter changes before audit or mainnet

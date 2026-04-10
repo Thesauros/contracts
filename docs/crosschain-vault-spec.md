@@ -228,7 +228,7 @@ Report requirements:
 
 - reject reports older than `maxReportDelay`;
 - reject reports with invalid `strategyId / chainId`;
-- use a signer / attestation policy;
+- use a signer / attestation policy (see `crosschain-vault-report-attestation-policy.md`);
 - keep report application idempotent.
 
 ### 5.6 `BridgeAdapter`

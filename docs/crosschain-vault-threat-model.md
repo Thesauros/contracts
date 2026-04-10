@@ -14,7 +14,7 @@ Current as of **2026-04-06**.
 - governance: config changes, emergency actions
 - keeper: operational state transitions, funding actions, settlement sync
 - bridge: asset + message transport and acknowledgements
-- reporter: strategy reports (in MVP this is trusted; signer policy is deferred)
+- reporter: strategy reports (EIP-712 attestation via REPORT_ATTESTOR_ROLE)
 
 ## Major Attack Surfaces
 
@@ -34,7 +34,5 @@ Current as of **2026-04-06**.
 
 ## Open Items / Deferred
 
-- production report attestation/signer policy
 - chain-level exposure caps enforced on-chain (per-chain config module)
 - full incident runbooks integrated with backend/orchestrator and monitoring
-

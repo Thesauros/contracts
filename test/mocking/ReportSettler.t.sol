@@ -17,13 +17,19 @@ contract ReportSettlerTests is Test {
 
     address internal reporter = makeAddr("reporter");
     address internal remoteAgent = makeAddr("remoteAgent");
+    uint256 internal attestorKey = 0xA11CE;
+    address internal attestor;
+    uint256 internal rogueKey = 0xBADC0DE;
 
     function setUp() public {
         asset = new MockERC20("USD Coin", "USDC", 6);
         registry = new StrategyRegistry(address(this));
         settler = new ReportSettler(address(this), registry);
 
+        attestor = vm.addr(attestorKey);
+
         settler.grantRole(settler.REPORTER_ROLE(), reporter);
+        settler.grantRole(settler.REPORT_ATTESTOR_ROLE(), attestor);
 
         registry.upsertStrategy(
             CrossChainTypes.StrategyConfig({
@@ -97,6 +103,55 @@ contract ReportSettlerTests is Test {
         settler.submitReport(report);
     }
 
+    function testSubmitReportAttestedAcceptsAuthorizedSignature() public {
+        CrossChainTypes.StrategyReport memory report = _buildReport(
+            uint64(block.timestamp)
+        );
+        bytes memory signature = _signReport(report, attestorKey);
+
+        settler.submitReportAttested(report, signature);
+
+        CrossChainTypes.StrategyReport memory stored = settler.getLastReport(
+            STRATEGY_ID
+        );
+        assertEq(stored.totalValue, report.totalValue);
+        assertEq(stored.reportTimestamp, report.reportTimestamp);
+    }
+
+    function testSubmitReportAttestedRejectsUnauthorizedSigner() public {
+        CrossChainTypes.StrategyReport memory report = _buildReport(
+            uint64(block.timestamp)
+        );
+        bytes memory signature = _signReport(report, rogueKey);
+
+        vm.expectRevert(ReportSettler.ReportSettler__AttestorNotAuthorized.selector);
+        settler.submitReportAttested(report, signature);
+    }
+
+    function testSubmitReportAttestedRejectsReplay() public {
+        CrossChainTypes.StrategyReport memory report = _buildReport(
+            uint64(block.timestamp)
+        );
+        bytes memory signature = _signReport(report, attestorKey);
+
+        settler.submitReportAttested(report, signature);
+
+        vm.expectRevert(ReportSettler.ReportSettler__ReportOutdated.selector);
+        settler.submitReportAttested(report, signature);
+    }
+
+    function testSubmitReportRejectsWhenAttestationRequired() public {
+        CrossChainTypes.StrategyReport memory report = _buildReport(
+            uint64(block.timestamp)
+        );
+
+        settler.setAttestationRequired(true);
+
+        vm.prank(reporter);
+        vm.expectRevert(ReportSettler.ReportSettler__AttestationRequired.selector);
+        settler.submitReport(report);
+    }
+
     function _buildReport(
         uint64 reportTimestamp
     ) internal pure returns (CrossChainTypes.StrategyReport memory report) {
@@ -110,5 +165,14 @@ contract ReportSettlerTests is Test {
             reportTimestamp: reportTimestamp,
             positionsHash: keccak256("positions")
         });
+    }
+
+    function _signReport(
+        CrossChainTypes.StrategyReport memory report,
+        uint256 signerKey
+    ) internal view returns (bytes memory signature) {
+        bytes32 digest = settler.reportDigest(report);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, digest);
+        signature = abi.encodePacked(r, s, v);
     }
 }

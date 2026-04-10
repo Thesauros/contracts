@@ -21,6 +21,10 @@ interface IReportSettler {
         bytes calldata signature
     ) external;
 
+    function reportDigest(
+        CrossChainTypes.StrategyReport calldata report
+    ) external view returns (bytes32);
+
     function getLastReport(
         uint32 strategyId
     ) external view returns (CrossChainTypes.StrategyReport memory);

@@ -15,8 +15,13 @@ contract ReportSettler is CrossChainAccessControl, IReportSettler, EIP712 {
     error ReportSettler__ReportStale();
     error ReportSettler__InvalidAttestation();
     error ReportSettler__AttestorNotAuthorized();
+    error ReportSettler__AttestationRequired();
+
+    event AttestationRequirementUpdated(bool required);
 
     IStrategyRegistry private immutable STRATEGY_REGISTRY;
+
+    bool public attestationRequired;
 
     mapping(uint32 strategyId => CrossChainTypes.StrategyReport) private _reports;
 
@@ -39,6 +44,9 @@ contract ReportSettler is CrossChainAccessControl, IReportSettler, EIP712 {
     function submitReport(
         CrossChainTypes.StrategyReport calldata report
     ) external onlyRole(REPORTER_ROLE) {
+        if (attestationRequired) {
+            revert ReportSettler__AttestationRequired();
+        }
         _acceptReport(report);
     }
 
@@ -57,6 +65,17 @@ contract ReportSettler is CrossChainAccessControl, IReportSettler, EIP712 {
         }
 
         _acceptReport(report);
+    }
+
+    function setAttestationRequired(bool required) external onlyRole(GOVERNANCE_ROLE) {
+        attestationRequired = required;
+        emit AttestationRequirementUpdated(required);
+    }
+
+    function reportDigest(
+        CrossChainTypes.StrategyReport calldata report
+    ) external view returns (bytes32) {
+        return _hashTypedDataV4(_hashReport(report));
     }
 
     function _hashReport(

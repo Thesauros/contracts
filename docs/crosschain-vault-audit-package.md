@@ -24,6 +24,7 @@ This package covers the cross-chain vault control plane and its mocked execution
 - [ADR-004 Rebalancing Policy and Risk Limits](adr-004-rebalancing-policy-and-risk-limits.md)
 - [Risk Limits Matrix](risk-limits-matrix.md)
 - [Cross-Chain Vault Threat Model](crosschain-vault-threat-model.md)
+- [Cross-Chain Vault Report Attestation Policy](crosschain-vault-report-attestation-policy.md)
 - [Cross-Chain Vault RC Checklist](crosschain-vault-rc-checklist.md)
 - [Cross-Chain Vault Incident Test Suite](crosschain-vault-incident-test-suite.md)
 - [Cross-Chain Vault Testnet Rehearsal Runbook](crosschain-vault-testnet-rehearsal-runbook.md)
@@ -79,6 +80,5 @@ Fork suites:
 
 ## Known Gaps / Explicitly Deferred
 
-- production report attestation/signer policy (beyond the mocked reporter role)
 - testnet rehearsal and end-to-end bridging integration
 - chain-level caps enforcement module (beyond per-strategy and vault-level limits)

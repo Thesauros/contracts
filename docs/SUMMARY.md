@@ -31,11 +31,14 @@
 * [Sprint 7 Closeout](crosschain-vault-sprint-7-closeout.md)
 * [Sprint 8 Closeout](crosschain-vault-sprint-8-closeout.md)
 * [Sprint 9 Closeout](crosschain-vault-sprint-9-closeout.md)
+* [Sprint 10 Closeout](crosschain-vault-sprint-10-closeout.md)
 * [Cross-Chain Vault RC Checklist](crosschain-vault-rc-checklist.md)
 * [Cross-Chain Vault Incident Test Suite](crosschain-vault-incident-test-suite.md)
 * [Cross-Chain Vault Threat Model](crosschain-vault-threat-model.md)
+* [Cross-Chain Vault Report Attestation Policy](crosschain-vault-report-attestation-policy.md)
 * [Cross-Chain Vault Audit Package](crosschain-vault-audit-package.md)
 * [Cross-Chain Vault Testnet Rehearsal Runbook](crosschain-vault-testnet-rehearsal-runbook.md)
+* [Cross-Chain Vault Testnet Rehearsal Report](crosschain-vault-testnet-rehearsal-report.md)
 * [Cross-Chain Vault Test Cases and Scripts](crosschain-vault-test-cases-and-scripts.md)
 
 ## Contracts

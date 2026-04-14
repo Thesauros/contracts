@@ -81,20 +81,22 @@ contract ReportSettler is CrossChainAccessControl, IReportSettler, EIP712 {
     function _hashReport(
         CrossChainTypes.StrategyReport calldata report
     ) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    REPORT_TYPEHASH,
-                    report.strategyId,
-                    report.chainId,
-                    report.totalValue,
-                    report.freeLiquidity,
-                    report.totalDebt,
-                    report.pnl,
-                    report.reportTimestamp,
-                    report.positionsHash
-                )
-            );
+        bytes32 digest;
+        bytes32 reportTypeHash = REPORT_TYPEHASH;
+        assembly {
+            let ptr := mload(0x40)
+            mstore(ptr, reportTypeHash)
+            mstore(add(ptr, 0x20), calldataload(report))
+            mstore(add(ptr, 0x40), calldataload(add(report, 0x20)))
+            mstore(add(ptr, 0x60), calldataload(add(report, 0x40)))
+            mstore(add(ptr, 0x80), calldataload(add(report, 0x60)))
+            mstore(add(ptr, 0xa0), calldataload(add(report, 0x80)))
+            mstore(add(ptr, 0xc0), calldataload(add(report, 0xa0)))
+            mstore(add(ptr, 0xe0), calldataload(add(report, 0xc0)))
+            mstore(add(ptr, 0x100), calldataload(add(report, 0xe0)))
+            digest := keccak256(ptr, 0x120)
+        }
+        return digest;
     }
 
     function _acceptReport(CrossChainTypes.StrategyReport calldata report) internal {

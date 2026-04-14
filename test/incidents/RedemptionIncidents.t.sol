@@ -8,7 +8,6 @@ import {ReportSettler} from "../../contracts/crosschain/ReportSettler.sol";
 import {StrategyAllocator} from "../../contracts/crosschain/StrategyAllocator.sol";
 import {StrategyRegistry} from "../../contracts/crosschain/StrategyRegistry.sol";
 import {WithdrawalQueue} from "../../contracts/crosschain/WithdrawalQueue.sol";
-import {CrossChainTypes} from "../../contracts/libraries/CrossChainTypes.sol";
 
 contract RedemptionIncidentTests is Test {
     MockERC20 internal asset;
@@ -91,4 +90,3 @@ contract RedemptionIncidentTests is Test {
         vm.stopPrank();
     }
 }
-

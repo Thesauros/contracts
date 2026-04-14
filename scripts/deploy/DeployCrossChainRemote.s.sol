@@ -14,8 +14,9 @@ import {MorphoStrategyAdapter} from "../../contracts/crosschain/MorphoStrategyAd
 import {RemoteStrategyAgent} from "../../contracts/crosschain/RemoteStrategyAgent.sol";
 import {StargateBridgeAdapter} from "../../contracts/crosschain/StargateBridgeAdapter.sol";
 import {IStrategyAdapter} from "../../contracts/interfaces/crosschain/IStrategyAdapter.sol";
+import {CrossChainDeployConfig} from "./CrossChainDeployConfig.s.sol";
 
-contract DeployCrossChainRemote is Script {
+contract DeployCrossChainRemote is CrossChainDeployConfig {
     function run() external {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerKey);
@@ -26,7 +27,6 @@ contract DeployCrossChainRemote is Script {
         uint32 strategyId = uint32(vm.envOr("STRATEGY_ID", uint256(1)));
 
         bool deployMockAsset = vm.envOr("DEPLOY_MOCK_ASSET", false);
-        address assetAddr = vm.envOr("ASSET", address(0));
         uint8 assetDecimals = uint8(vm.envOr("ASSET_DECIMALS", uint256(6)));
 
         string memory adapterType = vm.envOr(
@@ -44,8 +44,7 @@ contract DeployCrossChainRemote is Script {
                 address(new MockERC20("Mock USDC", "mUSDC", assetDecimals))
             );
         } else {
-            require(assetAddr != address(0), "ASSET required");
-            asset = IERC20(assetAddr);
+            asset = IERC20(_assetForCurrentChain());
         }
 
         IStrategyAdapter adapter;
@@ -64,10 +63,10 @@ contract DeployCrossChainRemote is Script {
             }
             adapter = new ERC4626StrategyAdapter(erc4626Vault);
         } else if (_equals(adapterType, "MORPHO")) {
-            address metaMorpho = vm.envAddress("META_MORPHO");
+            address metaMorpho = _metaMorphoForCurrentChain();
             adapter = new MorphoStrategyAdapter(metaMorpho);
         } else if (_equals(adapterType, "AAVE")) {
-            address provider = vm.envAddress("AAVE_POOL_ADDRESSES_PROVIDER");
+            address provider = _aaveProviderForCurrentChain();
             adapter = new AaveV3StrategyAdapter(provider, address(asset));
         } else {
             revert("Unknown STRATEGY_ADAPTER");

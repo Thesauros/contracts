@@ -9,8 +9,9 @@ import {AaveV3StrategyAdapter} from "../../contracts/crosschain/AaveV3StrategyAd
 import {MorphoStrategyAdapter} from "../../contracts/crosschain/MorphoStrategyAdapter.sol";
 import {ERC4626StrategyAdapter} from "../../contracts/crosschain/ERC4626StrategyAdapter.sol";
 import {IStrategyAdapter} from "../../contracts/interfaces/crosschain/IStrategyAdapter.sol";
+import {CrossChainDeployConfig} from "./CrossChainDeployConfig.s.sol";
 
-contract DeployCrossChainLocal is Script {
+contract DeployCrossChainLocal is CrossChainDeployConfig {
     function run() external {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerKey);
@@ -23,7 +24,7 @@ contract DeployCrossChainLocal is Script {
         address vault = vm.envAddress("VAULT");
         uint32 strategyId = uint32(vm.envOr("STRATEGY_ID", uint256(1)));
 
-        address asset = vm.envAddress("ASSET");
+        address asset = _assetForCurrentChain();
         string memory adapterType = vm.envOr(
             "STRATEGY_ADAPTER",
             string("AAVE")
@@ -33,10 +34,10 @@ contract DeployCrossChainLocal is Script {
 
         IStrategyAdapter adapter;
         if (_equals(adapterType, "AAVE")) {
-            address provider = vm.envAddress("AAVE_POOL_ADDRESSES_PROVIDER");
+            address provider = _aaveProviderForCurrentChain();
             adapter = new AaveV3StrategyAdapter(provider, asset);
         } else if (_equals(adapterType, "MORPHO")) {
-            address metaMorpho = vm.envAddress("META_MORPHO");
+            address metaMorpho = _metaMorphoForCurrentChain();
             adapter = new MorphoStrategyAdapter(metaMorpho);
         } else if (_equals(adapterType, "ERC4626")) {
             address erc4626Vault = vm.envAddress("ERC4626_VAULT");

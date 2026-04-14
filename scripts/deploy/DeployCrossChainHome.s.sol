@@ -14,8 +14,9 @@ import {StrategyRegistry} from "../../contracts/crosschain/StrategyRegistry.sol"
 import {WithdrawalQueue} from "../../contracts/crosschain/WithdrawalQueue.sol";
 import {StargateBridgeAdapter} from "../../contracts/crosschain/StargateBridgeAdapter.sol";
 import {CrossChainTypes} from "../../contracts/libraries/CrossChainTypes.sol";
+import {CrossChainDeployConfig} from "./CrossChainDeployConfig.s.sol";
 
-contract DeployCrossChainHome is Script {
+contract DeployCrossChainHome is CrossChainDeployConfig {
     function run() external {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerKey);
@@ -26,7 +27,6 @@ contract DeployCrossChainHome is Script {
         address reportAttestor = vm.envOr("REPORT_ATTESTOR", deployer);
 
         bool deployMockAsset = vm.envOr("DEPLOY_MOCK_ASSET", false);
-        address assetAddr = vm.envOr("ASSET", address(0));
         uint8 assetDecimals = uint8(vm.envOr("ASSET_DECIMALS", uint256(6)));
 
         string memory name = vm.envOr(
@@ -49,8 +49,7 @@ contract DeployCrossChainHome is Script {
                 address(new MockERC20("Mock USDC", "mUSDC", assetDecimals))
             );
         } else {
-            require(assetAddr != address(0), "ASSET required");
-            asset = IERC20(assetAddr);
+            asset = IERC20(_assetForCurrentChain());
         }
 
         StrategyRegistry registry = new StrategyRegistry(governance);
@@ -127,4 +126,3 @@ contract DeployCrossChainHome is Script {
         vm.stopBroadcast();
     }
 }
-

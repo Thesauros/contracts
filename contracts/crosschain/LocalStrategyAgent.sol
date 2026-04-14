@@ -318,7 +318,12 @@ contract LocalStrategyAgent is CrossChainAccessControl, ILocalStrategyAgent {
         if (storedCommand.executedAt != 0) {
             revert LocalStrategyAgent__CommandAlreadyExecuted(payload.opId);
         }
-        bytes32 payloadHash = keccak256(command);
+        bytes32 payloadHash;
+        assembly {
+            let ptr := mload(0x40)
+            calldatacopy(ptr, command.offset, command.length)
+            payloadHash := keccak256(ptr, command.length)
+        }
         if (storedCommand.payloadHash != bytes32(0)) {
             if (storedCommand.payloadHash != payloadHash) {
                 revert LocalStrategyAgent__PayloadMismatch(payload.opId);

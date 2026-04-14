@@ -10,6 +10,7 @@ import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {CrossChainAccessControl} from "../access/CrossChainAccessControl.sol";
+import {ICrossChainRoutingPolicy} from "../interfaces/crosschain/ICrossChainRoutingPolicy.sol";
 import {ICrossChainVault} from "../interfaces/crosschain/ICrossChainVault.sol";
 import {ILocalStrategyAgent} from "../interfaces/crosschain/ILocalStrategyAgent.sol";
 import {IReportSettler} from "../interfaces/crosschain/IReportSettler.sol";
@@ -22,7 +23,8 @@ contract CrossChainVault is
     ERC4626,
     ERC20Permit,
     CrossChainAccessControl,
-    ICrossChainVault
+    ICrossChainVault,
+    ICrossChainRoutingPolicy
 {
     using SafeERC20 for IERC20;
 
@@ -238,13 +240,13 @@ contract CrossChainVault is
     /// @dev Routing helper for off-chain policy. This is intentionally conservative and does not
     ///      attempt to model bridge latency or strategy liquidity; it only answers whether the
     ///      system is visibility-degraded due to stale reports.
-    function hasStaleStrategyReports() external view returns (bool) {
+    function hasStaleStrategyReports() external view override returns (bool) {
         return _hasStaleStrategyReports();
     }
 
     /// @dev Routing helper for off-chain policy: maximum assets that can be allocated while
     ///      preserving the local buffer target and residual liquidity floor.
-    function maxAllocatableAssets() external view returns (uint256) {
+    function maxAllocatableAssets() external view override returns (uint256) {
         uint256 liquidAssets = _availableHomeLiquidity();
 
         uint256 required = minimumResidualLiquidity;

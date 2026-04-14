@@ -150,7 +150,56 @@ forge script --offline scripts/deploy/DeployCrossChainHome.s.sol:DeployCrossChai
   --broadcast -vv
 ```
 
-### 3.3 Arbitrum deployment
+### 3.3 Base local strategy deployment
+
+Example (Aave V3 local strategy):
+
+```bash
+cd /Users/ivanborisov/Desktop/thesauros/contracts
+export PRIVATE_KEY=...
+export GOVERNANCE=...
+export KEEPER=...
+export REPORTER=...
+export GUARDIAN=...
+export VAULT=<home_vault>
+export STRATEGY_ID=101
+export ASSET=<base_usdc>
+export STRATEGY_ADAPTER=AAVE
+export AAVE_POOL_ADDRESSES_PROVIDER=<base_aave_pool_addresses_provider>
+
+forge script --offline scripts/deploy/DeployCrossChainLocal.s.sol:DeployCrossChainLocal \
+  --rpc-url "$BASE_RPC_URL" \
+  --broadcast -vv
+```
+
+Example (Morpho local strategy):
+
+```bash
+export STRATEGY_ID=102
+export STRATEGY_ADAPTER=MORPHO
+export META_MORPHO=<base_meta_morpho_vault>
+
+forge script --offline scripts/deploy/DeployCrossChainLocal.s.sol:DeployCrossChainLocal \
+  --rpc-url "$BASE_RPC_URL" \
+  --broadcast -vv
+```
+
+Register each local strategy in the registry:
+
+```bash
+export REGISTRY=<strategy_registry>
+export CHAIN_ID=<base_chain_id>
+export AGENT=<local_strategy_agent>
+export ASSET=<base_usdc>
+export STRATEGY_ID=101
+export STRATEGY_KIND=1
+
+forge script --offline scripts/deploy/UpsertStrategy.s.sol:UpsertStrategy \
+  --rpc-url "$BASE_RPC_URL" \
+  --broadcast -vv
+```
+
+### 3.4 Arbitrum deployment
 
 Example:
 
@@ -161,14 +210,15 @@ export GOVERNANCE=...
 export KEEPER=...
 export STRATEGY_ID=1
 export ASSET=...
-export DEPLOY_MOCK_ERC4626=true
+export STRATEGY_ADAPTER=AAVE
+export AAVE_POOL_ADDRESSES_PROVIDER=<arbitrum_aave_pool_addresses_provider>
 
 forge script --offline scripts/deploy/DeployCrossChainRemote.s.sol:DeployCrossChainRemote \
   --rpc-url "$ARBITRUM_RPC_URL" \
   --broadcast -vv
 ```
 
-### 3.4 Stargate peer wiring
+### 3.5 Stargate peer wiring
 
 On Base:
 
@@ -518,4 +568,3 @@ Record the following after the run:
   - first attested report
   - first recall
 - any deviations, failures, or required config changes before mainnet/audit
-

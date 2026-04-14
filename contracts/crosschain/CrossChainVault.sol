@@ -11,6 +11,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {CrossChainAccessControl} from "../access/CrossChainAccessControl.sol";
 import {ICrossChainVault} from "../interfaces/crosschain/ICrossChainVault.sol";
+import {ILocalStrategyAgent} from "../interfaces/crosschain/ILocalStrategyAgent.sol";
 import {IReportSettler} from "../interfaces/crosschain/IReportSettler.sol";
 import {IStrategyAllocator} from "../interfaces/crosschain/IStrategyAllocator.sol";
 import {IStrategyRegistry} from "../interfaces/crosschain/IStrategyRegistry.sol";
@@ -59,6 +60,12 @@ contract CrossChainVault is
     error CrossChainVault__DelayedFundingPaused();
     error CrossChainVault__InsufficientInstantLiquidity();
     error CrossChainVault__UnauthorizedCancellation();
+    error CrossChainVault__NonLocalStrategy(uint32 strategyId, uint256 chainId);
+    error CrossChainVault__InvalidLocalAgent(uint32 strategyId);
+    error CrossChainVault__InvalidLocalOperationStatus(
+        bytes32 opId,
+        CrossChainTypes.OperationStatus status
+    );
 
     uint256 private immutable ENTRY_CHAIN_ID;
     uint256 public override homeIdle;
@@ -143,6 +150,11 @@ contract CrossChainVault is
         CrossChainTypes.OperationStatus currentStatus
     );
     event RecallFundsReceived(uint256 assets, uint256 homeIdleAfter);
+    event LocalStrategyAssetsReceived(
+        uint32 indexed strategyId,
+        uint256 assets,
+        uint256 homeIdleAfter
+    );
 
     constructor(
         IERC20 asset_,
@@ -664,15 +676,144 @@ contract CrossChainVault is
         );
     }
 
-    function receiveRecallFunds(uint256 assets) external override {
-        _requireBridgeKeeperOrGovernance();
+    function executeLocalAllocate(
+        bytes32 opId,
+        bytes calldata params
+    ) external override {
+        _requireKeeperOrGovernance();
 
-        uint256 accountedBalance = IERC20(asset()).balanceOf(address(this));
-        if (accountedBalance < homeIdle + assets) {
-            revert CrossChainVault__InsufficientReceivedAssets();
+        CrossChainTypes.Operation memory operation = STRATEGY_ALLOCATOR
+            .getOperation(opId);
+        if (operation.opType != CrossChainTypes.OperationType.Allocate) {
+            revert CrossChainVault__UnsupportedOperationType();
         }
 
-        homeIdle += assets;
+        CrossChainTypes.StrategyConfig memory config = STRATEGY_REGISTRY
+            .getStrategyConfig(operation.strategyId);
+        _requireLocalStrategy(config);
+        _requireLocalOperationStatus(opId, operation.status);
+
+        bytes memory payload = STRATEGY_ALLOCATOR.encodeCommandPayload(
+            opId,
+            uint64(block.timestamp),
+            params
+        );
+
+        IERC20(asset()).safeTransfer(config.agent, operation.assets);
+        ILocalStrategyAgent(config.agent).executeAllocate(payload);
+    }
+
+    function executeLocalRecall(
+        bytes32 opId,
+        bytes calldata params
+    ) external override {
+        _requireKeeperOrGovernance();
+
+        CrossChainTypes.Operation memory operation = STRATEGY_ALLOCATOR
+            .getOperation(opId);
+        if (operation.opType != CrossChainTypes.OperationType.Recall) {
+            revert CrossChainVault__UnsupportedOperationType();
+        }
+
+        CrossChainTypes.StrategyConfig memory config = STRATEGY_REGISTRY
+            .getStrategyConfig(operation.strategyId);
+        _requireLocalStrategy(config);
+        _requireLocalOperationStatus(opId, operation.status);
+
+        bytes memory payload = STRATEGY_ALLOCATOR.encodeCommandPayload(
+            opId,
+            uint64(block.timestamp),
+            params
+        );
+
+        uint256 assetsFreed = ILocalStrategyAgent(config.agent).executeRecall(
+            payload
+        );
+        if (assetsFreed != 0) {
+            _recordInboundAssets(assetsFreed);
+            emit LocalStrategyAssetsReceived(
+                operation.strategyId,
+                assetsFreed,
+                homeIdle
+            );
+        }
+    }
+
+    function executeLocalHarvest(
+        bytes32 opId,
+        bytes calldata params
+    ) external override {
+        _requireKeeperOrGovernance();
+
+        CrossChainTypes.Operation memory operation = STRATEGY_ALLOCATOR
+            .getOperation(opId);
+        if (operation.opType != CrossChainTypes.OperationType.Harvest) {
+            revert CrossChainVault__UnsupportedOperationType();
+        }
+
+        CrossChainTypes.StrategyConfig memory config = STRATEGY_REGISTRY
+            .getStrategyConfig(operation.strategyId);
+        _requireLocalStrategy(config);
+        _requireLocalOperationStatus(opId, operation.status);
+
+        bytes memory payload = STRATEGY_ALLOCATOR.encodeCommandPayload(
+            opId,
+            uint64(block.timestamp),
+            params
+        );
+
+        (, uint256 assetsOut) = ILocalStrategyAgent(config.agent).harvest(
+            payload
+        );
+        if (assetsOut != 0) {
+            _recordInboundAssets(assetsOut);
+            emit LocalStrategyAssetsReceived(
+                operation.strategyId,
+                assetsOut,
+                homeIdle
+            );
+        }
+    }
+
+    function executeLocalEmergencyExit(
+        bytes32 opId,
+        bytes calldata params
+    ) external override {
+        _requireKeeperOrGovernance();
+
+        CrossChainTypes.Operation memory operation = STRATEGY_ALLOCATOR
+            .getOperation(opId);
+        if (operation.opType != CrossChainTypes.OperationType.EmergencyExit) {
+            revert CrossChainVault__UnsupportedOperationType();
+        }
+
+        CrossChainTypes.StrategyConfig memory config = STRATEGY_REGISTRY
+            .getStrategyConfig(operation.strategyId);
+        _requireLocalStrategy(config);
+        _requireLocalOperationStatus(opId, operation.status);
+
+        bytes memory payload = STRATEGY_ALLOCATOR.encodeCommandPayload(
+            opId,
+            uint64(block.timestamp),
+            params
+        );
+
+        uint256 assetsOut = ILocalStrategyAgent(config.agent).emergencyExit(
+            payload
+        );
+        if (assetsOut != 0) {
+            _recordInboundAssets(assetsOut);
+            emit LocalStrategyAssetsReceived(
+                operation.strategyId,
+                assetsOut,
+                homeIdle
+            );
+        }
+    }
+
+    function receiveRecallFunds(uint256 assets) external override {
+        _requireBridgeKeeperOrGovernance();
+        _recordInboundAssets(assets);
         emit RecallFundsReceived(assets, homeIdle);
     }
 
@@ -782,6 +923,41 @@ contract CrossChainVault is
             !hasRole(GOVERNANCE_ROLE, _msgSender())
         ) {
             revert AccessControlUnauthorizedAccount(_msgSender(), BRIDGE_ROLE);
+        }
+    }
+
+    function _recordInboundAssets(uint256 assets) internal {
+        uint256 accountedBalance = IERC20(asset()).balanceOf(address(this));
+        if (accountedBalance < homeIdle + assets) {
+            revert CrossChainVault__InsufficientReceivedAssets();
+        }
+
+        homeIdle += assets;
+    }
+
+    function _requireLocalStrategy(
+        CrossChainTypes.StrategyConfig memory config
+    ) internal view {
+        if (config.chainId != uint32(block.chainid)) {
+            revert CrossChainVault__NonLocalStrategy(
+                config.strategyId,
+                config.chainId
+            );
+        }
+        if (config.agent == address(0)) {
+            revert CrossChainVault__InvalidLocalAgent(config.strategyId);
+        }
+    }
+
+    function _requireLocalOperationStatus(
+        bytes32 opId,
+        CrossChainTypes.OperationStatus status
+    ) internal pure {
+        if (
+            status != CrossChainTypes.OperationStatus.Sent &&
+            status != CrossChainTypes.OperationStatus.Received
+        ) {
+            revert CrossChainVault__InvalidLocalOperationStatus(opId, status);
         }
     }
 

@@ -8,9 +8,12 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {MockERC20} from "../../contracts/mocks/MockERC20.sol";
 import {MockERC4626Vault} from "../../contracts/mocks/MockERC4626Vault.sol";
+import {AaveV3StrategyAdapter} from "../../contracts/crosschain/AaveV3StrategyAdapter.sol";
 import {ERC4626StrategyAdapter} from "../../contracts/crosschain/ERC4626StrategyAdapter.sol";
+import {MorphoStrategyAdapter} from "../../contracts/crosschain/MorphoStrategyAdapter.sol";
 import {RemoteStrategyAgent} from "../../contracts/crosschain/RemoteStrategyAgent.sol";
 import {StargateBridgeAdapter} from "../../contracts/crosschain/StargateBridgeAdapter.sol";
+import {IStrategyAdapter} from "../../contracts/interfaces/crosschain/IStrategyAdapter.sol";
 
 contract DeployCrossChainRemote is Script {
     function run() external {
@@ -26,7 +29,10 @@ contract DeployCrossChainRemote is Script {
         address assetAddr = vm.envOr("ASSET", address(0));
         uint8 assetDecimals = uint8(vm.envOr("ASSET_DECIMALS", uint256(6)));
 
-        // Optional: deploy a mock ERC4626 vault + adapter for rehearsal.
+        string memory adapterType = vm.envOr(
+            "STRATEGY_ADAPTER",
+            string("ERC4626")
+        );
         bool deployMockErc4626 = vm.envOr("DEPLOY_MOCK_ERC4626", true);
         address erc4626VaultAddr = vm.envOr("ERC4626_VAULT", address(0));
 
@@ -42,17 +48,30 @@ contract DeployCrossChainRemote is Script {
             asset = IERC20(assetAddr);
         }
 
+        IStrategyAdapter adapter;
         address erc4626Vault;
-        if (deployMockErc4626) {
-            erc4626Vault = address(
-                new MockERC4626Vault(asset, "Mock 4626 Vault", "m4626")
-            );
+        if (_equals(adapterType, "ERC4626")) {
+            if (deployMockErc4626) {
+                erc4626Vault = address(
+                    new MockERC4626Vault(asset, "Mock 4626 Vault", "m4626")
+                );
+            } else {
+                require(
+                    erc4626VaultAddr != address(0),
+                    "ERC4626_VAULT required"
+                );
+                erc4626Vault = erc4626VaultAddr;
+            }
+            adapter = new ERC4626StrategyAdapter(erc4626Vault);
+        } else if (_equals(adapterType, "MORPHO")) {
+            address metaMorpho = vm.envAddress("META_MORPHO");
+            adapter = new MorphoStrategyAdapter(metaMorpho);
+        } else if (_equals(adapterType, "AAVE")) {
+            address provider = vm.envAddress("AAVE_POOL_ADDRESSES_PROVIDER");
+            adapter = new AaveV3StrategyAdapter(provider, address(asset));
         } else {
-            require(erc4626VaultAddr != address(0), "ERC4626_VAULT required");
-            erc4626Vault = erc4626VaultAddr;
+            revert("Unknown STRATEGY_ADAPTER");
         }
-
-        ERC4626StrategyAdapter adapter = new ERC4626StrategyAdapter(erc4626Vault);
         RemoteStrategyAgent agent = new RemoteStrategyAgent(governance, strategyId);
         StargateBridgeAdapter bridge = new StargateBridgeAdapter(governance);
 
@@ -79,5 +98,11 @@ contract DeployCrossChainRemote is Script {
 
         vm.stopBroadcast();
     }
-}
 
+    function _equals(
+        string memory a,
+        string memory b
+    ) private pure returns (bool) {
+        return keccak256(bytes(a)) == keccak256(bytes(b));
+    }
+}

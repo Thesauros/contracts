@@ -6,7 +6,7 @@
     "@nomicfoundation/hardhat-toolbox": "^7.0.0",
     "dotenv": "^16.4.4",
     "hardhat": "3.2.0",
-    "hardhat-deploy": "^1.0.4"
+    "hardhat-deploy": "^2.0.3"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.4.0"

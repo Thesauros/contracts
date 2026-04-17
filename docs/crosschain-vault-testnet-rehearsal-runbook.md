@@ -11,6 +11,7 @@ Goal: run an end-to-end rehearsal on testnet(s) that exercises the operational l
 - Base + Arbitrum are the default target chains in this project
 - Stargate is the only supported bridge choice (peer config uses Stargate/LayerZero eids)
 - chosen bridge adapter is deployed and peers are configured
+- production rehearsal requires a bridge adapter that calls the real Stargate/LayerZero transport; the current repository `StargateBridgeAdapter` is a bridge-control-plane adapter and does not autonomously deliver cross-chain messages
 - at least one remote strategy agent is deployed on the remote chain
 - a backend ledger is ready to ingest events and reconcile NAV buckets
 - report attestation signers are provisioned and `REPORT_ATTESTOR_ROLE` is granted
@@ -54,6 +55,7 @@ Notes:
 - peer configuration requires `PEER_EID` and `PEER` (`bytes32`) values for the target chain.
   - `PEER` should be the remote bridge adapter `localPeer()` value.
   - do not guess EIDs: use the Stargate/LayerZero official values for Base/Arbitrum.
+- this track validates deployment wiring only; it does not prove real Stargate delivery unless the production transport adapter from Sprint 11 is used.
 
 ### Track A: Happy Path Lifecycle
 

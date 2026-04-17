@@ -584,3 +584,87 @@ Focus:
 Deliverable:
 
 - [Sprint 10 Closeout](crosschain-vault-sprint-10-closeout.md)
+
+## 13. Post-Plan Extension: Sprint 11
+
+Sprint 11 closes the production transport gap discovered during the Base + Arbitrum mainnet deployment.
+
+### Status
+
+`Planned`
+
+### Goal
+
+Replace the current bridge-control-plane adapter with a production Stargate/LayerZero transport path that can actually move payloads and USDC between Base and Arbitrum.
+
+### Context
+
+The deployed `StargateBridgeAdapter` currently inherits the repository `LayerZeroBridgeAdapter`, which records bridge lifecycle state and can escrow assets, but does not call a real Stargate or LayerZero endpoint.
+
+Therefore, the current deployment is suitable for:
+
+- registry, role, peer, and accounting readiness;
+- mockable bridge lifecycle tests;
+- operational control-plane rehearsal.
+
+It is not yet sufficient for:
+
+- autonomous Base -> Arbitrum message delivery;
+- autonomous Arbitrum -> Base return settlement;
+- production cross-chain allocation or recall with real bridged USDC.
+
+### Scope
+
+- define the exact Stargate/LayerZero contracts used on Base and Arbitrum:
+  - endpoint / router / pool addresses;
+  - supported USDC asset paths;
+  - fee quote mechanism;
+  - refund receiver behavior;
+- implement a production `StargateBridgeAdapter`:
+  - outbound `sendAssetAndMessage` must call the real Stargate/LayerZero path;
+  - inbound receive hook must authenticate source chain, source peer, token, amount, and payload;
+  - ack/finalization semantics must map to the existing operation lifecycle;
+  - failed or timed-out messages must remain recoverable;
+- add chain-specific deployment config:
+  - Base Stargate/LayerZero addresses;
+  - Arbitrum Stargate/LayerZero addresses;
+  - peer EIDs and bridge peer bytes32 values;
+  - fee and gas limit defaults;
+- add keeper/operator scripts:
+  - quote cross-chain fee;
+  - dispatch allocate payload;
+  - receive/finalize payload on destination if required by the transport model;
+  - bridge recall assets home;
+  - reconcile message IDs against explorer/provider records;
+- extend tests:
+  - fork test for Base -> Arbitrum dust USDC transfer;
+  - fork test for Arbitrum -> Base recall return;
+  - replay rejection;
+  - wrong peer rejection;
+  - wrong asset rejection;
+  - insufficient fee / failed message recovery;
+- run an operational rehearsal:
+  - deposit a dust amount;
+  - create an allocation operation;
+  - bridge to Arbitrum;
+  - execute AAVE allocation;
+  - prepare and submit report;
+  - recall dust amount;
+  - bridge home and clear pending accounting.
+
+### Deliverables
+
+- production Stargate/LayerZero adapter implementation;
+- updated deployment config with real transport addresses and fee settings;
+- bridge operator runbook;
+- fork/integration tests for real cross-chain transfer paths;
+- rehearsal report with tx hashes for Base -> Arbitrum and Arbitrum -> Base dust flows.
+
+### Exit Criteria
+
+- a real Base -> Arbitrum transaction moves USDC and payload through the production bridge path;
+- a real Arbitrum -> Base recall transaction returns USDC through the production bridge path;
+- `StrategyAllocator` dispatch state, bridge message IDs, and vault pending bridge accounting reconcile with provider/explorer records;
+- no privileged operator can spoof an inbound message from an untrusted peer;
+- failed or timed-out bridge messages have a documented and tested recovery path;
+- production allocation remains disabled for non-dust amounts until the rehearsal report is reviewed.

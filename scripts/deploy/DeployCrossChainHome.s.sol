@@ -17,85 +17,123 @@ import {CrossChainTypes} from "../../contracts/libraries/CrossChainTypes.sol";
 import {CrossChainDeployConfig} from "./CrossChainDeployConfig.s.sol";
 
 contract DeployCrossChainHome is CrossChainDeployConfig {
+    struct Roles {
+        address governance;
+        address keeper;
+        address allocator;
+        address reportAttestor;
+    }
+
+    struct Bootstrap {
+        bool upsertStrategy;
+        uint32 strategyId;
+        uint32 remoteChainId;
+        address remoteAgent;
+    }
+
+    struct Core {
+        IERC20 asset;
+        StrategyRegistry registry;
+        StrategyAllocator allocator;
+        WithdrawalQueue queue;
+        ReportSettler settler;
+        StargateBridgeAdapter bridge;
+        CrossChainVault vault;
+    }
+
     function run() external {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerKey);
 
-        address governance = vm.envOr("GOVERNANCE", deployer);
-        address keeper = vm.envOr("KEEPER", deployer);
-        address allocatorRole = vm.envOr("ALLOCATOR", deployer);
-        address reportAttestor = vm.envOr("REPORT_ATTESTOR", deployer);
+        Roles memory roles = Roles({
+            governance: vm.envOr("GOVERNANCE", deployer),
+            keeper: vm.envOr("KEEPER", deployer),
+            allocator: vm.envOr("ALLOCATOR", deployer),
+            reportAttestor: vm.envOr("REPORT_ATTESTOR", deployer)
+        });
 
-        bool deployMockAsset = vm.envOr("DEPLOY_MOCK_ASSET", false);
-        uint8 assetDecimals = uint8(vm.envOr("ASSET_DECIMALS", uint256(6)));
-
-        string memory name = vm.envOr(
-            "VAULT_NAME",
-            string("CrossChain Vault (Home)")
-        );
-        string memory symbol = vm.envOr("VAULT_SYMBOL", string("ccHOME"));
-
-        // Optional strategy bootstrap (can be done later after remote deploy).
-        bool upsertStrategy = vm.envOr("UPSERT_STRATEGY", false);
-        uint32 strategyId = uint32(vm.envOr("STRATEGY_ID", uint256(1)));
-        uint32 remoteChainId = uint32(vm.envOr("REMOTE_CHAIN_ID", uint256(0)));
-        address remoteAgent = vm.envOr("REMOTE_AGENT", address(0));
+        Bootstrap memory bootstrap = Bootstrap({
+            upsertStrategy: vm.envOr("UPSERT_STRATEGY", false),
+            strategyId: uint32(vm.envOr("STRATEGY_ID", uint256(1))),
+            remoteChainId: uint32(vm.envOr("REMOTE_CHAIN_ID", uint256(0))),
+            remoteAgent: vm.envOr("REMOTE_AGENT", address(0))
+        });
 
         vm.startBroadcast(deployerKey);
 
-        IERC20 asset;
-        if (deployMockAsset) {
-            asset = IERC20(
-                address(new MockERC20("Mock USDC", "mUSDC", assetDecimals))
-            );
-        } else {
-            asset = IERC20(_assetForCurrentChain());
+        Core memory core = _deployCore(roles);
+        _wireRoles(core, roles);
+        core.allocator.setRoutingPolicy(core.vault);
+        _maybeUpsertStrategy(core, bootstrap);
+        _logDeployment(deployer, roles, core);
+
+        vm.stopBroadcast();
+    }
+
+    function _deployCore(Roles memory roles) internal returns (Core memory core) {
+        core.asset = _deployOrResolveAsset();
+        core.registry = new StrategyRegistry(roles.governance);
+        core.allocator = new StrategyAllocator(roles.governance, core.registry);
+        core.queue = new WithdrawalQueue(roles.governance);
+        core.settler = new ReportSettler(roles.governance, core.registry);
+        core.bridge = new StargateBridgeAdapter(roles.governance);
+        core.vault = new CrossChainVault(
+            core.asset,
+            vm.envOr("VAULT_NAME", string("CrossChain Vault (Home)")),
+            vm.envOr("VAULT_SYMBOL", string("ccHOME")),
+            roles.governance,
+            core.registry,
+            core.allocator,
+            core.settler,
+            core.queue
+        );
+    }
+
+    function _deployOrResolveAsset() internal returns (IERC20) {
+        if (vm.envOr("DEPLOY_MOCK_ASSET", false)) {
+            uint8 decimals = uint8(vm.envOr("ASSET_DECIMALS", uint256(6)));
+            return IERC20(address(new MockERC20("Mock USDC", "mUSDC", decimals)));
         }
 
-        StrategyRegistry registry = new StrategyRegistry(governance);
-        StrategyAllocator allocator = new StrategyAllocator(governance, registry);
-        WithdrawalQueue queue = new WithdrawalQueue(governance);
-        ReportSettler settler = new ReportSettler(governance, registry);
-        StargateBridgeAdapter bridge = new StargateBridgeAdapter(governance);
+        return IERC20(_assetForCurrentChain());
+    }
 
-        CrossChainVault vault = new CrossChainVault(
-            asset,
-            name,
-            symbol,
-            governance,
-            registry,
-            allocator,
-            settler,
-            queue
-        );
-
+    function _wireRoles(Core memory core, Roles memory roles) internal {
         // Wire internal roles.
-        registry.grantRole(registry.VAULT_ROLE(), address(vault));
-        queue.grantRole(queue.VAULT_ROLE(), address(vault));
+        core.registry.grantRole(core.registry.VAULT_ROLE(), address(core.vault));
+        core.queue.grantRole(core.queue.VAULT_ROLE(), address(core.vault));
 
         // Wire operator roles.
-        allocator.grantRole(allocator.ALLOCATOR_ROLE(), allocatorRole);
-        allocator.grantRole(allocator.KEEPER_ROLE(), keeper);
-        allocator.grantRole(allocator.BRIDGE_ROLE(), address(bridge));
+        core.allocator.grantRole(core.allocator.ALLOCATOR_ROLE(), roles.allocator);
+        core.allocator.grantRole(core.allocator.KEEPER_ROLE(), roles.keeper);
+        core.allocator.grantRole(
+            core.allocator.BRIDGE_ROLE(),
+            address(core.bridge)
+        );
 
-        vault.grantRole(vault.KEEPER_ROLE(), keeper);
-        vault.grantRole(vault.BRIDGE_ROLE(), address(bridge));
+        core.vault.grantRole(core.vault.KEEPER_ROLE(), roles.keeper);
+        core.vault.grantRole(core.vault.BRIDGE_ROLE(), address(core.bridge));
 
-        settler.grantRole(settler.REPORT_ATTESTOR_ROLE(), reportAttestor);
+        core.settler.grantRole(
+            core.settler.REPORT_ATTESTOR_ROLE(),
+            roles.reportAttestor
+        );
+    }
 
-        // Route policy gating to the vault itself (implements ICrossChainRoutingPolicy).
-        allocator.setRoutingPolicy(vault);
+    function _maybeUpsertStrategy(
+        Core memory core,
+        Bootstrap memory bootstrap
+    ) internal {
+        if (bootstrap.upsertStrategy) {
+            require(bootstrap.remoteChainId != 0, "REMOTE_CHAIN_ID required");
+            require(bootstrap.remoteAgent != address(0), "REMOTE_AGENT required");
 
-        if (upsertStrategy) {
-            require(remoteChainId != 0, "REMOTE_CHAIN_ID required");
-            require(remoteAgent != address(0), "REMOTE_AGENT required");
-
-            registry.upsertStrategy(
+            core.registry.upsertStrategy(
                 CrossChainTypes.StrategyConfig({
-                    strategyId: strategyId,
-                    chainId: remoteChainId,
-                    agent: remoteAgent,
-                    asset: address(asset),
+                    strategyId: bootstrap.strategyId,
+                    chainId: bootstrap.remoteChainId,
+                    agent: bootstrap.remoteAgent,
+                    asset: address(core.asset),
                     debtLimit: uint96(type(uint96).max),
                     maxSlippageBps: 100,
                     maxReportDelay: 1 days,
@@ -106,23 +144,28 @@ contract DeployCrossChainHome is CrossChainDeployConfig {
                 })
             );
         }
+    }
 
+    function _logDeployment(
+        address deployer,
+        Roles memory roles,
+        Core memory core
+    ) internal view {
         console2.log("chainId", block.chainid);
         console2.log("deployer", deployer);
-        console2.log("governance", governance);
-        console2.log("keeper", keeper);
-        console2.log("allocator", allocatorRole);
-        console2.log("reportAttestor", reportAttestor);
-        console2.log("asset", address(asset));
+        console2.log("governance", roles.governance);
+        console2.log("keeper", roles.keeper);
+        console2.log("allocator", roles.allocator);
+        console2.log("reportAttestor", roles.reportAttestor);
+        console2.log("asset", address(core.asset));
 
-        console2.log("registry", address(registry));
-        console2.log("allocatorContract", address(allocator));
-        console2.log("settler", address(settler));
-        console2.log("queue", address(queue));
-        console2.log("vault", address(vault));
-        console2.log("bridge", address(bridge));
-        console2.log("bridge.localPeer(bytes32)", bridge.localPeer());
-
-        vm.stopBroadcast();
+        console2.log("registry", address(core.registry));
+        console2.log("allocatorContract", address(core.allocator));
+        console2.log("settler", address(core.settler));
+        console2.log("queue", address(core.queue));
+        console2.log("vault", address(core.vault));
+        console2.log("bridge", address(core.bridge));
+        console2.log("bridge.localPeer(bytes32)");
+        console2.logBytes32(core.bridge.localPeer());
     }
 }

@@ -93,7 +93,8 @@ contract DeployCrossChainRemote is CrossChainDeployConfig {
         console2.log("strategyAdapter", address(adapter));
         console2.log("remoteAgent", address(agent));
         console2.log("bridge", address(bridge));
-        console2.log("bridge.localPeer(bytes32)", bridge.localPeer());
+        console2.log("bridge.localPeer(bytes32)");
+        console2.logBytes32(bridge.localPeer());
 
         vm.stopBroadcast();
     }

@@ -93,7 +93,24 @@
     "routingPolicy": "0x206Ac58E24888e852cB3F9f4540031a0D53298c2",
     "basePeer30110": "0x000000000000000000000000f91980fca99b4094258966b81fb71b211dcfa529",
     "arbitrumPeer30184": "0x000000000000000000000000ea7b7d019eea0864723bd8c9e1c72eb81aa23c41",
-    "criticalRolesChecked": true
+    "criticalRolesChecked": true,
+    "explorerVerified": true,
+    "verifiedAt": "2026-04-17",
+    "explorers": {
+      "base": {
+        "strategyRegistry": "https://basescan.org/address/0xCaFaF5f72235B1F10C92d57Db512C802ec1D9ad2#code",
+        "strategyAllocator": "https://basescan.org/address/0x0dB5b3401f526E3dFE46dFCA2297745AA16D2884#code",
+        "reportSettler": "https://basescan.org/address/0xA663142A0202A751f21B3122b7611d4B3E35d004#code",
+        "withdrawalQueue": "https://basescan.org/address/0x17f223ae2BdE86dbC32574d12578e2A6F8380724#code",
+        "stargateBridgeAdapter": "https://basescan.org/address/0xea7B7d019eEA0864723bD8c9e1c72eb81aa23C41#code",
+        "crossChainVault": "https://basescan.org/address/0x206Ac58E24888e852cB3F9f4540031a0D53298c2#code"
+      },
+      "arbitrum": {
+        "aaveV3StrategyAdapter": "https://arbiscan.io/address/0xfAc846b296DA830A041217F32387763d31cE6998#code",
+        "remoteStrategyAgent": "https://arbiscan.io/address/0xf04D182F9990040A395E65D0151A30dB6957a9Ed#code",
+        "stargateBridgeAdapter": "https://arbiscan.io/address/0xf91980fCA99B4094258966B81FB71b211DCFa529#code"
+      }
+    }
   },
   "notes": [
     "Initial unoptimized CrossChainVault deployment on Base reverted because runtime bytecode exceeded EIP-170.",

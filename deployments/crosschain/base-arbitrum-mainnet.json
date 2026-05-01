@@ -18,6 +18,13 @@
       "tokens": {
         "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
       },
+      "transport": {
+        "layerZeroEndpointV2": "0x1a44076050125825900e736c501f859c50fE728c",
+        "stargatePoolUsdc": "0x27a16dc786820B16E5c9028b75B99F6f604b5d26",
+        "tokenMessaging": "0x5634c4a5FEd09819E3c46D86A965Dd9447d86e47",
+        "recommendedComposeGas": 200000,
+        "recommendedSendOptions": "0x00030100130300000000000000000000000000000000030d40"
+      },
       "protocols": {
         "aavePoolAddressesProvider": "0xe20fcbDbFfC4Dd138ce8B2E6FbB6cB49777aD64D",
         "metaMorpho": "0x5A32099837D89E3a794a44fb131CBbAD41f87a8C"
@@ -52,6 +59,13 @@
       "stargateEid": 30110,
       "tokens": {
         "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+      },
+      "transport": {
+        "layerZeroEndpointV2": "0x1a44076050125825900e736c501f859c50fE728c",
+        "stargatePoolUsdc": "0xe8CDF27AcD73a434D661C84887215F7598e7d0d3",
+        "tokenMessaging": "0x19cFCE47eD54a88614648DC3f19A5980097007dD",
+        "recommendedComposeGas": 200000,
+        "recommendedSendOptions": "0x00030100130300000000000000000000000000000000030d40"
       },
       "protocols": {
         "aavePoolAddressesProvider": "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb"
@@ -115,6 +129,8 @@
   "notes": [
     "Initial unoptimized CrossChainVault deployment on Base reverted because runtime bytecode exceeded EIP-170.",
     "The active CrossChainVault is the optimized deployment at 0x206Ac58E24888e852cB3F9f4540031a0D53298c2.",
-    "The failed unoptimized vault address 0xEFaF271c17A0d089f3ff7B46168117E5fa9A78e4 has no code and is not used."
+    "The failed unoptimized vault address 0xEFaF271c17A0d089f3ff7B46168117E5fa9A78e4 has no code and is not used.",
+    "Transport addresses were cross-checked against Stargate mainnet contract docs and on-chain LayerZero EndpointV2 eid() checks on 2026-05-01.",
+    "The recommendedSendOptions value is a compose-only baseline using 200000 destination gas; it is an operational default, not an immutable protocol address."
   ]
 }

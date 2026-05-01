@@ -70,6 +70,7 @@ contract CrossChainERC4626PipelineTests is Test {
         allocator.grantRole(allocator.ALLOCATOR_ROLE(), address(this));
         allocator.grantRole(allocator.KEEPER_ROLE(), keeper);
         allocator.grantRole(allocator.BRIDGE_ROLE(), bridge);
+        allocator.grantRole(allocator.BRIDGE_ROLE(), address(vault));
         queue.grantRole(queue.VAULT_ROLE(), address(vault));
         settler.grantRole(settler.REPORTER_ROLE(), reporter);
         vault.grantRole(vault.KEEPER_ROLE(), keeper);
@@ -136,23 +137,11 @@ contract CrossChainERC4626PipelineTests is Test {
         vm.prank(keeper);
         vault.syncOperationAccounting(allocateOpId);
 
-        vm.startPrank(address(vault));
-        asset.approve(address(homeBridge), ALLOCATE_AMOUNT);
-        bytes32 allocateMessageId = homeBridge.sendAssetAndMessage(
-            REMOTE_EID,
-            address(asset),
-            ALLOCATE_AMOUNT,
-            allocatePayload
-        );
-        vm.stopPrank();
-
-        vm.prank(bridge);
-        allocator.registerBridgeDispatch(
+        vm.prank(keeper);
+        bytes32 allocateMessageId = vault.dispatchRemoteOperation(
             allocateOpId,
-            REMOTE_EID,
-            address(remoteAgent),
-            allocateMessageId,
-            allocatePayload
+            address(homeBridge),
+            bytes("erc4626-allocate")
         );
 
         asset.mint(address(remoteBridge), ALLOCATE_AMOUNT);
@@ -239,21 +228,11 @@ contract CrossChainERC4626PipelineTests is Test {
             bytes("erc4626-recall")
         );
 
-        vm.prank(bridge);
-        bytes32 recallDispatchMessageId = homeBridge.sendAssetAndMessage(
-            REMOTE_EID,
-            address(asset),
-            0,
-            recallPayload
-        );
-
-        vm.prank(bridge);
-        allocator.registerBridgeDispatch(
+        vm.prank(keeper);
+        bytes32 recallDispatchMessageId = vault.dispatchRemoteOperation(
             recallOpId,
-            REMOTE_EID,
-            address(remoteAgent),
-            recallDispatchMessageId,
-            recallPayload
+            address(homeBridge),
+            bytes("erc4626-recall")
         );
 
         vm.prank(keeper);

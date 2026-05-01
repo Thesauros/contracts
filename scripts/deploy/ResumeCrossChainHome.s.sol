@@ -52,9 +52,11 @@ contract ResumeCrossChainHome is CrossChainDeployConfig {
         allocator.grantRole(allocator.ALLOCATOR_ROLE(), allocatorRole);
         allocator.grantRole(allocator.KEEPER_ROLE(), keeper);
         allocator.grantRole(allocator.BRIDGE_ROLE(), address(bridge));
+        allocator.grantRole(allocator.BRIDGE_ROLE(), address(vault));
 
         vault.grantRole(vault.KEEPER_ROLE(), keeper);
         vault.grantRole(vault.BRIDGE_ROLE(), address(bridge));
+        bridge.grantRole(bridge.BRIDGE_ROLE(), address(vault));
 
         settler.grantRole(settler.REPORT_ATTESTOR_ROLE(), reportAttestor);
         allocator.setRoutingPolicy(vault);

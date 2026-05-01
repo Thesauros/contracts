@@ -197,6 +197,26 @@ contract RolesAccessTests is Test {
         vault.syncOperationAccounting(opId);
     }
 
+    function testVaultDispatchRemoteOperationRequiresKeeperOrGovernance() public {
+        bytes32 opId = allocator.createOperation(
+            STRATEGY_ID,
+            CrossChainTypes.OperationType.Allocate,
+            1e6,
+            0,
+            uint64(block.timestamp + 1 days)
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                alice,
+                vault.KEEPER_ROLE()
+            )
+        );
+        vm.prank(alice);
+        vault.dispatchRemoteOperation(opId, makeAddr("bridgeAdapter"), bytes(""));
+    }
+
     function testVaultReceiveRecallFundsRequiresBridgeKeeperOrGovernance() public {
         // Make sure we have enough token balance to satisfy the vault internal accounting check.
         asset.mint(address(vault), 1e6);

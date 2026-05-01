@@ -4,6 +4,7 @@ pragma solidity 0.8.34;
 import {Test} from "forge-std/Test.sol";
 import {MockERC20} from "../../contracts/mocks/MockERC20.sol";
 import {CrossChainVault} from "../../contracts/crosschain/CrossChainVault.sol";
+import {LayerZeroBridgeAdapter} from "../../contracts/crosschain/LayerZeroBridgeAdapter.sol";
 import {ReportSettler} from "../../contracts/crosschain/ReportSettler.sol";
 import {StrategyAllocator} from "../../contracts/crosschain/StrategyAllocator.sol";
 import {StrategyRegistry} from "../../contracts/crosschain/StrategyRegistry.sol";
@@ -23,6 +24,7 @@ contract CrossChainVaultTests is Test {
     ReportSettler internal settler;
     WithdrawalQueue internal queue;
     CrossChainVault internal vault;
+    LayerZeroBridgeAdapter internal bridgeAdapter;
 
     address internal alice = makeAddr("alice");
     address internal keeper = makeAddr("keeper");
@@ -36,6 +38,7 @@ contract CrossChainVaultTests is Test {
         allocator = new StrategyAllocator(address(this), registry);
         queue = new WithdrawalQueue(address(this));
         settler = new ReportSettler(address(this), registry);
+        bridgeAdapter = new LayerZeroBridgeAdapter(address(this));
         vault = new CrossChainVault(
             asset,
             "CrossChain Vault",
@@ -50,10 +53,13 @@ contract CrossChainVaultTests is Test {
         registry.grantRole(registry.VAULT_ROLE(), address(vault));
         allocator.grantRole(allocator.ALLOCATOR_ROLE(), address(this));
         allocator.grantRole(allocator.KEEPER_ROLE(), keeper);
+        allocator.grantRole(allocator.BRIDGE_ROLE(), address(vault));
         queue.grantRole(queue.VAULT_ROLE(), address(vault));
         settler.grantRole(settler.REPORTER_ROLE(), reporter);
         vault.grantRole(vault.KEEPER_ROLE(), keeper);
         vault.grantRole(vault.BRIDGE_ROLE(), bridge);
+        bridgeAdapter.grantRole(bridgeAdapter.BRIDGE_ROLE(), address(vault));
+        bridgeAdapter.setPeer(REMOTE_CHAIN_ID, bytes32(uint256(uint160(remoteAgent))));
 
         asset.mint(alice, 1_000_000e6);
     }
@@ -181,6 +187,41 @@ contract CrossChainVaultTests is Test {
             buckets.totalManagedAssets,
             DEPOSIT_AMOUNT + REMOTE_VALUE + 10e6 + 5e6 - 3e6
         );
+    }
+
+    function testDispatchRemoteOperationBridgesAllocateFromVault() public {
+        _configureStrategy();
+        _depositAsAlice(DEPOSIT_AMOUNT);
+
+        bytes32 opId = allocator.createOperation(
+            STRATEGY_ID,
+            CrossChainTypes.OperationType.Allocate,
+            25e6,
+            0,
+            uint64(block.timestamp + 1 days)
+        );
+
+        vm.prank(keeper);
+        bytes32 messageId = vault.dispatchRemoteOperation(
+            opId,
+            address(bridgeAdapter),
+            bytes("dispatch")
+        );
+
+        CrossChainTypes.OperationDispatch memory dispatch = allocator
+            .getOperationDispatch(opId);
+        LayerZeroBridgeAdapter.BridgeMessage memory message = bridgeAdapter
+            .getMessage(messageId);
+
+        assertEq(dispatch.opId, opId);
+        assertEq(dispatch.dstEid, REMOTE_CHAIN_ID);
+        assertEq(dispatch.remoteAgent, remoteAgent);
+        assertEq(dispatch.bridgeMessageId, messageId);
+        assertEq(message.messageId, messageId);
+        assertEq(message.amount, 25e6);
+        assertEq(message.sender, address(vault));
+        assertEq(asset.balanceOf(address(vault)), DEPOSIT_AMOUNT - 25e6);
+        assertEq(asset.balanceOf(address(bridgeAdapter)), 25e6);
     }
 
     function testRequestAndClaimQueuedWithdrawalAfterRecallFunds() public {

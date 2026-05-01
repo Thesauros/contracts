@@ -110,9 +110,14 @@ contract DeployCrossChainHome is CrossChainDeployConfig {
             core.allocator.BRIDGE_ROLE(),
             address(core.bridge)
         );
+        core.allocator.grantRole(
+            core.allocator.BRIDGE_ROLE(),
+            address(core.vault)
+        );
 
         core.vault.grantRole(core.vault.KEEPER_ROLE(), roles.keeper);
         core.vault.grantRole(core.vault.BRIDGE_ROLE(), address(core.bridge));
+        core.bridge.grantRole(core.bridge.BRIDGE_ROLE(), address(core.vault));
 
         core.settler.grantRole(
             core.settler.REPORT_ATTESTOR_ROLE(),

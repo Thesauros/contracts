@@ -64,6 +64,7 @@ contract CrossChainMorphoPipelineTests is Test {
         allocator.grantRole(allocator.ALLOCATOR_ROLE(), address(this));
         allocator.grantRole(allocator.KEEPER_ROLE(), keeper);
         allocator.grantRole(allocator.BRIDGE_ROLE(), bridge);
+        allocator.grantRole(allocator.BRIDGE_ROLE(), address(vault));
         queue.grantRole(queue.VAULT_ROLE(), address(vault));
         vault.grantRole(vault.KEEPER_ROLE(), keeper);
         vault.grantRole(vault.BRIDGE_ROLE(), bridge);
@@ -124,23 +125,11 @@ contract CrossChainMorphoPipelineTests is Test {
         vm.prank(keeper);
         vault.syncOperationAccounting(allocateOpId);
 
-        vm.startPrank(address(vault));
-        asset.approve(address(homeBridge), ALLOCATE_AMOUNT);
-        bytes32 allocateMessageId = homeBridge.sendAssetAndMessage(
-            REMOTE_EID,
-            address(asset),
-            ALLOCATE_AMOUNT,
-            allocatePayload
-        );
-        vm.stopPrank();
-
-        vm.prank(bridge);
-        allocator.registerBridgeDispatch(
+        vm.prank(keeper);
+        bytes32 allocateMessageId = vault.dispatchRemoteOperation(
             allocateOpId,
-            REMOTE_EID,
-            address(remoteAgent),
-            allocateMessageId,
-            allocatePayload
+            address(homeBridge),
+            bytes("morpho-allocate")
         );
 
         asset.mint(address(remoteBridge), ALLOCATE_AMOUNT);
@@ -210,21 +199,11 @@ contract CrossChainMorphoPipelineTests is Test {
             bytes("morpho-recall")
         );
 
-        vm.prank(bridge);
-        bytes32 recallDispatchMessageId = homeBridge.sendAssetAndMessage(
-            REMOTE_EID,
-            address(asset),
-            0,
-            recallPayload
-        );
-
-        vm.prank(bridge);
-        allocator.registerBridgeDispatch(
+        vm.prank(keeper);
+        bytes32 recallDispatchMessageId = vault.dispatchRemoteOperation(
             recallOpId,
-            REMOTE_EID,
-            address(remoteAgent),
-            recallDispatchMessageId,
-            recallPayload
+            address(homeBridge),
+            bytes("morpho-recall")
         );
 
         vm.prank(keeper);

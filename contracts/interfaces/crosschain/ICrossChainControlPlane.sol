@@ -42,6 +42,12 @@ interface ICrossChainControlPlane {
 
     function syncOperationAccounting(bytes32 opId) external;
 
+    function dispatchRemoteOperation(
+        bytes32 opId,
+        address bridgeAdapter,
+        bytes calldata params
+    ) external payable returns (bytes32 messageId);
+
     function executeLocalAllocate(bytes32 opId, bytes calldata params) external;
     function executeLocalRecall(bytes32 opId, bytes calldata params) external;
     function executeLocalHarvest(bytes32 opId, bytes calldata params) external;

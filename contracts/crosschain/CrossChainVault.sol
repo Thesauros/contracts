@@ -10,6 +10,7 @@ import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {CrossChainAccessControl} from "../access/CrossChainAccessControl.sol";
+import {IBridgeAdapter} from "../interfaces/crosschain/IBridgeAdapter.sol";
 import {ICrossChainRoutingPolicy} from "../interfaces/crosschain/ICrossChainRoutingPolicy.sol";
 import {ICrossChainVault} from "../interfaces/crosschain/ICrossChainVault.sol";
 import {ILocalStrategyAgent} from "../interfaces/crosschain/ILocalStrategyAgent.sol";
@@ -63,6 +64,7 @@ contract CrossChainVault is
     error CrossChainVault__InsufficientInstantLiquidity();
     error CrossChainVault__UnauthorizedCancellation();
     error CrossChainVault__NonLocalStrategy(uint32 strategyId, uint256 chainId);
+    error CrossChainVault__LocalStrategyDispatch(uint32 strategyId, uint256 chainId);
     error CrossChainVault__InvalidLocalAgent(uint32 strategyId);
     error CrossChainVault__InvalidLocalOperationStatus(
         bytes32 opId,
@@ -115,6 +117,14 @@ contract CrossChainVault is
         uint256 previousTarget,
         uint256 newTarget,
         uint256 effectiveLocalBufferAssets
+    );
+    event RemoteOperationDispatched(
+        bytes32 indexed opId,
+        bytes32 indexed messageId,
+        address indexed bridgeAdapter,
+        uint32 dstEid,
+        address remoteAgent,
+        uint256 amount
     );
     event MinimumResidualLiquidityUpdated(
         uint256 previousMinimum,
@@ -675,6 +685,65 @@ contract CrossChainVault is
             operation.opType,
             previousStatus,
             operation.status
+        );
+    }
+
+    function dispatchRemoteOperation(
+        bytes32 opId,
+        address bridgeAdapter,
+        bytes calldata params
+    ) external payable override returns (bytes32 messageId) {
+        _requireKeeperOrGovernance();
+
+        CrossChainTypes.Operation memory operation = STRATEGY_ALLOCATOR
+            .getOperation(opId);
+        CrossChainTypes.StrategyConfig memory config = STRATEGY_REGISTRY
+            .getStrategyConfig(operation.strategyId);
+
+        if (config.chainId == uint32(block.chainid)) {
+            revert CrossChainVault__LocalStrategyDispatch(
+                config.strategyId,
+                config.chainId
+            );
+        }
+
+        bytes memory payload = STRATEGY_ALLOCATOR.encodeCommandPayload(
+            opId,
+            uint64(block.timestamp),
+            params
+        );
+
+        uint256 amount = operation.opType == CrossChainTypes.OperationType.Allocate
+            ? operation.assets
+            : 0;
+
+        if (amount != 0) {
+            IERC20(asset()).forceApprove(bridgeAdapter, amount);
+        }
+
+        messageId = IBridgeAdapter(bridgeAdapter).sendAssetAndMessage{
+            value: msg.value
+        }(config.chainId, asset(), amount, payload);
+
+        if (amount != 0) {
+            IERC20(asset()).forceApprove(bridgeAdapter, 0);
+        }
+
+        STRATEGY_ALLOCATOR.registerBridgeDispatch(
+            opId,
+            config.chainId,
+            config.agent,
+            messageId,
+            payload
+        );
+
+        emit RemoteOperationDispatched(
+            opId,
+            messageId,
+            bridgeAdapter,
+            config.chainId,
+            config.agent,
+            amount
         );
     }
 

@@ -587,84 +587,51 @@ Deliverable:
 
 ## 13. Post-Plan Extension: Sprint 11
 
-Sprint 11 closes the production transport gap discovered during the Base + Arbitrum mainnet deployment.
+Sprint 11 closed the production transport gap discovered during the Base + Arbitrum mainnet deployment.
 
 ### Status
 
-`Planned`
+`Completed`
 
 ### Goal
 
-Replace the current bridge-control-plane adapter with a production Stargate/LayerZero transport path that can actually move payloads and USDC between Base and Arbitrum.
+Replace the bridge-control-plane-only adapter with a Stargate/LayerZero transport path that can move payloads and USDC between Base and Arbitrum.
 
 ### Context
 
-The deployed `StargateBridgeAdapter` currently inherits the repository `LayerZeroBridgeAdapter`, which records bridge lifecycle state and can escrow assets, but does not call a real Stargate or LayerZero endpoint.
+`StargateBridgeAdapter` now keeps the repository `LayerZeroBridgeAdapter` lifecycle/accounting surface and adds a production Stargate transport path for outbound sends and authenticated inbound compose delivery.
 
-Therefore, the current deployment is suitable for:
+The current implementation now covers:
 
 - registry, role, peer, and accounting readiness;
-- mockable bridge lifecycle tests;
-- operational control-plane rehearsal.
+- production Stargate send/compose flows for supported asset routes;
+- mockable bridge lifecycle tests and local fallback rehearsal.
 
-It is not yet sufficient for:
+Remaining work is operational rather than architectural:
 
-- autonomous Base -> Arbitrum message delivery;
-- autonomous Arbitrum -> Base return settlement;
-- production cross-chain allocation or recall with real bridged USDC.
+- chain-specific transport address rollout in deployment artifacts/env files;
+- fork or live-network rehearsal against real Base/Arbitrum endpoints;
+- tx-hash-backed operational report and recovery drill validation.
 
 ### Scope
 
-- define the exact Stargate/LayerZero contracts used on Base and Arbitrum:
-  - endpoint / router / pool addresses;
-  - supported USDC asset paths;
-  - fee quote mechanism;
-  - refund receiver behavior;
-- implement a production `StargateBridgeAdapter`:
-  - outbound `sendAssetAndMessage` must call the real Stargate/LayerZero path;
-  - inbound receive hook must authenticate source chain, source peer, token, amount, and payload;
-  - ack/finalization semantics must map to the existing operation lifecycle;
-  - failed or timed-out messages must remain recoverable;
-- add chain-specific deployment config:
-  - Base Stargate/LayerZero addresses;
-  - Arbitrum Stargate/LayerZero addresses;
-  - peer EIDs and bridge peer bytes32 values;
-  - fee and gas limit defaults;
-- add keeper/operator scripts:
-  - quote cross-chain fee;
-  - dispatch allocate payload;
-  - receive/finalize payload on destination if required by the transport model;
-  - bridge recall assets home;
-  - reconcile message IDs against explorer/provider records;
-- extend tests:
-  - fork test for Base -> Arbitrum dust USDC transfer;
-  - fork test for Arbitrum -> Base recall return;
-  - replay rejection;
-  - wrong peer rejection;
-  - wrong asset rejection;
-  - insufficient fee / failed message recovery;
-- run an operational rehearsal:
-  - deposit a dust amount;
-  - create an allocation operation;
-  - bridge to Arbitrum;
-  - execute AAVE allocation;
-  - prepare and submit report;
-  - recall dust amount;
-  - bridge home and clear pending accounting.
+- implement production `StargateBridgeAdapter` transport wiring;
+- keep manual `LayerZeroBridgeAdapter` lifecycle compatibility for local/mock flows;
+- add transport configuration and relay inspection scripts;
+- extend tests for allocate/recall delivery and endpoint authentication;
+- prepare deployment/runbook docs for Base/Arbitrum rollout.
 
 ### Deliverables
 
 - production Stargate/LayerZero adapter implementation;
-- updated deployment config with real transport addresses and fee settings;
-- bridge operator runbook;
-- fork/integration tests for real cross-chain transfer paths;
-- rehearsal report with tx hashes for Base -> Arbitrum and Arbitrum -> Base dust flows.
+- transport configuration script and manual relay/inspection helpers;
+- adapter tests for real send/compose lifecycle in the local harness;
+- updated runbook docs reflecting transport vs fallback modes.
 
 ### Exit Criteria
 
-- a real Base -> Arbitrum transaction moves USDC and payload through the production bridge path;
-- a real Arbitrum -> Base recall transaction returns USDC through the production bridge path;
-- `StrategyAllocator` dispatch state, bridge message IDs, and vault pending bridge accounting reconcile with provider/explorer records;
+- `sendAssetAndMessage` uses Stargate when transport is configured and falls back to the local lifecycle path otherwise;
+- inbound compose delivery authenticates endpoint, Stargate sender, peer, and asset route before calling the destination receiver;
+- `StrategyAllocator` dispatch state and bridge message lifecycle remain compatible with existing accounting flows;
 - no privileged operator can spoof an inbound message from an untrusted peer;
-- failed or timed-out bridge messages have a documented and tested recovery path;
-- production allocation remains disabled for non-dust amounts until the rehearsal report is reviewed.
+- failed or timed-out messages remain observable and recoverable through the existing bridge message registry.

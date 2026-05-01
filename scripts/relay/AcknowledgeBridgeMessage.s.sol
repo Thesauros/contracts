@@ -6,7 +6,7 @@ import {console2} from "forge-std/console2.sol";
 
 import {LayerZeroBridgeAdapter} from "../../contracts/crosschain/LayerZeroBridgeAdapter.sol";
 
-/// @dev Source-side acknowledgement for the current bridge-control-plane adapters.
+/// @dev Source-side acknowledgement helper for local/fallback bridge-control-plane flows.
 ///      Run this against the source chain RPC after destination delivery succeeded.
 ///
 ///      Required env:

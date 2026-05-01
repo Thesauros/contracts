@@ -8,9 +8,9 @@ import {LayerZeroBridgeAdapter} from "../../contracts/crosschain/LayerZeroBridge
 import {RemoteStrategyAgent} from "../../contracts/crosschain/RemoteStrategyAgent.sol";
 import {CrossChainVault} from "../../contracts/crosschain/CrossChainVault.sol";
 
-/// @dev Destination-side relay for the current bridge-control-plane adapters.
+/// @dev Destination-side relay helper for local/fallback bridge-control-plane flows.
 ///      Run this against the destination chain RPC after an outbound message was
-///      created on the source chain.
+///      created on the source chain when live Stargate delivery is not being used.
 ///
 ///      Required env:
 ///      - PRIVATE_KEY

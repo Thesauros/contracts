@@ -1,6 +1,6 @@
 # Cross-Chain Vault: Test Cases and Scripts
 
-Current as of: **2026-04-07**
+Current as of: **2026-05-01**
 
 Target topology for this runbook:
 
@@ -82,6 +82,33 @@ Important:
 - `PEER` must be the remote bridge adapter `localPeer()` value
 - `PEER_EID` must be the official Stargate/LayerZero endpoint id for the remote chain
 
+### Transport wiring
+
+- [`scripts/deploy/ConfigureStargateTransport.s.sol`](../scripts/deploy/ConfigureStargateTransport.s.sol)
+
+Purpose:
+
+- configure production Stargate transport on each bridge adapter
+- set LayerZero endpoint v2, executor send options, and strategy receiver route
+
+Important:
+
+- `STARGATE` must be the Stargate OFT/router used for the asset path on that chain
+- `LAYERZERO_ENDPOINT_V2` must match the endpoint that will call `lzCompose`
+- `STRATEGY_RECEIVER` should be the remote `RemoteStrategyAgent` for allocate flows
+- `STARGATE_SEND_OPTIONS` must already encode the executor gas/options expected by the destination
+
+### Manual relay / inspection helpers
+
+- [`scripts/relay/InspectBridgeMessage.s.sol`](../scripts/relay/InspectBridgeMessage.s.sol)
+- [`scripts/relay/RelayBridgeMessage.s.sol`](../scripts/relay/RelayBridgeMessage.s.sol)
+- [`scripts/relay/AcknowledgeBridgeMessage.s.sol`](../scripts/relay/AcknowledgeBridgeMessage.s.sol)
+
+Purpose:
+
+- inspect recorded bridge lifecycle state
+- manually advance fallback/local adapter flows when not using live Stargate delivery
+
 ## 2. Environment
 
 Template:
@@ -106,6 +133,10 @@ Meaning of key env vars:
 - `BASE_EID` / `ARBITRUM_EID`: Stargate/LayerZero endpoint ids
 - `HOME_BRIDGE_ADAPTER` / `REMOTE_BRIDGE_ADAPTER`: deployed bridge adapters
 - `HOME_PEER` / `REMOTE_PEER`: `localPeer()` values of each deployed bridge adapter
+- `STARGATE`: Stargate token transport contract for the chain
+- `LAYERZERO_ENDPOINT_V2`: LayerZero endpoint v2 contract for the chain
+- `STARGATE_SEND_OPTIONS`: encoded executor options used by Stargate sends
+- `STRATEGY_RECEIVER`: destination receiver for the configured `STRATEGY_ID`
 
 ## 3. Commands
 
@@ -244,6 +275,40 @@ forge script --offline scripts/deploy/ConfigureStargatePeers.s.sol:ConfigureStar
   --broadcast -vv
 ```
 
+### 3.6 Stargate transport wiring
+
+On Base:
+
+```bash
+export BRIDGE_ADAPTER=<home_bridge_adapter>
+export STARGATE=<base_stargate_transport>
+export LAYERZERO_ENDPOINT_V2=<base_lz_endpoint_v2>
+export PEER_EID=<arbitrum_eid>
+export STRATEGY_ID=1
+export STRATEGY_RECEIVER=<remote_strategy_agent>
+export STARGATE_SEND_OPTIONS=<encoded_options_hex>
+
+forge script --offline scripts/deploy/ConfigureStargateTransport.s.sol:ConfigureStargateTransport \
+  --rpc-url "$BASE_RPC_URL" \
+  --broadcast -vv
+```
+
+On Arbitrum:
+
+```bash
+export BRIDGE_ADAPTER=<remote_bridge_adapter>
+export STARGATE=<arbitrum_stargate_transport>
+export LAYERZERO_ENDPOINT_V2=<arbitrum_lz_endpoint_v2>
+export PEER_EID=<base_eid>
+export STRATEGY_ID=1
+export STRATEGY_RECEIVER=<home_vault_or_expected_receiver>
+export STARGATE_SEND_OPTIONS=<encoded_options_hex>
+
+forge script --offline scripts/deploy/ConfigureStargateTransport.s.sol:ConfigureStargateTransport \
+  --rpc-url "$ARBITRUM_RPC_URL" \
+  --broadcast -vv
+```
+
 ## 4. Post-Deploy Verification
 
 Before any E2E flow, verify:
@@ -264,6 +329,7 @@ Before any E2E flow, verify:
   - `BRIDGE_ROLE` to the remote bridge adapter
 - remote bridge granted `BRIDGE_ROLE` to `remoteAgent`
 - peers are configured both directions
+- transport is configured on each chain for the intended asset path
 - if `UPSERT_STRATEGY=true`, `StrategyRegistry.getStrategyConfig(strategyId)` points to:
   - `chainId = Arbitrum chain id`
   - `agent = remoteAgent`

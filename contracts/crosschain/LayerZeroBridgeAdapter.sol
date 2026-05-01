@@ -87,7 +87,7 @@ contract LayerZeroBridgeAdapter is CrossChainAccessControl, IBridgeAdapter {
         address asset,
         uint256 amount,
         bytes calldata payload
-    ) external payable onlyRole(BRIDGE_ROLE) returns (bytes32 messageId) {
+    ) public payable virtual onlyRole(BRIDGE_ROLE) returns (bytes32 messageId) {
         if (peers[dstEid] == bytes32(0)) {
             revert LayerZeroBridgeAdapter__UnknownPeer(dstEid);
         }

@@ -31,3 +31,5 @@ lcov.info
 # Foundry scripts
 script
 broadcast
+/out-unoptimized
+/cache_forge_unoptimized

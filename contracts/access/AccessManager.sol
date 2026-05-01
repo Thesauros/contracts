@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.23;
+pragma solidity 0.8.34;
 
-import "@openzeppelin/contracts/utils/Context.sol";
+import {Context} from "@openzeppelin/contracts/utils/Context.sol";
 
 /**
  * @title AccessManager
@@ -45,9 +45,7 @@ contract AccessManager is Context {
      * with an {AccessManager__CallerIsNotAdmin} error.
      */
     modifier onlyAdmin() {
-        if (!hasRole(ADMIN_ROLE, _msgSender())) {
-            revert AccessManager__CallerIsNotAdmin();
-        }
+        _onlyAdmin();
         _;
     }
 
@@ -56,9 +54,7 @@ contract AccessManager is Context {
      * with an {AccessManager__CallerIsNotOperator} error.
      */
     modifier onlyOperator() {
-        if (!hasRole(OPERATOR_ROLE, _msgSender())) {
-            revert AccessManager__CallerIsNotOperator();
-        }
+        _onlyOperator();
         _;
     }
 
@@ -67,9 +63,7 @@ contract AccessManager is Context {
      * with an {AccessManager__CallerIsNotExecutor} error.
      */
     modifier onlyExecutor() {
-        if (!hasRole(EXECUTOR_ROLE, _msgSender())) {
-            revert AccessManager__CallerIsNotExecutor();
-        }
+        _onlyExecutor();
         _;
     }
 
@@ -119,6 +113,24 @@ contract AccessManager is Context {
      */
     function revokeRole(bytes32 role, address account) public onlyAdmin {
         _revokeRole(role, account);
+    }
+
+    function _onlyAdmin() internal view {
+        if (!hasRole(ADMIN_ROLE, _msgSender())) {
+            revert AccessManager__CallerIsNotAdmin();
+        }
+    }
+
+    function _onlyOperator() internal view {
+        if (!hasRole(OPERATOR_ROLE, _msgSender())) {
+            revert AccessManager__CallerIsNotOperator();
+        }
+    }
+
+    function _onlyExecutor() internal view {
+        if (!hasRole(EXECUTOR_ROLE, _msgSender())) {
+            revert AccessManager__CallerIsNotExecutor();
+        }
     }
 
     /**

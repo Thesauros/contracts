@@ -52,19 +52,23 @@ contract CrossChainLocalPipeline is Test {
             queue
         );
 
+        vm.startPrank(governance);
         registry.grantRole(registry.VAULT_ROLE(), address(vault));
         queue.grantRole(queue.VAULT_ROLE(), address(vault));
-
         allocator.grantRole(allocator.ALLOCATOR_ROLE(), allocatorRole);
         allocator.grantRole(allocator.KEEPER_ROLE(), keeper);
         vault.grantRole(vault.KEEPER_ROLE(), keeper);
         allocator.setRoutingPolicy(vault);
+        vm.stopPrank();
 
         adapter = new MockStrategyAdapter(address(asset));
         localAgent = new LocalStrategyAgent(governance, STRATEGY_ID, address(vault));
+        vm.startPrank(governance);
         localAgent.grantRole(localAgent.KEEPER_ROLE(), keeper);
+        localAgent.grantRole(localAgent.KEEPER_ROLE(), address(vault));
         localAgent.setAsset(address(asset));
         localAgent.setStrategyAdapter(address(adapter));
+        vm.stopPrank();
 
         vm.prank(governance);
         registry.upsertStrategy(
@@ -87,6 +91,7 @@ contract CrossChainLocalPipeline is Test {
     function testLocalAllocateAndRecall() public {
         _depositAsAlice(DEPOSIT_AMOUNT);
 
+        vm.prank(allocatorRole);
         bytes32 allocateOpId = allocator.createOperation(
             STRATEGY_ID,
             CrossChainTypes.OperationType.Allocate,
@@ -99,6 +104,11 @@ contract CrossChainLocalPipeline is Test {
         allocator.setOperationStatus(
             allocateOpId,
             CrossChainTypes.OperationStatus.Sent
+        );
+        vm.prank(keeper);
+        allocator.setOperationStatus(
+            allocateOpId,
+            CrossChainTypes.OperationStatus.Received
         );
         vm.prank(keeper);
         vault.syncOperationAccounting(allocateOpId);
@@ -127,6 +137,7 @@ contract CrossChainLocalPipeline is Test {
         assertEq(allocateState.currentDebt, ALLOCATE_AMOUNT);
         assertEq(adapter.deployedBalance(), ALLOCATE_AMOUNT);
 
+        vm.prank(allocatorRole);
         bytes32 recallOpId = allocator.createOperation(
             STRATEGY_ID,
             CrossChainTypes.OperationType.Recall,
@@ -139,6 +150,11 @@ contract CrossChainLocalPipeline is Test {
         allocator.setOperationStatus(
             recallOpId,
             CrossChainTypes.OperationStatus.Sent
+        );
+        vm.prank(keeper);
+        allocator.setOperationStatus(
+            recallOpId,
+            CrossChainTypes.OperationStatus.Received
         );
 
         vm.prank(keeper);

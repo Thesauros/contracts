@@ -381,6 +381,7 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
     }
 
     function _requireActiveDeadline(bytes32 opId, uint64 deadline) internal view {
+        // forge-lint: disable-next-line(block-timestamp)
         if (deadline < block.timestamp) {
             revert RemoteStrategyAgent__DeadlineExpired(
                 opId,

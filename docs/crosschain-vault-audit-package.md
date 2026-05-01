@@ -71,7 +71,7 @@ Role review:
 
 Primary local suite (stable in this repo environment):
 
-`forge test --offline --no-match-path test/forking/*`
+`forge test --offline --no-match-path 'test/forking/*'`
 
 Fork suites:
 

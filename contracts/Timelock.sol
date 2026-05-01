@@ -165,6 +165,7 @@ contract Timelock is Ownable2Step {
         bytes memory data,
         uint256 timestamp
     ) public onlyOwner returns (bytes32) {
+        // forge-lint: disable-next-line(block-timestamp)
         if (timestamp < block.timestamp + delay) {
             revert Timelock__InvalidTimestamp();
         }
@@ -236,9 +237,11 @@ contract Timelock is Ownable2Step {
         if (!queued[txId]) {
             revert Timelock__NotQueued();
         }
+        // forge-lint: disable-next-line(block-timestamp)
         if (block.timestamp < timestamp) {
             revert Timelock__StillLocked();
         }
+        // forge-lint: disable-next-line(block-timestamp)
         if (block.timestamp > timestamp + GRACE_PERIOD) {
             revert Timelock__Expired();
         }

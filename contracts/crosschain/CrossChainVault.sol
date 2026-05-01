@@ -864,9 +864,7 @@ contract CrossChainVault is
 
             if (
                 config.maxReportDelay != 0 &&
-                (state.lastReportTimestamp == 0 ||
-                    block.timestamp >
-                    uint256(state.lastReportTimestamp) + config.maxReportDelay)
+                _isStrategyReportStale(config, state)
             ) {
                 return true;
             }
@@ -890,13 +888,23 @@ contract CrossChainVault is
 
             if (
                 config.maxReportDelay != 0 &&
-                (state.lastReportTimestamp == 0 ||
-                    block.timestamp >
-                    uint256(state.lastReportTimestamp) + config.maxReportDelay)
+                _isStrategyReportStale(config, state)
             ) {
                 revert CrossChainVault__StaleStrategyReport(strategyId);
             }
         }
+    }
+
+    function _isStrategyReportStale(
+        CrossChainTypes.StrategyConfig memory config,
+        CrossChainTypes.StrategyState memory state
+    ) internal view returns (bool) {
+        if (state.lastReportTimestamp == 0) {
+            return true;
+        }
+
+        // forge-lint: disable-next-line(block-timestamp)
+        return block.timestamp > uint256(state.lastReportTimestamp) + config.maxReportDelay;
     }
 
     function _strategyHasExposure(

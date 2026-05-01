@@ -56,7 +56,7 @@ Delivered in:
 
 All non-forking suites were executed with:
 
-`forge test --offline --no-match-path test/forking/*`
+`forge test --offline --no-match-path 'test/forking/*'`
 
 Fork suites remain environment-dependent (RPC + Foundry/macOS proxy panic noted previously) and are excluded from this closeout.
 

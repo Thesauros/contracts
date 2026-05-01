@@ -349,6 +349,7 @@ contract LocalStrategyAgent is CrossChainAccessControl, ILocalStrategyAgent {
     }
 
     function _requireActiveDeadline(bytes32 opId, uint64 deadline) internal view {
+        // forge-lint: disable-next-line(block-timestamp)
         if (deadline < block.timestamp) {
             revert LocalStrategyAgent__DeadlineExpired(
                 opId,

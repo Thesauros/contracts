@@ -202,6 +202,7 @@ contract LayerZeroBridgeAdapter is CrossChainAccessControl, IBridgeAdapter {
             message.sentAt != 0 &&
             !message.acknowledged &&
             !message.failed &&
+            // forge-lint: disable-next-line(block-timestamp)
             block.timestamp >= message.timeoutAt;
     }
 

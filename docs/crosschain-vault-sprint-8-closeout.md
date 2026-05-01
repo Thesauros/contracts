@@ -50,7 +50,7 @@ Result:
 
 Mock tests were updated and run with:
 
-`forge test --offline --no-match-path test/forking/*`
+`forge test --offline --no-match-path 'test/forking/*'`
 
 Fork suites remain environment-dependent (RPC + Foundry/macOS proxy panic noted previously) and are excluded from this closeout.
 
@@ -59,4 +59,3 @@ Fork suites remain environment-dependent (RPC + Foundry/macOS proxy panic noted 
 - full chain-level caps enforced on-chain (per-chain config module);
 - richer routing benefit models (latency penalty calibration, uncertainty bands, risk-based horizons);
 - production report attestation/signer policy (explicitly deferred from Sprint 7 closeout).
-

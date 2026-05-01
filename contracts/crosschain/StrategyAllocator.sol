@@ -83,6 +83,7 @@ contract StrategyAllocator is CrossChainAccessControl, IStrategyAllocator {
         uint256 minAssetsOut,
         uint64 deadline
     ) external onlyRole(ALLOCATOR_ROLE) returns (bytes32 opId) {
+        // forge-lint: disable-next-line(block-timestamp)
         if (deadline < block.timestamp) {
             revert StrategyAllocator__InvalidDeadline();
         }
@@ -490,6 +491,7 @@ contract StrategyAllocator is CrossChainAccessControl, IStrategyAllocator {
         if (state.lastReportTimestamp == 0) {
             return true;
         }
+        // forge-lint: disable-next-line(block-timestamp)
         return block.timestamp > uint256(state.lastReportTimestamp) + config.maxReportDelay;
     }
 

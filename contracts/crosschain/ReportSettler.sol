@@ -116,6 +116,7 @@ contract ReportSettler is CrossChainAccessControl, IReportSettler, EIP712 {
         }
         if (
             config.maxReportDelay != 0 &&
+            // forge-lint: disable-next-line(block-timestamp)
             block.timestamp > uint256(report.reportTimestamp) + config.maxReportDelay
         ) {
             revert ReportSettler__ReportStale();

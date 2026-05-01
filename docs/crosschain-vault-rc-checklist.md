@@ -7,7 +7,7 @@ This checklist is intended to drive Sprint 9 hardening to an audit-ready, rehear
 ## Build and Tests
 
 - [ ] `forge build` passes cleanly
-- [ ] `forge test --offline --no-match-path test/forking/*` passes
+- [ ] `forge test --offline --no-match-path 'test/forking/*'` passes
 - [ ] Core fuzz suites added and passing
 - [ ] Invariant suites added and passing
 
@@ -54,4 +54,3 @@ This checklist is intended to drive Sprint 9 hardening to an audit-ready, rehear
 - [ ] Threat model doc updated
 - [ ] Spec + ADRs + closeouts linked and consistent
 - [ ] Known limitations and deferred items enumerated
-

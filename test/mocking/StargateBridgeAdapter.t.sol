@@ -69,10 +69,35 @@ contract MockStargateTransport is IStargate {
         return true;
     }
 
+    function quoteOFT(
+        SendParam calldata sendParam
+    )
+        external
+        pure
+        returns (
+            OFTLimit memory limit,
+            OFTFeeDetail[] memory oftFeeDetails,
+            OFTReceipt memory receipt
+        )
+    {
+        limit = OFTLimit({minAmountLD: 1, maxAmountLD: type(uint256).max});
+        oftFeeDetails = new OFTFeeDetail[](0);
+        receipt = OFTReceipt({
+            amountSentLD: sendParam.amountLD,
+            amountReceivedLD: sendParam.amountLD == 0
+                ? 0
+                : sendParam.amountLD - 1
+        });
+    }
+
     function quoteSend(
-        SendParam calldata,
+        SendParam calldata sendParam,
         bool
     ) external pure returns (MessagingFee memory) {
+        if (
+            sendParam.amountLD != 0 &&
+            sendParam.minAmountLD >= sendParam.amountLD
+        ) revert("slippage");
         return MessagingFee({nativeFee: 1 wei, lzTokenFee: 0});
     }
 

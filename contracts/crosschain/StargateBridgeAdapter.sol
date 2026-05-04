@@ -19,6 +19,16 @@ interface ILayerZeroComposer {
 }
 
 interface IStargate {
+    struct OFTLimit {
+        uint256 minAmountLD;
+        uint256 maxAmountLD;
+    }
+
+    struct OFTFeeDetail {
+        int256 feeAmountLD;
+        string description;
+    }
+
     struct SendParam {
         uint32 dstEid;
         bytes32 to;
@@ -47,6 +57,16 @@ interface IStargate {
 
     function token() external view returns (address);
     function approvalRequired() external view returns (bool);
+    function quoteOFT(
+        SendParam calldata sendParam
+    )
+        external
+        view
+        returns (
+            OFTLimit memory limit,
+            OFTFeeDetail[] memory oftFeeDetails,
+            OFTReceipt memory receipt
+        );
     function quoteSend(
         SendParam calldata sendParam,
         bool payInLzToken
@@ -115,6 +135,16 @@ contract StargateBridgeAdapter is LayerZeroBridgeAdapter, ILayerZeroComposer {
         address indexed receiver
     );
     event StargateSendOptionsConfigured(uint32 indexed dstEid, bytes options);
+    event StargateManualRelayModeConfigured(
+        uint32 indexed dstEid,
+        bool enabled
+    );
+    event StargateManualRelayForwarded(
+        address indexed receiver,
+        address indexed asset,
+        uint256 amount,
+        bytes32 payloadHash
+    );
 
     struct BridgeComposePayload {
         bytes32 srcPeer;
@@ -125,6 +155,7 @@ contract StargateBridgeAdapter is LayerZeroBridgeAdapter, ILayerZeroComposer {
     IStargate public stargate;
     address public endpointV2;
     mapping(uint32 dstEid => bytes sendOptions) public stargateSendOptions;
+    mapping(uint32 dstEid => bool enabled) public manualRelayMode;
     mapping(uint32 dstEid => mapping(uint32 strategyId => address receiver))
         public strategyReceivers;
 
@@ -162,6 +193,14 @@ contract StargateBridgeAdapter is LayerZeroBridgeAdapter, ILayerZeroComposer {
         emit StargateSendOptionsConfigured(dstEid, options);
     }
 
+    function setManualRelayMode(
+        uint32 dstEid,
+        bool enabled
+    ) external onlyRole(GOVERNANCE_ROLE) {
+        manualRelayMode[dstEid] = enabled;
+        emit StargateManualRelayModeConfigured(dstEid, enabled);
+    }
+
     function quoteTransportFee(
         uint32 dstEid,
         address asset,
@@ -177,15 +216,21 @@ contract StargateBridgeAdapter is LayerZeroBridgeAdapter, ILayerZeroComposer {
         strategyId; // silence stack/local variable warning semantics
 
         bytes memory options = stargateSendOptions[dstEid];
-        if (options.length == 0) {
+        if (!manualRelayMode[dstEid] && options.length == 0) {
             revert StargateBridgeAdapter__MissingExecutorOptions(dstEid);
         }
 
-        BridgeComposePayload memory composePayload = BridgeComposePayload({
-            srcPeer: localPeer(),
-            receiver: receiver,
-            payload: payload
-        });
+        bytes memory composeMsg;
+        if (!manualRelayMode[dstEid]) {
+            BridgeComposePayload memory composePayload = BridgeComposePayload({
+                srcPeer: localPeer(),
+                receiver: receiver,
+                payload: payload
+            });
+            composeMsg = abi.encode(composePayload);
+        } else {
+            options = bytes("");
+        }
 
         IStargate.SendParam memory sendParam = IStargate.SendParam({
             dstEid: dstEid,
@@ -193,10 +238,14 @@ contract StargateBridgeAdapter is LayerZeroBridgeAdapter, ILayerZeroComposer {
             amountLD: amount,
             minAmountLD: amount,
             extraOptions: options,
-            composeMsg: abi.encode(composePayload),
+            composeMsg: composeMsg,
             oftCmd: bytes("")
         });
 
+        (, , IStargate.OFTReceipt memory oftReceipt) = stargate.quoteOFT(
+            sendParam
+        );
+        sendParam.minAmountLD = oftReceipt.amountReceivedLD;
         nativeFee = stargate.quoteSend(sendParam, false).nativeFee;
     }
 
@@ -295,15 +344,21 @@ contract StargateBridgeAdapter is LayerZeroBridgeAdapter, ILayerZeroComposer {
     ) internal view returns (IStargate.SendParam memory sendParam) {
         (, address receiver) = _resolveRoute(dstEid, payload);
         bytes memory options = stargateSendOptions[dstEid];
-        if (options.length == 0) {
+        if (!manualRelayMode[dstEid] && options.length == 0) {
             revert StargateBridgeAdapter__MissingExecutorOptions(dstEid);
         }
 
-        BridgeComposePayload memory composePayload = BridgeComposePayload({
-            srcPeer: localPeer(),
-            receiver: receiver,
-            payload: payload
-        });
+        bytes memory composeMsg;
+        if (!manualRelayMode[dstEid]) {
+            BridgeComposePayload memory composePayload = BridgeComposePayload({
+                srcPeer: localPeer(),
+                receiver: receiver,
+                payload: payload
+            });
+            composeMsg = abi.encode(composePayload);
+        } else {
+            options = bytes("");
+        }
 
         sendParam = IStargate.SendParam({
             dstEid: dstEid,
@@ -311,9 +366,14 @@ contract StargateBridgeAdapter is LayerZeroBridgeAdapter, ILayerZeroComposer {
             amountLD: amount,
             minAmountLD: amount,
             extraOptions: options,
-            composeMsg: abi.encode(composePayload),
+            composeMsg: composeMsg,
             oftCmd: bytes("")
         });
+
+        (, , IStargate.OFTReceipt memory oftReceipt) = stargate.quoteOFT(
+            sendParam
+        );
+        sendParam.minAmountLD = oftReceipt.amountReceivedLD;
     }
 
     function _afterSend(
@@ -340,6 +400,38 @@ contract StargateBridgeAdapter is LayerZeroBridgeAdapter, ILayerZeroComposer {
 
         emit MessageSent(receipt.guid, dstEid);
         emit AssetBridged(receipt.guid, dstEid, asset, amount);
+    }
+
+    function manualForwardReceivedAsset(
+        address receiver,
+        uint256 amount,
+        bytes calldata payload
+    ) external onlyRole(GOVERNANCE_ROLE) {
+        address asset = stargate.token();
+        bytes memory adjustedPayload = payload;
+        CrossChainTypes.CommandPayloadV1 memory command = abi.decode(
+            payload,
+            (CrossChainTypes.CommandPayloadV1)
+        );
+
+        if (amount != 0) {
+            IERC20(asset).safeTransfer(receiver, amount);
+        }
+
+        if (command.commandType == CrossChainTypes.CommandType.Allocate) {
+            command.assets = amount;
+            adjustedPayload = abi.encode(command);
+            IRemoteStrategyAgent(receiver).receiveBridgeAsset(adjustedPayload);
+        } else {
+            ICrossChainVault(receiver).receiveRecallFunds(amount);
+        }
+
+        emit StargateManualRelayForwarded(
+            receiver,
+            asset,
+            amount,
+            keccak256(adjustedPayload)
+        );
     }
 
     function _applyComposedMessage(

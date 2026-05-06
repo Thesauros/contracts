@@ -370,7 +370,8 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
                 payload.commandType
             );
         }
-        if (storedCommand.payloadHash != keccak256(command)) {
+        payload = _normalizePayloadForStoredCommand(payload, storedCommand);
+        if (storedCommand.payloadHash != keccak256(abi.encode(payload))) {
             revert RemoteStrategyAgent__PayloadMismatch(payload.opId);
         }
     }
@@ -428,6 +429,19 @@ contract RemoteStrategyAgent is CrossChainAccessControl, IRemoteStrategyAgent {
                 storedCommand.commandType
             );
         }
+    }
+
+    function _normalizePayloadForStoredCommand(
+        CrossChainTypes.CommandPayloadV1 memory payload,
+        StoredCommand memory storedCommand
+    ) internal pure returns (CrossChainTypes.CommandPayloadV1 memory) {
+        if (
+            storedCommand.commandType == CrossChainTypes.CommandType.Allocate &&
+            payload.assets != storedCommand.assets
+        ) {
+            payload.assets = storedCommand.assets;
+        }
+        return payload;
     }
 
     function _buildStrategyReport(

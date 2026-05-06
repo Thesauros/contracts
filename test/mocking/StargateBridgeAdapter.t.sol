@@ -111,6 +111,9 @@ contract MockStargateTransport is IStargate {
         returns (MessagingReceipt memory msgReceipt, OFTReceipt memory oftReceipt)
     {
         require(msg.value >= fee.nativeFee, "fee");
+        uint256 amountReceivedLD = sendParam.amountLD == 0
+            ? 0
+            : sendParam.amountLD - 1;
 
         uint64 nonce = nextNonce++;
         bytes32 guid = keccak256(
@@ -126,12 +129,17 @@ contract MockStargateTransport is IStargate {
         );
 
         address receiver = address(uint160(uint256(sendParam.to)));
-        IERC20(underlyingToken).safeTransferFrom(msg.sender, receiver, sendParam.amountLD);
+        IERC20(underlyingToken).safeTransferFrom(
+            msg.sender,
+            address(this),
+            sendParam.amountLD
+        );
+        IERC20(underlyingToken).safeTransfer(receiver, amountReceivedLD);
 
         bytes memory composeMessage = abi.encodePacked(
             nonce,
             localEid,
-            sendParam.amountLD,
+            amountReceivedLD,
             bytes32(uint256(uint160(msg.sender))),
             sendParam.composeMsg
         );
@@ -150,7 +158,7 @@ contract MockStargateTransport is IStargate {
         });
         oftReceipt = OFTReceipt({
             amountSentLD: sendParam.amountLD,
-            amountReceivedLD: sendParam.amountLD
+            amountReceivedLD: amountReceivedLD
         });
     }
 }
@@ -232,6 +240,7 @@ contract StargateBridgeAdapterTests is Test {
             CrossChainTypes.CommandType.Allocate,
             125e6
         );
+        uint256 deliveredAmount = 125e6 - 1;
 
         vm.startPrank(bridgeOperator);
         asset.approve(address(homeBridge), type(uint256).max);
@@ -256,11 +265,11 @@ contract StargateBridgeAdapterTests is Test {
         assertEq(inbound.messageId, messageId);
         assertEq(inbound.srcEid, HOME_EID);
         assertEq(inbound.receiver, address(remoteAgent));
-        assertEq(inbound.amount, 125e6);
+        assertEq(inbound.amount, deliveredAmount);
         assertTrue(inbound.delivered);
 
-        assertEq(remoteAgent.idleAssets(), 125e6);
-        assertEq(asset.balanceOf(address(remoteAgent)), 125e6);
+        assertEq(remoteAgent.idleAssets(), deliveredAmount);
+        assertEq(asset.balanceOf(address(remoteAgent)), deliveredAmount);
         assertEq(asset.balanceOf(address(homeBridge)), 0);
         assertEq(asset.balanceOf(address(remoteBridge)), 0);
     }
@@ -286,11 +295,36 @@ contract StargateBridgeAdapterTests is Test {
 
         assertEq(inbound.srcEid, REMOTE_EID);
         assertEq(inbound.receiver, address(recallVault));
-        assertEq(inbound.amount, 55e6);
+        assertEq(inbound.amount, 55e6 - 1);
         assertTrue(inbound.delivered);
 
-        assertEq(recallVault.receivedAssets(), 55e6);
-        assertEq(asset.balanceOf(address(recallVault)), 55e6);
+        assertEq(recallVault.receivedAssets(), 55e6 - 1);
+        assertEq(asset.balanceOf(address(recallVault)), 55e6 - 1);
+    }
+
+    function testExecuteAllocateAcceptsOriginalPayloadAfterAmountAdjustment() public {
+        bytes memory payload = _commandPayload(
+            CrossChainTypes.CommandType.Allocate,
+            125e6
+        );
+        uint256 deliveredAmount = 125e6 - 1;
+
+        remoteAgent.grantRole(remoteAgent.KEEPER_ROLE(), bridgeOperator);
+
+        vm.startPrank(bridgeOperator);
+        asset.approve(address(homeBridge), type(uint256).max);
+        homeBridge.sendAssetAndMessage{value: 1 wei}(
+            REMOTE_EID,
+            address(asset),
+            125e6,
+            payload
+        );
+        remoteAgent.executeAllocate(payload);
+        vm.stopPrank();
+
+        assertEq(remoteAgent.idleAssets(), 0);
+        assertEq(remoteAgent.deployedAssets(), deliveredAmount);
+        assertEq(strategyAdapter.deployedBalance(), deliveredAmount);
     }
 
     function testLzComposeRejectsUnknownEndpoint() public {

@@ -408,9 +408,12 @@ contract StargateBridgeAdapter is LayerZeroBridgeAdapter, ILayerZeroComposer {
         bytes calldata payload
     ) external onlyRole(GOVERNANCE_ROLE) {
         address asset = stargate.token();
-        bytes memory adjustedPayload = payload;
-        CrossChainTypes.CommandPayloadV1 memory command = abi.decode(
+        bytes memory adjustedPayload = _rewriteAllocatePayloadAmount(
             payload,
+            amount
+        );
+        CrossChainTypes.CommandPayloadV1 memory command = abi.decode(
+            adjustedPayload,
             (CrossChainTypes.CommandPayloadV1)
         );
 
@@ -419,8 +422,6 @@ contract StargateBridgeAdapter is LayerZeroBridgeAdapter, ILayerZeroComposer {
         }
 
         if (command.commandType == CrossChainTypes.CommandType.Allocate) {
-            command.assets = amount;
-            adjustedPayload = abi.encode(command);
             IRemoteStrategyAgent(receiver).receiveBridgeAsset(adjustedPayload);
         } else {
             ICrossChainVault(receiver).receiveRecallFunds(amount);
@@ -448,6 +449,10 @@ contract StargateBridgeAdapter is LayerZeroBridgeAdapter, ILayerZeroComposer {
         }
 
         address asset = stargate.token();
+        bytes memory adjustedPayload = _rewriteAllocatePayloadAmount(
+            composePayload.payload,
+            amount
+        );
         bytes32 payloadHash = keccak256(composePayload.payload);
 
         _storeInboundMessage(
@@ -465,17 +470,33 @@ contract StargateBridgeAdapter is LayerZeroBridgeAdapter, ILayerZeroComposer {
         }
 
         CrossChainTypes.CommandPayloadV1 memory command = abi.decode(
-            composePayload.payload,
+            adjustedPayload,
             (CrossChainTypes.CommandPayloadV1)
         );
         if (command.commandType == CrossChainTypes.CommandType.Allocate) {
             IRemoteStrategyAgent(composePayload.receiver).receiveBridgeAsset(
-                composePayload.payload
+                adjustedPayload
             );
         } else {
             ICrossChainVault(composePayload.receiver).receiveRecallFunds(amount);
         }
 
         emit MessageReceived(guid, srcEid, composePayload.receiver, payloadHash);
+    }
+
+    function _rewriteAllocatePayloadAmount(
+        bytes memory payload,
+        uint256 amount
+    ) internal pure returns (bytes memory adjustedPayload) {
+        CrossChainTypes.CommandPayloadV1 memory command = abi.decode(
+            payload,
+            (CrossChainTypes.CommandPayloadV1)
+        );
+        if (command.commandType != CrossChainTypes.CommandType.Allocate) {
+            return payload;
+        }
+
+        command.assets = amount;
+        adjustedPayload = abi.encode(command);
     }
 }

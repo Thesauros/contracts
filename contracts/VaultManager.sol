@@ -42,10 +42,81 @@ import {AccessManager} from "./access/AccessManager.sol";
 contract VaultManager is AccessManager {
     using SafeERC20 for IERC20;
 
+    uint16 public constant BPS_DENOMINATOR = 10_000;
+
+    struct RebalancePolicy {
+        uint256 minRebalanceAmount;
+        uint16 maxVaultOutflowBps;
+        uint16 maxFeeBps;
+        uint256 minAprImprovementRay;
+    }
+
     /**
      * @dev Errors
      */
     error VaultManager__InvalidAssetAmount();
+    error VaultManager__VaultNotApproved();
+    error VaultManager__SameProvider();
+    error VaultManager__RebalanceAmountTooSmall();
+    error VaultManager__VaultOutflowLimitExceeded();
+    error VaultManager__RebalanceFeeTooHigh();
+    error VaultManager__InsufficientAprImprovement();
+    error VaultManager__InvalidBps();
+
+    mapping(address vault => bool approved) public approvedVaults;
+
+    RebalancePolicy public rebalancePolicy;
+
+    event VaultApprovalUpdated(address indexed vault, bool approved);
+    event RebalancePolicyUpdated(
+        uint256 minRebalanceAmount,
+        uint16 maxVaultOutflowBps,
+        uint16 maxFeeBps,
+        uint256 minAprImprovementRay
+    );
+
+    constructor() {
+        rebalancePolicy = RebalancePolicy({
+            minRebalanceAmount: 0,
+            maxVaultOutflowBps: BPS_DENOMINATOR,
+            maxFeeBps: 2_000,
+            minAprImprovementRay: 0
+        });
+    }
+
+    function setVaultApproval(address vault, bool approved) external onlyAdmin {
+        approvedVaults[vault] = approved;
+        emit VaultApprovalUpdated(vault, approved);
+    }
+
+    function setRebalancePolicy(
+        uint256 minRebalanceAmount,
+        uint16 maxVaultOutflowBps,
+        uint16 maxFeeBps,
+        uint256 minAprImprovementRay
+    ) external onlyAdmin {
+        if (
+            maxVaultOutflowBps == 0 ||
+            maxVaultOutflowBps > BPS_DENOMINATOR ||
+            maxFeeBps > BPS_DENOMINATOR
+        ) {
+            revert VaultManager__InvalidBps();
+        }
+
+        rebalancePolicy = RebalancePolicy({
+            minRebalanceAmount: minRebalanceAmount,
+            maxVaultOutflowBps: maxVaultOutflowBps,
+            maxFeeBps: maxFeeBps,
+            minAprImprovementRay: minAprImprovementRay
+        });
+
+        emit RebalancePolicyUpdated(
+            minRebalanceAmount,
+            maxVaultOutflowBps,
+            maxFeeBps,
+            minAprImprovementRay
+        );
+    }
 
     /**
      * @notice Executes rebalancing of vault assets between providers
@@ -81,13 +152,42 @@ contract VaultManager is AccessManager {
         uint256 fee,
         bool activateToProvider
     ) external onlyExecutor returns (bool success) {
+        if (!approvedVaults[address(vault)]) {
+            revert VaultManager__VaultNotApproved();
+        }
+        if (address(from) == address(to)) {
+            revert VaultManager__SameProvider();
+        }
+
         uint256 assetsAtFrom = from.getDepositBalance(address(vault), vault);
+        RebalancePolicy memory policy = rebalancePolicy;
 
         if (assets == type(uint256).max) {
             assets = assetsAtFrom;
         }
         if (assets == 0 || assets > assetsAtFrom) {
             revert VaultManager__InvalidAssetAmount();
+        }
+        if (assets < policy.minRebalanceAmount) {
+            revert VaultManager__RebalanceAmountTooSmall();
+        }
+        if (
+            assets >
+            (assetsAtFrom * uint256(policy.maxVaultOutflowBps)) /
+                BPS_DENOMINATOR
+        ) {
+            revert VaultManager__VaultOutflowLimitExceeded();
+        }
+        if (fee > (assets * uint256(policy.maxFeeBps)) / BPS_DENOMINATOR) {
+            revert VaultManager__RebalanceFeeTooHigh();
+        }
+        if (policy.minAprImprovementRay > 0) {
+            uint256 fromRate = from.getDepositRate(vault);
+            uint256 toRate = to.getDepositRate(vault);
+
+            if (toRate < fromRate + policy.minAprImprovementRay) {
+                revert VaultManager__InsufficientAprImprovement();
+            }
         }
 
         vault.rebalance(assets, from, to, fee, activateToProvider);

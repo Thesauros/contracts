@@ -9,6 +9,8 @@ import {MockERC20} from "./MockERC20.sol";
  * @title BaseMockProvider
  */
 contract BaseMockProvider is IProvider {
+    uint256 private _depositRateRay = 1e27;
+
     /**
      * @inheritdoc IProvider
      */
@@ -68,8 +70,8 @@ contract BaseMockProvider is IProvider {
      */
     function getDepositRate(
         IVault
-    ) external pure override returns (uint256 rate) {
-        rate = 1e27;
+    ) external view override returns (uint256 rate) {
+        rate = _depositRateRay;
     }
 
     /**
@@ -83,6 +85,10 @@ contract BaseMockProvider is IProvider {
             user,
             getIdentifier()
         );
+    }
+
+    function setDepositRate(uint256 rate) external {
+        _depositRateRay = rate;
     }
 }
 

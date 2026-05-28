@@ -76,6 +76,7 @@ contract MockingUtilities is Test {
         vault.grantRole(OPERATOR_ROLE, address(vaultManager));
 
         vaultManager.grantRole(EXECUTOR_ROLE, address(this));
+        vaultManager.setVaultApproval(address(vault), true);
     }
 
     function initializeVault(

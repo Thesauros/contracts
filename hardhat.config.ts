@@ -16,7 +16,22 @@ const config: HardhatUserConfig = {
   },
   networks: networkConfig,
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY!,
+    apiKey: {
+      arbitrumOne: process.env.ETHERSCAN_API_KEY!,
+      // Plasmascan is powered by Routescan: any non-empty string works as the key
+      plasma: process.env.PLASMASCAN_API_KEY || 'plasmascan',
+    },
+    customChains: [
+      {
+        network: 'plasma',
+        chainId: 9745,
+        urls: {
+          apiURL:
+            'https://api.routescan.io/v2/network/mainnet/evm/9745/etherscan',
+          browserURL: 'https://plasmascan.to',
+        },
+      },
+    ],
   },
   namedAccounts: {
     deployer: 0,

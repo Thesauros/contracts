@@ -1,6 +1,7 @@
 export const networkUrls = {
   arbitrumOne: `https://arb-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_PROJECT_ID}`,
   arbitrumSepolia: `https://arbitrum-sepolia.blockpi.network/v1/rpc/public`,
+  plasma: process.env.PLASMA_RPC_URL || `https://rpc.plasma.to`,
 };
 
 export const networkConfig = {
@@ -9,7 +10,7 @@ export const networkConfig = {
   },
   hardhat: {
     forking: {
-      url: networkUrls.arbitrumOne,
+      url: process.env.ARBITRUM_RPC_URL || networkUrls.arbitrumOne,
     },
   },
   arbitrumOne: {
@@ -26,5 +27,12 @@ export const networkConfig = {
       ? [process.env.DEPLOYER_PRIVATE_KEY]
       : [],
     chainId: 421614,
+  },
+  plasma: {
+    url: networkUrls.plasma,
+    accounts: process.env.DEPLOYER_PRIVATE_KEY
+      ? [process.env.DEPLOYER_PRIVATE_KEY]
+      : [],
+    chainId: 9745,
   },
 };

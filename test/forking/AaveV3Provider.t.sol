@@ -7,10 +7,15 @@ import {AaveV3Provider} from "../../contracts/providers/AaveV3Provider.sol";
 import {ForkingUtilities} from "../utils/ForkingUtilities.sol";
 
 contract AaveV3ProviderTests is ForkingUtilities {
+    address public constant AAVE_V3_ARBITRUM_POOL_ADDRESSES_PROVIDER =
+        0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb;
+
     AaveV3Provider public aaveV3Provider;
 
     function setUp() public {
-        aaveV3Provider = new AaveV3Provider();
+        aaveV3Provider = new AaveV3Provider(
+            AAVE_V3_ARBITRUM_POOL_ADDRESSES_PROVIDER
+        );
 
         IProvider[] memory providers = new IProvider[](1);
         providers[0] = aaveV3Provider;

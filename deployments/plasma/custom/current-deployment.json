@@ -1,0 +1,28 @@
+{
+  "network": "plasma",
+  "chainId": 9745,
+  "lastUpdated": "2026-06-22T17:27:45.000Z",
+  "baseContracts": {
+    "timelock": "0xAeEcf7F780e88B155df330434Ef29b2B077024e0",
+    "vaultManager": "0x30dC35B78a401Fd0227C229ADF6d0F5097358EF9",
+    "aaveV3Provider": "0x0c5cEd804488E4AbdE6B809164e72cc0F91896b5"
+  },
+  "vaults": {
+    "usdt0": {
+      "address": "0x44eC9D49196749Cf647339350d381302af4a3d60",
+      "asset": "0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb",
+      "name": "Thesauros USDT0 Vault",
+      "symbol": "tUSDT0",
+      "initialized": false
+    }
+  },
+  "tokens": {
+    "usdt0": "0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb"
+  },
+  "treasury": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
+  "deploymentInfo": {
+    "deployer": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
+    "verifyRequested": true,
+    "explorerVerificationStatus": "pending_or_unconfirmed"
+  }
+}

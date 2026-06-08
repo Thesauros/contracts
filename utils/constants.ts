@@ -5,6 +5,10 @@ export const tokenAddresses = {
   USDT: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
 };
 
+export const plasmaTokenAddresses = {
+  USDT0: '0xB8CE59FC3717ada4C02eaDF9682A9e934F625ebb',
+};
+
 export const cometTokens = {
   cUSDC: '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf',
   cUSDT: '0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07',
@@ -41,6 +45,12 @@ export const morphoVaults = [
 ];
 
 export const ARBITRUM_CHAIN_ID = 42161n;
+export const PLASMA_CHAIN_ID = 9745n;
+
+export const AAVE_V3_POOL_ADDRESSES_PROVIDERS = {
+  arbitrumOne: '0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb',
+  plasma: '0x061D8e131F26512348ee5FA42e2DF1bA9d6505E9',
+};
 
 export const TREASURY_ADDRESS = process.env.TREASURY_ADDRESS;
 export const WITHDRAW_FEE_PERCENT = BigInt(

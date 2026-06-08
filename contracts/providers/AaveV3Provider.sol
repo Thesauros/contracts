@@ -44,6 +44,21 @@ import {IProvider} from "../interfaces/IProvider.sol";
  */
 contract AaveV3Provider is IProvider {
     /**
+     * @dev Errors
+     */
+    error AaveV3Provider__AddressZero();
+
+    IPoolAddressesProvider private immutable _poolAddressesProvider;
+
+    constructor(address poolAddressesProvider_) {
+        if (poolAddressesProvider_ == address(0)) {
+            revert AaveV3Provider__AddressZero();
+        }
+
+        _poolAddressesProvider = IPoolAddressesProvider(poolAddressesProvider_);
+    }
+
+    /**
      * @inheritdoc IProvider
      */
     function deposit(
@@ -80,11 +95,10 @@ contract AaveV3Provider is IProvider {
      */
     function _getPoolAddressesProvider()
         internal
-        pure
+        view
         returns (IPoolAddressesProvider)
     {
-        return
-            IPoolAddressesProvider(0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb);
+        return _poolAddressesProvider;
     }
 
     /**
@@ -126,5 +140,16 @@ contract AaveV3Provider is IProvider {
      */
     function getIdentifier() public pure override returns (string memory) {
         return "Aave_V3_Provider";
+    }
+
+    /**
+     * @notice Returns the PoolAddressesProvider configured for this deployment.
+     */
+    function getPoolAddressesProvider()
+        public
+        view
+        returns (IPoolAddressesProvider)
+    {
+        return _poolAddressesProvider;
     }
 }

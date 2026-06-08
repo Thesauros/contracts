@@ -4,6 +4,7 @@ import { DeployFunction } from 'hardhat-deploy/types';
 
 import {
   ARBITRUM_CHAIN_ID,
+  PLASMA_CHAIN_ID,
   TREASURY_ADDRESS,
   WITHDRAW_FEE_PERCENT,
   TIMELOCK_DELAY,
@@ -11,6 +12,7 @@ import {
   tokenAddresses,
   cometPairs,
   morphoVaults,
+  AAVE_V3_POOL_ADDRESSES_PROVIDERS,
 } from '../utils/constants';
 import { verify } from '../utils/verify';
 
@@ -80,7 +82,11 @@ const deployUsdcVault: DeployFunction = async function (
 
   for (const providerName of providersToDeploy) {
     const args =
-      providerName === 'CompoundV3Provider' ? [providerManager.address] : [];
+      providerName === 'CompoundV3Provider'
+        ? [providerManager.address]
+        : providerName === 'AaveV3Provider'
+          ? [AAVE_V3_POOL_ADDRESSES_PROVIDERS.arbitrumOne]
+          : [];
 
     const provider = await deploy(providerName, {
       from: deployer,
@@ -215,3 +221,7 @@ const deployUsdcVault: DeployFunction = async function (
 
 export default deployUsdcVault;
 deployUsdcVault.tags = ['all', 'usdc-vault'];
+// Arbitrum-only vault: providers reference Arbitrum addresses (Compound,
+// Dolomite, Morpho), so skip on Plasma where only the Aave strategy exists.
+deployUsdcVault.skip = async () =>
+  (await ethers.provider.getNetwork()).chainId === PLASMA_CHAIN_ID;

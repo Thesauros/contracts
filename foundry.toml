@@ -7,3 +7,4 @@ cache_path = 'cache_forge'
 
 [rpc_endpoints]
 arbitrum = "${ARBITRUM_RPC_URL}"
+plasma = "${PLASMA_RPC_URL}"

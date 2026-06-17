@@ -1,0 +1,138 @@
+{
+  "name": "Base home + Arbitrum AAVE remote",
+  "environment": "mainnet",
+  "lastUpdated": "2026-05-01",
+  "deployer": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
+  "roles": {
+    "governance": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
+    "keeper": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
+    "allocator": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
+    "reportAttestor": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
+    "reporter": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D",
+    "guardian": "0xafA9ed53c33bbD8DE300481ce150dB3D35738F9D"
+  },
+  "chains": {
+    "base": {
+      "chainId": 8453,
+      "stargateEid": 30184,
+      "tokens": {
+        "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+      },
+      "transport": {
+        "layerZeroEndpointV2": "0x1a44076050125825900e736c501f859c50fE728c",
+        "stargatePoolUsdc": "0x27a16dc786820B16E5c9028b75B99F6f604b5d26",
+        "tokenMessaging": "0x5634c4a5FEd09819E3c46D86A965Dd9447d86e47",
+        "recommendedComposeGas": 200000,
+        "recommendedSendOptions": "0x00030100130300000000000000000000000000000000030d40"
+      },
+      "protocols": {
+        "aavePoolAddressesProvider": "0xe20fcbDbFfC4Dd138ce8B2E6FbB6cB49777aD64D",
+        "metaMorpho": "0x5A32099837D89E3a794a44fb131CBbAD41f87a8C"
+      },
+      "contracts": {
+        "strategyRegistry": "0xCaFaF5f72235B1F10C92d57Db512C802ec1D9ad2",
+        "strategyAllocator": "0x0dB5b3401f526E3dFE46dFCA2297745AA16D2884",
+        "reportSettler": "0xA663142A0202A751f21B3122b7611d4B3E35d004",
+        "withdrawalQueue": "0x17f223ae2BdE86dbC32574d12578e2A6F8380724",
+        "stargateBridgeAdapter": "0x6dD4a38b2Ad0482A5232c9030926dEB4845f7729",
+        "crossChainVault": "0x8AD87BB0FE973A48e5C027E1C27A708BBe78a8Ae"
+      },
+      "peers": {
+        "localPeer": "0x0000000000000000000000006dd4a38b2ad0482a5232c9030926deb4845f7729",
+        "remotePeerEid": 30110,
+        "remotePeer": "0x000000000000000000000000c1ddf8be4537875ec51e37bc560d991d1c809f81"
+      },
+      "transactions": {
+        "deployStrategyRegistry": "0x34af86ff9638e0e420a6e12ba439f90fb6703e10c2b1f70fa42536a102237f8f",
+        "deployStrategyAllocator": "0xfc53e0f5d4fdd8787c528ecaa1dcd2b97892fdd2299f0559098d58f9b060e27e",
+        "deployWithdrawalQueue": "0x2ee02294244aade411a5f10825d448983f232885540a840beeb8145d9464c451",
+        "deployReportSettler": "0x06bd6edfe4289c7e170bde6ff6f0a37514b4f5e918d53990a7ccdf2bd0d332c2",
+        "deployStargateBridgeAdapter": "0xb61f0f4403de28fed9c2997598d5713459193fe6b545e56b9e2cd9481ecc62be",
+        "failedUnoptimizedVaultDeploy": "0x6cf3a6c933256ef084c919ed41bbabe3a5da46974e3f8e48f16e37d4a3b7b306",
+        "deployCrossChainVault": "0x7419a4a4d0ec0f504bdd2a0d8e36bc978ff71044bf67aafc271b59ce73873c0c",
+        "upsertStrategy": "0xf386d95cef5394ba79c3af2effc75faa5f2167ef1af073a22e4879cf00726318",
+        "configureArbitrumPeer": "0x23dac2450c0bb8902ddf94acf6fc95e3b98ac99b3357bcb5044b56b643f6a251"
+      }
+    },
+    "arbitrum": {
+      "chainId": 42161,
+      "stargateEid": 30110,
+      "tokens": {
+        "usdc": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+      },
+      "transport": {
+        "layerZeroEndpointV2": "0x1a44076050125825900e736c501f859c50fE728c",
+        "stargatePoolUsdc": "0xe8CDF27AcD73a434D661C84887215F7598e7d0d3",
+        "tokenMessaging": "0x19cFCE47eD54a88614648DC3f19A5980097007dD",
+        "recommendedComposeGas": 200000,
+        "recommendedSendOptions": "0x00030100130300000000000000000000000000000000030d40"
+      },
+      "protocols": {
+        "aavePoolAddressesProvider": "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb"
+      },
+      "contracts": {
+        "aaveV3StrategyAdapter": "0xfAc846b296DA830A041217F32387763d31cE6998",
+        "remoteStrategyAgent": "0xf04D182F9990040A395E65D0151A30dB6957a9Ed",
+        "stargateBridgeAdapter": "0xC1DDF8be4537875eC51e37BC560D991D1c809F81"
+      },
+      "peers": {
+        "localPeer": "0x000000000000000000000000c1ddf8be4537875ec51e37bc560d991d1c809f81",
+        "remotePeerEid": 30184,
+        "remotePeer": "0x0000000000000000000000006dd4a38b2ad0482a5232c9030926deb4845f7729"
+      },
+      "transactions": {
+        "deployAaveV3StrategyAdapter": "0x7aae11b0d125edb2921c7f055be857859ebee398ee1debf845eb52172c6ec4f9",
+        "deployRemoteStrategyAgent": "0xf1a0794a844bfd3f1d6ed04f2a1984278415df61ac31337acf98827131c40436",
+        "deployStargateBridgeAdapter": "0x4a0f25c5fcabaf781a4a83557a8140260a8ba179be24e7280d10970f0b1eb238",
+        "configureBasePeer": "0x82f634910a93e5b8de1038fd30cdfb9818ac1f2d3a404b18ac2732ce3848fe0e"
+      }
+    }
+  },
+  "strategy": {
+    "id": 1,
+    "kind": "Aave",
+    "homeChain": "base",
+    "remoteChain": "arbitrum",
+    "remoteEid": 30110,
+    "agent": "0xf04D182F9990040A395E65D0151A30dB6957a9Ed",
+    "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+    "debtLimit": "79228162514264337593543950335",
+    "maxSlippageBps": 100,
+    "maxReportDelay": 86400,
+    "depositsEnabled": true,
+    "withdrawalsEnabled": true,
+    "emergencyExitOnly": false
+  },
+  "verification": {
+    "routingPolicy": "0x8AD87BB0FE973A48e5C027E1C27A708BBe78a8Ae",
+    "basePeer30110": "0x000000000000000000000000c1ddf8be4537875ec51e37bc560d991d1c809f81",
+    "arbitrumPeer30184": "0x0000000000000000000000006dd4a38b2ad0482a5232c9030926deb4845f7729",
+    "criticalRolesChecked": true,
+    "explorerVerified": true,
+    "verifiedAt": "2026-05-01",
+    "explorers": {
+      "base": {
+        "strategyRegistry": "https://basescan.org/address/0xCaFaF5f72235B1F10C92d57Db512C802ec1D9ad2#code",
+        "strategyAllocator": "https://basescan.org/address/0x0dB5b3401f526E3dFE46dFCA2297745AA16D2884#code",
+        "reportSettler": "https://basescan.org/address/0xA663142A0202A751f21B3122b7611d4B3E35d004#code",
+        "withdrawalQueue": "https://basescan.org/address/0x17f223ae2BdE86dbC32574d12578e2A6F8380724#code",
+        "stargateBridgeAdapter": "https://basescan.org/address/0x6dD4a38b2Ad0482A5232c9030926dEB4845f7729#code",
+        "crossChainVault": "https://basescan.org/address/0x8AD87BB0FE973A48e5C027E1C27A708BBe78a8Ae#code"
+      },
+      "arbitrum": {
+        "aaveV3StrategyAdapter": "https://arbiscan.io/address/0xfAc846b296DA830A041217F32387763d31cE6998#code",
+        "remoteStrategyAgent": "https://arbiscan.io/address/0xf04D182F9990040A395E65D0151A30dB6957a9Ed#code",
+        "stargateBridgeAdapter": "https://arbiscan.io/address/0xC1DDF8be4537875eC51e37BC560D991D1c809F81#code"
+      }
+    }
+  },
+  "notes": [
+    "Initial unoptimized CrossChainVault deployment on Base reverted because runtime bytecode exceeded EIP-170.",
+    "The original optimized Base vault at 0x206Ac58E24888e852cB3F9f4540031a0D53298c2 remains deployed but is no longer the active routing policy target.",
+    "The failed unoptimized vault address 0xEFaF271c17A0d089f3ff7B46168117E5fa9A78e4 has no code and is not used.",
+    "Transport addresses were cross-checked against Stargate mainnet contract docs and on-chain LayerZero EndpointV2 eid() checks on 2026-05-01.",
+    "The recommendedSendOptions value is a compose-only baseline using 200000 destination gas; it is an operational default, not an immutable protocol address.",
+    "The active Base vault was redeployed via via-ir as 0x8AD87BB0FE973A48e5C027E1C27A708BBe78a8Ae to restore remote dispatch support while staying under the EIP-170 size limit.",
+    "The active Stargate bridge pair was refreshed on 2026-05-01: Base 0x6dD4a38b2Ad0482A5232c9030926dEB4845f7729, Arbitrum 0xC1DDF8be4537875eC51e37BC560D991D1c809F81."
+  ]
+}

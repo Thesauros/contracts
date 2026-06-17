@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.23;
+pragma solidity 0.8.34;
 
 import {IProvider} from "../../contracts/interfaces/IProvider.sol";
 import {MockERC20} from "../../contracts/mocks/MockERC20.sol";
 import {MockProviderA, MockProviderB} from "../../contracts/mocks/MockProvider.sol";
 import {IVault} from "../../contracts/interfaces/IVault.sol";
-import {Vault} from "../../contracts/base/Vault.sol";
 import {Rebalancer} from "../../contracts/Rebalancer.sol";
 import {VaultManager} from "../../contracts/VaultManager.sol";
 import {Timelock} from "../../contracts/Timelock.sol";
@@ -77,6 +76,7 @@ contract MockingUtilities is Test {
         vault.grantRole(OPERATOR_ROLE, address(vaultManager));
 
         vaultManager.grantRole(EXECUTOR_ROLE, address(this));
+        vaultManager.setVaultApproval(address(vault), true);
     }
 
     function initializeVault(

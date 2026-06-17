@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.23;
+pragma solidity 0.8.34;
 
 import {AccessManager} from "../../contracts/access/AccessManager.sol";
 import {VaultManager} from "../../contracts/VaultManager.sol";
+import {MockProviderA, MockProviderB} from "../../contracts/mocks/MockProvider.sol";
 import {MockingUtilities} from "../utils/MockingUtilities.sol";
 
 contract VaultManagerTests is MockingUtilities {
@@ -29,6 +30,32 @@ contract VaultManagerTests is MockingUtilities {
             assets,
             mockProviderA,
             mockProviderB,
+            0,
+            false
+        );
+    }
+
+    function testRebalanceVaultRevertsIfVaultIsNotApproved() public {
+        vaultManager.setVaultApproval(address(vault), false);
+
+        vm.expectRevert(VaultManager.VaultManager__VaultNotApproved.selector);
+        vaultManager.rebalanceVault(
+            vault,
+            DEPOSIT_AMOUNT,
+            mockProviderA,
+            mockProviderB,
+            0,
+            false
+        );
+    }
+
+    function testRebalanceVaultRevertsIfSourceAndDestinationMatch() public {
+        vm.expectRevert(VaultManager.VaultManager__SameProvider.selector);
+        vaultManager.rebalanceVault(
+            vault,
+            DEPOSIT_AMOUNT,
+            mockProviderA,
+            mockProviderA,
             0,
             false
         );
@@ -98,5 +125,86 @@ contract VaultManagerTests is MockingUtilities {
             assets
         );
         assertEq(address(vault.activeProvider()), address(mockProviderA));
+    }
+
+    function testRebalanceVaultRevertsIfAmountIsBelowPolicyFloor() public {
+        vaultManager.setRebalancePolicy(MIN_AMOUNT + 1, 10_000, 2_000, 0);
+
+        vm.expectRevert(
+            VaultManager.VaultManager__RebalanceAmountTooSmall.selector
+        );
+        vaultManager.rebalanceVault(
+            vault,
+            MIN_AMOUNT,
+            mockProviderA,
+            mockProviderB,
+            0,
+            false
+        );
+    }
+
+    function testRebalanceVaultRevertsIfVaultOutflowLimitIsExceeded() public {
+        vaultManager.setRebalancePolicy(0, 5_000, 2_000, 0);
+
+        vm.expectRevert(
+            VaultManager.VaultManager__VaultOutflowLimitExceeded.selector
+        );
+        vaultManager.rebalanceVault(
+            vault,
+            type(uint256).max,
+            mockProviderA,
+            mockProviderB,
+            0,
+            false
+        );
+    }
+
+    function testRebalanceVaultRevertsIfFeeExceedsPolicyCap() public {
+        vaultManager.setRebalancePolicy(0, 10_000, 100, 0);
+
+        vm.expectRevert(VaultManager.VaultManager__RebalanceFeeTooHigh.selector);
+        vaultManager.rebalanceVault(
+            vault,
+            DEPOSIT_AMOUNT,
+            mockProviderA,
+            mockProviderB,
+            101 ether,
+            false
+        );
+    }
+
+    function testRebalanceVaultRevertsIfAprImprovementIsInsufficient() public {
+        MockProviderA(address(mockProviderA)).setDepositRate(1e27);
+        MockProviderB(address(mockProviderB)).setDepositRate(104e25);
+        vaultManager.setRebalancePolicy(0, 10_000, 2_000, 5e25);
+
+        vm.expectRevert(
+            VaultManager.VaultManager__InsufficientAprImprovement.selector
+        );
+        vaultManager.rebalanceVault(
+            vault,
+            DEPOSIT_AMOUNT,
+            mockProviderA,
+            mockProviderB,
+            0,
+            false
+        );
+    }
+
+    function testRebalanceVaultAllowsMoveWhenAprImprovementThresholdIsMet() public {
+        MockProviderA(address(mockProviderA)).setDepositRate(1e27);
+        MockProviderB(address(mockProviderB)).setDepositRate(108e25);
+        vaultManager.setRebalancePolicy(0, 10_000, 2_000, 5e25);
+
+        vaultManager.rebalanceVault(
+            vault,
+            DEPOSIT_AMOUNT,
+            mockProviderA,
+            mockProviderB,
+            0,
+            true
+        );
+
+        assertEq(address(vault.activeProvider()), address(mockProviderB));
     }
 }

@@ -5,6 +5,10 @@ export const tokenAddresses = {
   USDT: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
 };
 
+export const inkTokenAddresses = {
+  USDT0: '0x0200C29006150606B650577BBE7B6248F58470c1',
+};
+
 export const cometTokens = {
   cUSDC: '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf',
   cUSDT: '0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07',
@@ -41,6 +45,12 @@ export const morphoVaults = [
 ];
 
 export const ARBITRUM_CHAIN_ID = 42161n;
+export const INK_CHAIN_ID = 57073n;
+
+// Tydro (white-label Aave V3) PoolAddressesProvider on Ink.
+export const AAVE_V3_POOL_ADDRESSES_PROVIDERS = {
+  ink: '0x4172E6aAEC070ACB31aaCE343A58c93E4C70f44D',
+};
 
 export const TREASURY_ADDRESS = process.env.TREASURY_ADDRESS;
 export const WITHDRAW_FEE_PERCENT = BigInt(

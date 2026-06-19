@@ -7,3 +7,4 @@ cache_path = 'cache_forge'
 
 [rpc_endpoints]
 arbitrum = "${ARBITRUM_RPC_URL}"
+ink = "${INK_RPC_URL}"

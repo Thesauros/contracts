@@ -1,6 +1,7 @@
 export const networkUrls = {
   arbitrumOne: `https://arb-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_PROJECT_ID}`,
   arbitrumSepolia: `https://arbitrum-sepolia.blockpi.network/v1/rpc/public`,
+  ink: process.env.INK_RPC_URL || `https://rpc-gel.inkonchain.com`,
 };
 
 export const networkConfig = {
@@ -26,5 +27,12 @@ export const networkConfig = {
       ? [process.env.DEPLOYER_PRIVATE_KEY]
       : [],
     chainId: 421614,
+  },
+  ink: {
+    url: networkUrls.ink,
+    accounts: process.env.DEPLOYER_PRIVATE_KEY
+      ? [process.env.DEPLOYER_PRIVATE_KEY]
+      : [],
+    chainId: 57073,
   },
 };

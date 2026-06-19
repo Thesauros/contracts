@@ -1,6 +1,11 @@
 {
   "name": "thesauros-rebalancer",
-  "scripts": {},
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:arbitrum": "hardhat deploy --network arbitrumOne --tags usdc-vault",
+    "deploy:ink": "hardhat deploy --network ink --tags ink-usdt0-vault",
+    "test:fork:ink": "forge test --match-contract AaveV3InkProviderTests --fork-url $INK_RPC_URL -vv"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^3.0.0",
     "@nomicfoundation/hardhat-toolbox": "^7.0.0",

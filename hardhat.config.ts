@@ -16,7 +16,21 @@ const config: HardhatUserConfig = {
   },
   networks: networkConfig,
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY!,
+    apiKey: {
+      arbitrumOne: process.env.ETHERSCAN_API_KEY!,
+      // Ink explorer is Blockscout: any non-empty string works as the key
+      ink: process.env.INK_EXPLORER_API_KEY || 'blockscout',
+    },
+    customChains: [
+      {
+        network: 'ink',
+        chainId: 57073,
+        urls: {
+          apiURL: 'https://explorer.inkonchain.com/api',
+          browserURL: 'https://explorer.inkonchain.com',
+        },
+      },
+    ],
   },
   namedAccounts: {
     deployer: 0,

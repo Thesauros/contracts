@@ -5,7 +5,7 @@
     "@nomicfoundation/hardhat-foundry": "^3.0.0",
     "@nomicfoundation/hardhat-toolbox": "^7.0.0",
     "dotenv": "^16.4.4",
-    "hardhat": "3.2.0",
+    "hardhat": "3.17.0",
     "hardhat-deploy": "^2.0.3"
   },
   "dependencies": {

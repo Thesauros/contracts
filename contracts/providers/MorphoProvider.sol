@@ -121,7 +121,37 @@ contract MorphoProvider is IProvider {
         IVault
     ) external view override returns (uint256 balance) {
         uint256 shares = _metaMorpho.balanceOf(user);
-        balance = _metaMorpho.convertToAssets(shares);
+        if (shares == 0) return 0;
+        uint256 bookAssets = _metaMorpho.totalAssets();
+        uint256 realAssets = _totalRealAssets();
+        uint256 effective = realAssets < bookAssets ? realAssets : bookAssets;
+        if (effective == 0) return 0;
+
+        // MetaMorpho V1 and V1.1 both expose this offset. Missing/incompatible
+        // accounting fields revert rather than assume a favorable share price.
+        uint256 virtualShares = 10 ** uint256(_metaMorpho.DECIMALS_OFFSET());
+        uint256 supply = _metaMorpho.totalSupply();
+        uint256 lastTotal = _metaMorpho.lastTotalAssets();
+        uint256 feeShares;
+        if (bookAssets > lastTotal) {
+            uint256 feeAssets = (bookAssets - lastTotal).mulDivDown(_metaMorpho.fee(), 1e18);
+            // Match upstream FLOOR fee minting and its virtual assets/shares.
+            feeShares = feeAssets.mulDivDown(supply + virtualShares, bookAssets - feeAssets + 1);
+        }
+        balance = shares.mulDivDown(effective + 1, supply + feeShares + virtualShares);
+        uint256 upstreamQuote = _metaMorpho.convertToAssets(shares);
+        if (upstreamQuote < balance) balance = upstreamQuote;
+    }
+
+    /// @dev V1/V1.1 backing consists of market supply. Unallocated ERC20 in
+    ///      MetaMorpho is skimmable and must not offset an unrecoverable loss.
+    function _totalRealAssets() internal view returns (uint256 total) {
+        IMorpho morpho = _getMorpho();
+        uint256 count = _metaMorpho.withdrawQueueLength();
+        for (uint256 i; i < count; i++) {
+            MarketParams memory params = morpho.idToMarketParams(_metaMorpho.withdrawQueue(i));
+            total += morpho.expectedSupplyAssets(params, address(_metaMorpho));
+        }
     }
 
     /**
@@ -135,7 +165,8 @@ contract MorphoProvider is IProvider {
         uint256 ratio;
         uint256 queueLength = _metaMorpho.withdrawQueueLength();
 
-        uint256 totalDeposits = _metaMorpho.totalAssets();
+        uint256 totalDeposits = _totalRealAssets();
+        if (totalDeposits == 0) return 0;
 
         for (uint256 i; i < queueLength; i++) {
             Id idMarket = _metaMorpho.withdrawQueue(i);

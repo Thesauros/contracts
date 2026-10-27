@@ -16,6 +16,8 @@ struct MarketAllocation {
 /// @custom:contact security@morpho.org
 /// @dev Modified version of the original Morpho interface.
 interface IMetaMorpho is IERC4626 {
+    /// @notice Virtual-share exponent supported by MetaMorpho V1 and V1.1.
+    function DECIMALS_OFFSET() external view returns (uint8);
     /// @notice The address of the Morpho contract.
     function MORPHO() external view returns (IMorpho);
 

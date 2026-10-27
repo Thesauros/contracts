@@ -8,6 +8,8 @@ import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step
  * @title ProviderManager
  */
 contract ProviderManager is Ownable2Step, IProviderManager {
+    error ProviderManager__ImmutableSource();
+    error ProviderManager__AddressZero();
     // identifier => asset address => yield token address
     mapping(string => mapping(address => address)) private _assetToYieldToken;
 
@@ -33,6 +35,9 @@ contract ProviderManager is Ownable2Step, IProviderManager {
         address asset,
         address yieldToken
     ) public override onlyOwner {
+        if (yieldToken == address(0)) revert ProviderManager__AddressZero();
+        address current = _assetToYieldToken[identifier][asset];
+        if (current != address(0) && current != yieldToken) revert ProviderManager__ImmutableSource();
         if (!_identifierRegistered[identifier]) {
             _identifierRegistered[identifier] = true;
             _providerIdentifiers.push(identifier);
@@ -50,6 +55,9 @@ contract ProviderManager is Ownable2Step, IProviderManager {
         address assetTwo,
         address market
     ) public override onlyOwner {
+        if (market == address(0)) revert ProviderManager__AddressZero();
+        address current = _assetsToMarket[identifier][assetOne][assetTwo];
+        if (current != address(0) && current != market) revert ProviderManager__ImmutableSource();
         if (!_identifierRegistered[identifier]) {
             _identifierRegistered[identifier] = true;
             _providerIdentifiers.push(identifier);

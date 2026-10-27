@@ -1,0 +1,157 @@
+{
+  "change": "security-remediation-2026-10-27",
+  "mode": "selected-security-regressions",
+  "compiler": "0.8.23+commit.f704f362.Emscripten.clang",
+  "evm": "Foundry local Shanghai; no fork",
+  "dependency": "@openzeppelin/contracts@5.4.0",
+  "tests": 27,
+  "failed": 0,
+  "suites": [
+    {
+      "suite": "test/security/LegacySecurity.t.sol:LegacySecurityRegressionTest",
+      "tests": [
+        {
+          "test": "testFuzz_SC009_positiveWithdrawAlwaysChargesCeil(uint64,uint64)",
+          "status": "Success",
+          "reason": null,
+          "fuzz_runs": 128
+        },
+        {
+          "test": "test_SC005_allFalseReceiptsRevertWithoutBurn()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC005_emptyActiveUsesLaterLiquidity()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC005_idleUnderlyingIsCountedAndUsable()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC005_insufficientLiquidityRollsBackAllProvidersAndShares()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC005_partialReceiptUsesMeasuredRemainder()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC005_revertingFirstActionIsIsolated()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC005_successWithoutReceiptCannotSatisfyExit()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC005_unknownFundedNavFailsWithoutBurn()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC007_duplicateAdapterAndEconomicAliasRejectAtConstruction()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC007_duplicateAliasAndEmptyListRejectAtUpdate()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC007_failedRemovalViewIsNotAnEmptyPosition()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC007_fundedRemovalRejected()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC007_zeroMigrationRevokesRecordedApprovalAndUpdatesActive()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC007_zeroNavReceiptClaimMustBeMigratedBeforeRemoval()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC008_registryInitialBindIdempotentAndNoRetarget()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC008_sourceRetargetCannotHideOldPosition()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC009_dustCannotPayWithoutUpwardRoundedAllowance()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC009_oversizedWithdrawAndRedeemReject()",
+          "status": "Success",
+          "reason": null
+        }
+      ]
+    },
+    {
+      "suite": "test/security/MorphoRecoverable.t.sol:MorphoRecoverableRegressionTest",
+      "tests": [
+        {
+          "test": "test_SC006_HealthyLiquidityCannotPayBookLossToEarlyRedeemer()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC006_RateUsesSameRecoverableMarketBase()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC006_UnsupportedOffsetFailsClosed()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC006_V11LossAndPendingFeeUseBookFeeButRealPayout()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC006_V11PersistentLossUsesRecoverableValue()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC006_V1QuoteMatchesPendingFeeAndVirtualShares()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC006_V1RealizedLossAndZeroOffset()",
+          "status": "Success",
+          "reason": null
+        },
+        {
+          "test": "test_SC006_ZeroAndDustPositions()",
+          "status": "Success",
+          "reason": null
+        }
+      ]
+    }
+  ]
+}

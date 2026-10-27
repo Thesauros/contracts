@@ -1,4 +1,6 @@
 node_modules
+out_security/
+cache_security/
 .env
 .env.local
 .env.backup

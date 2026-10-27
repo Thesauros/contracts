@@ -30,7 +30,8 @@ contract BaseMockProvider is IProvider {
         address,
         address
     ) external pure override returns (address source) {
-        source = keyOne;
+        // Independent mock positions are keyed by identifier, with no spender.
+        source = address(uint160(uint256(keccak256(abi.encode(keyOne, getIdentifier())))));
     }
 
     /**

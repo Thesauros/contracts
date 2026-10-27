@@ -7,3 +7,21 @@ cache_path = 'cache_forge'
 
 [rpc_endpoints]
 arbitrum = "${ARBITRUM_RPC_URL}"
+
+# Isolated local security suite: never inherits a live fork endpoint.
+[profile.security]
+src = 'contracts'
+test = 'test/security'
+out = 'out_security'
+cache_path = 'cache_security'
+libs = []
+auto_detect_remappings = false
+optimizer = true
+optimizer_runs = 200
+evm_version = 'shanghai'
+code_size_limit = 1000000
+fuzz.runs = 128
+remappings = [
+  '@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/',
+  'morpho-blue/=lib/morpho-blue/src/'
+]

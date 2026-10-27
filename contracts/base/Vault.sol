@@ -28,6 +28,11 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
     error Vault__InvalidInput();
     error Vault__DepositLessThanMin();
     error Vault__SetupAlreadyCompleted();
+    error Vault__ExceededOwnerLimit();
+    error Vault__InsufficientLiquidity();
+    error Vault__DuplicateProviderSource();
+    error Vault__ProviderSourceChanged();
+    error Vault__FundedProvider();
 
     uint256 internal constant PRECISION_FACTOR = 1e18;
     uint256 internal constant MAX_WITHDRAW_FEE_PERCENT = 0.05 * 1e18; // 5%
@@ -46,6 +51,9 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
     address public treasury;
 
     bool public setupCompleted;
+
+    // Recorded approval identities cannot be silently retargeted.
+    mapping(address => address) private _providerSources;
 
     /**
      * @dev Reverts if called by any account other than the timelock contract.
@@ -395,25 +403,16 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
         whenNotPaused(Actions.Withdraw)
         returns (uint256 validatedAssets, uint256 validatedShares)
     {
-        if (receiver == address(0) || owner == address(0)) {
-            revert Vault__AddressZero();
+        if (receiver == address(0) || owner == address(0)) revert Vault__AddressZero();
+        if (assets == 0 || shares == 0) revert Vault__InvalidInput();
+        // Reject over-limit requests instead of flooring a clamped share debit.
+        if (assets > maxWithdraw(owner) || shares > maxRedeem(owner)) {
+            revert Vault__ExceededOwnerLimit();
         }
-        if (assets == 0 || shares == 0) {
-            revert Vault__InvalidInput();
-        }
-
-        uint256 _maxWithdraw = maxWithdraw(owner);
-        if (assets > _maxWithdraw) {
-            validatedAssets = _maxWithdraw;
-            validatedShares = validatedAssets.mulDiv(shares, assets);
-        } else {
-            validatedAssets = assets;
-            validatedShares = shares;
-        }
-
-        if (caller != owner) {
-            _spendAllowance(owner, caller, validatedShares);
-        }
+        if (shares < previewWithdraw(assets)) revert Vault__InvalidInput();
+        validatedAssets = assets;
+        validatedShares = shares;
+        if (caller != owner) _spendAllowance(owner, caller, shares);
     }
 
     /**
@@ -438,7 +437,7 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
         uint256 assetsToReceiver = assets - withdrawFee;
 
         _burn(owner, shares);
-        _delegateActionToProvider(assets, "withdraw", activeProvider);
+        _collectWithdrawal(assets);
 
         address _treasury = treasury;
 
@@ -558,17 +557,53 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
      * @param providers An array of provider contracts.
      */
     function _setProviders(IProvider[] memory providers) internal {
-        for (uint256 i; i < providers.length; i++) {
-            if (address(providers[i]) == address(0)) {
-                revert Vault__AddressZero();
+        uint256 count = providers.length;
+        if (count == 0) revert Vault__InvalidInput();
+        address[] memory sources = new address[](count);
+        for (uint256 i; i < count; i++) {
+            address provider = address(providers[i]);
+            if (provider == address(0)) revert Vault__AddressZero();
+            if (provider.code.length == 0) revert Vault__InvalidInput();
+            address source = providers[i].getSource(asset(), address(this), address(0));
+            if (source == address(0)) revert Vault__AddressZero();
+            for (uint256 j; j < i; j++) {
+                if (providers[j] == providers[i] || sources[j] == source) {
+                    revert Vault__DuplicateProviderSource();
+                }
             }
-            _asset.forceApprove(
-                providers[i].getSource(asset(), address(this), address(0)),
-                type(uint256).max
-            );
+            address pinned = _providerSources[provider];
+            if (pinned != address(0) && pinned != source) revert Vault__ProviderSourceChanged();
+            sources[i] = source;
+        }
+        // A failed valuation is never evidence that a removed position is empty.
+        for (uint256 i; i < _providers.length; i++) {
+            IProvider previous = _providers[i];
+            bool retained;
+            for (uint256 j; j < count; j++) {
+                if (previous == providers[j]) { retained = true; break; }
+            }
+            if (!retained) {
+                if (_getProviderBalance(previous) != 0) revert Vault__FundedProvider();
+                // A zero rounded/recoverable quote can still leave receipt
+                // shares (e.g. MetaMorpho after a total loss). Retain that claim.
+                (bool readable, bytes memory receipt) = _providerSources[address(previous)].staticcall(
+                    abi.encodeWithSelector(IERC20.balanceOf.selector, address(this))
+                );
+                if (readable && receipt.length == 32 && abi.decode(receipt, (uint256)) != 0) {
+                    revert Vault__FundedProvider();
+                }
+                _asset.forceApprove(_providerSources[address(previous)], 0);
+                delete _providerSources[address(previous)];
+            }
+        }
+        for (uint256 i; i < count; i++) {
+            _providerSources[address(providers[i])] = sources[i];
+            _asset.forceApprove(sources[i], type(uint256).max);
         }
         _providers = providers;
-
+        if (address(activeProvider) != address(0) && !_validateProvider(address(activeProvider))) {
+            _setActiveProvider(providers[0]);
+        }
         emit ProvidersUpdated(providers);
     }
 
@@ -628,6 +663,7 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
         string memory actionName,
         IProvider provider
     ) internal {
+        _assertProviderSource(provider);
         bytes memory data = abi.encodeWithSignature(
             string(abi.encodePacked(actionName, "(uint256,address)")),
             assets,
@@ -644,15 +680,41 @@ abstract contract Vault is ERC20Permit, AccessManager, PausableActions, IVault {
         view
         returns (uint256 totalBalance)
     {
-        uint256 providerBalance;
-        uint256 count = _providers.length;
-        for (uint256 i; i < count; i++) {
-            providerBalance = _providers[i].getDepositBalance(
-                address(this),
-                this
-            );
-            totalBalance += providerBalance;
+        totalBalance = _asset.balanceOf(address(this));
+        for (uint256 i; i < _providers.length; i++) {
+            totalBalance += _getProviderBalance(_providers[i]);
         }
+    }
+
+    function _assertProviderSource(IProvider provider) internal view {
+        address pinned = _providerSources[address(provider)];
+        if (pinned == address(0) ||
+            provider.getSource(asset(), address(this), address(0)) != pinned) {
+            revert Vault__ProviderSourceChanged();
+        }
+    }
+
+    function _getProviderBalance(IProvider provider) internal view returns (uint256) {
+        _assertProviderSource(provider);
+        return provider.getDepositBalance(address(this), this);
+    }
+
+    /// @dev Isolate action failures; only measured receipts settle an exit.
+    ///      Complete NAV is still required before burning any shares.
+    function _collectWithdrawal(uint256 assets) internal {
+        uint256 available = _asset.balanceOf(address(this));
+        for (uint256 i; available < assets && i < _providers.length; i++) {
+            IProvider provider = _providers[i];
+            uint256 balance = _getProviderBalance(provider);
+            if (balance == 0) continue;
+            uint256 amount = Math.min(balance, assets - available);
+            bytes memory data = abi.encodeWithSignature(
+                "withdraw(uint256,address)", amount, address(this)
+            );
+            (bool success, ) = address(provider).delegatecall(data);
+            if (success) available = _asset.balanceOf(address(this));
+        }
+        if (_asset.balanceOf(address(this)) < assets) revert Vault__InsufficientLiquidity();
     }
 
     /**
